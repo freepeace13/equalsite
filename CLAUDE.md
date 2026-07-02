@@ -125,7 +125,8 @@ rather than hand-rolling Playwright — it already knows the login flow, the `/d
 - TS deprecation flags (e.g. `ignoreDeprecations: '6.0'`) belong in a package's tsup `dts.compilerOptions`,
   not the root `tsconfig.json` — putting them at the root breaks IDE validation.
 
-## Frontend design
-See `docs/design-system.md` for brand identity, color/type tokens, and the
-locked information-architecture decisions (narrative score, impact-first
-grouping, quick-wins-first sort) before touching any UI work.
+## Project docs
+- `docs/style-guide.md` — brand identity, color/type tokens, component
+  patterns, and UX design principles. Read before any UI work.
+- `docs/architecture.md` — user journey, state machines, data model, and
+  engineering notes. Read before any backend/frontend logic work.
