@@ -4,7 +4,6 @@ namespace App\Support\Spider;
 
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Arr;
-use Override;
 
 class SpiderOptions implements Arrayable
 {
@@ -18,6 +17,12 @@ class SpiderOptions implements Arrayable
 
     protected int $maxPages = 50;
 
+    protected ?int $maxDepth = null;
+
+    protected array $includeGlobs = [];
+
+    protected array $excludeGlobs = [];
+
     public function __construct(array $urls, string $callbackUrl)
     {
         $this->urls = $urls;
@@ -26,7 +31,7 @@ class SpiderOptions implements Arrayable
     }
 
     /**
-     * @param string | list<int, string> $urls
+     * @param  string | list<int, string>  $urls
      */
     public static function make($urls, string $callbackUrl): static
     {
@@ -72,7 +77,10 @@ class SpiderOptions implements Arrayable
         return [
             'maxPages' => $this->getMaxPages(),
             'enqueueLinks' => $this->getEnqueueLinks(),
-            'enqueueStrategy' => $this->getEnqueueStrategy()
+            'enqueueStrategy' => $this->getEnqueueStrategy(),
+            'maxDepth' => $this->getMaxDepth(),
+            'includeGlobs' => $this->getIncludeGlobs(),
+            'excludeGlobs' => $this->getExcludeGlobs(),
         ];
     }
 
@@ -88,9 +96,12 @@ class SpiderOptions implements Arrayable
     public function setOption(string $name, mixed $value): self
     {
         return value(match ($name) {
-            'maxPages' => fn() => $this->setMaxPages($value),
-            'enqueueLinks' => fn() => $this->setEnqueueLinks($value),
-            'enqueueStrategy' => fn() => $this->setEnqueueStrategy($value),
+            'maxPages' => fn () => $this->setMaxPages($value),
+            'enqueueLinks' => fn () => $this->setEnqueueLinks($value),
+            'enqueueStrategy' => fn () => $this->setEnqueueStrategy($value),
+            'maxDepth' => fn () => $this->setMaxDepth($value),
+            'includeGlobs' => fn () => $this->setIncludeGlobs($value),
+            'excludeGlobs' => fn () => $this->setExcludeGlobs($value),
             default => $this
         });
     }
@@ -120,7 +131,7 @@ class SpiderOptions implements Arrayable
     }
 
     /**
-     * @param EnqueueStrategy|string $value
+     * @param  EnqueueStrategy|string  $value
      */
     public function setEnqueueStrategy($value): self
     {
@@ -138,12 +149,48 @@ class SpiderOptions implements Arrayable
         return $this->enqueueStrategy->value;
     }
 
+    public function setMaxDepth(?int $value): self
+    {
+        $this->maxDepth = $value;
+
+        return $this;
+    }
+
+    public function getMaxDepth(): ?int
+    {
+        return $this->maxDepth;
+    }
+
+    public function setIncludeGlobs(array $value): self
+    {
+        $this->includeGlobs = $value;
+
+        return $this;
+    }
+
+    public function getIncludeGlobs(): array
+    {
+        return $this->includeGlobs;
+    }
+
+    public function setExcludeGlobs(array $value): self
+    {
+        $this->excludeGlobs = $value;
+
+        return $this;
+    }
+
+    public function getExcludeGlobs(): array
+    {
+        return $this->excludeGlobs;
+    }
+
     public function toArray(): array
     {
         return [
             'urls' => $this->getUrls(),
             'callbackUrl' => $this->getCallbackUrl(),
-            'options' => $this->getOptions()
+            'options' => $this->getOptions(),
         ];
     }
 }

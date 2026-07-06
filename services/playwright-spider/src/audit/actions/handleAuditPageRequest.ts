@@ -47,10 +47,16 @@ export const createAuditPageRequestHandler = (
         totalRequests: info?.totalRequestCount ?? 0,
     }));
 
-    if (options.enqueueLinks) {
+    const currentDepth = (request.userData?.depth as number | undefined) ?? 0;
+    const withinMaxDepth = options.maxDepth == null || currentDepth < options.maxDepth;
+
+    if (options.enqueueLinks && withinMaxDepth) {
         await enqueueLinks({
-            strategy: options.enqueueStrategy as  EnqueueStrategy,
+            strategy: options.enqueueStrategy as EnqueueStrategy,
             selector: 'a',
+            globs: options.includeGlobs?.length ? options.includeGlobs : undefined,
+            exclude: options.excludeGlobs?.length ? options.excludeGlobs : undefined,
+            userData: { depth: currentDepth + 1 },
         });
     }
 }

@@ -1,6 +1,5 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useEchoPublic } from '@laravel/echo-react';
-import { useEffect } from 'react';
 import { PublicHeader } from '@/components/public-header';
 import { result } from '@/routes/audit';
 import { omit } from '@/lib/obj';
@@ -233,16 +232,21 @@ function CrawlingPanel({ scanProgress, scanUrls }: { scanProgress: ScanProgress;
     );
 }
 
-function CompletePanel() {
+function ReportCta({ auditId, issuesCount }: { auditId: string; issuesCount: number }) {
     return (
-        <div className="flex flex-col items-center text-center py-16">
-            <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center mb-4">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="text-emerald-600 dark:text-emerald-400">
-                    <path d="M20 6L9 17l-5-5" />
+        <div className="mt-6 flex items-center justify-between rounded-lg bg-emerald-50 dark:bg-emerald-900/20 px-4 py-3.5">
+            <p className="text-sm text-emerald-700 dark:text-emerald-400">
+                <span className="font-medium">audit complete</span> — {issuesCount} issue{issuesCount !== 1 ? 's' : ''} found
+            </p>
+            <Link
+                href={result(auditId).url}
+                className="h-9 px-4 rounded-lg bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-medium inline-flex items-center gap-1.5"
+            >
+                view report
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
-            </div>
-            <h1 className="font-display text-lg font-medium mb-1">audit complete</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">taking you to the report…</p>
+            </Link>
         </div>
     );
 }
@@ -256,15 +260,6 @@ export default function Progress({
     const domain = (() => {
         try { return new URL(scanInfo.siteUrl).hostname; } catch { return scanInfo.siteUrl; }
     })();
-
-    useEffect(() => {
-        if (scanInfo.status === 'completed') {
-            const timer = setTimeout(() => {
-                window.location.href = result(scanInfo.auditId).url;
-            }, 1100);
-            return () => clearTimeout(timer);
-        }
-    }, [scanInfo.status, scanInfo.auditId]);
 
     useEchoPublic<WsEvents>(
         `audit-${scanInfo.auditId}-scanning`,
@@ -378,9 +373,10 @@ export default function Progress({
         },
     );
 
-    const activePanel = scanInfo.status === 'completed' ? 'complete'
-        : scanInfo.status === 'started' ? 'crawling'
+    const activePanel = scanInfo.status === 'started' || scanInfo.status === 'completed'
+        ? 'crawling'
         : 'waiting';
+    const issuesCount = Object.values(scanUrls).reduce((sum, u) => sum + (u.violationsCount ?? 0), 0);
 
     return (
         <>
@@ -402,7 +398,10 @@ export default function Progress({
 
                 {activePanel === 'waiting' && <WaitingPanel scanQueue={scanQueue} />}
                 {activePanel === 'crawling' && <CrawlingPanel scanProgress={scanProgress} scanUrls={scanUrls} />}
-                {activePanel === 'complete' && <CompletePanel />}
+
+                {scanInfo.status === 'completed' && (
+                    <ReportCta auditId={scanInfo.auditId} issuesCount={issuesCount} />
+                )}
 
                 {scanInfo.status === 'failed' && (
                     <div className="mt-6 rounded-lg border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-900/20 px-4 py-3.5">

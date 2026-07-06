@@ -10,10 +10,15 @@ class RequestController extends Controller
 {
     public function __invoke(AuditCreateRequest $request, CreateAudit $creator)
     {
-        $audit = $creator->create($request->url);
+        $audit = $creator->create($request->url, $request->only([
+            'crawlDepth',
+            'include',
+            'exclude',
+            'sameDomain',
+        ]));
 
         return redirect()->route('audit.progress', [
-            'id' => $audit->crawler_id
+            'id' => $audit->crawler_id,
         ]);
     }
 }

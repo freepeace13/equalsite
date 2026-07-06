@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'audit/index')->name('audit.create');
 Route::redirect('/dashboard', '/')->name('dashboard');
 Route::redirect('/home', '/')->name('home');
+Route::inertia('/audit', 'audit/lobby')->name('audit.index');
 Route::post('/audit', RequestController::class)->name('audit.store');
 Route::delete('/audit/{id}', CancelController::class)->name('audit.cancel');
 Route::get('/audit/{id}', ProgressController::class)->name('audit.progress');

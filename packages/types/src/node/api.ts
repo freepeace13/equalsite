@@ -7,6 +7,9 @@ export type AuditOptions = {
     maxPages: number;
     enqueueLinks: boolean;
     enqueueStrategy: string;
+    maxDepth?: number | null;
+    includeGlobs?: string[];
+    excludeGlobs?: string[];
 }
 
 export type CreateAuditRequestBody = {

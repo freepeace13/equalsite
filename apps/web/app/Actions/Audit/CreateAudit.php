@@ -2,8 +2,8 @@
 
 namespace App\Actions\Audit;
 
-use App\Models\Audit;
 use App\Contracts\Spider;
+use App\Models\Audit;
 use App\Support\Spider\EnqueueStrategy;
 use App\Support\Spider\SpiderOptions;
 use App\Value\Status;
@@ -14,16 +14,24 @@ class CreateAudit
         protected Spider $spider,
     ) {}
 
-    public function create(string $url): Audit
+    /**
+     * @param  array{crawlDepth?: int, include?: ?string, exclude?: ?string, sameDomain?: bool}  $settings
+     */
+    public function create(string $url, array $settings = []): Audit
     {
         $response = $this->spider->create(
             SpiderOptions::make(
                 urls: [$url],
-                callbackUrl: 'http://web' . route('api.crawler.callback', absolute: false)
+                callbackUrl: 'http://web'.route('api.crawler.callback', absolute: false)
             )->setOptions([
                 'maxPages' => 50,
                 'enqueueLinks' => true,
-                'enqueueStrategy' => EnqueueStrategy::SameDomain
+                'enqueueStrategy' => filter_var($settings['sameDomain'] ?? true, FILTER_VALIDATE_BOOLEAN)
+                    ? EnqueueStrategy::SameDomain
+                    : EnqueueStrategy::All,
+                'maxDepth' => isset($settings['crawlDepth']) ? (int) $settings['crawlDepth'] : 3,
+                'includeGlobs' => $this->parsePatterns($settings['include'] ?? null),
+                'excludeGlobs' => $this->parsePatterns($settings['exclude'] ?? null),
             ])
         );
 
@@ -31,7 +39,23 @@ class CreateAudit
             'domain' => parse_url($url, PHP_URL_HOST),
             'url' => $url,
             'status' => Status::Queued,
-            'crawler_id' => $response['id']
+            'crawler_id' => $response['id'],
         ]);
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function parsePatterns(?string $patterns): array
+    {
+        if (! $patterns) {
+            return [];
+        }
+
+        return collect(explode(',', $patterns))
+            ->map(fn (string $pattern) => trim($pattern))
+            ->filter()
+            ->values()
+            ->all();
     }
 }
