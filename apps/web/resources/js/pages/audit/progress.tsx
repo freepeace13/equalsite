@@ -1,10 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEchoPublic } from '@laravel/echo-react';
 import { PublicHeader } from '@/components/public-header';
-import { result } from '@/routes/audit';
+import { cancel, result } from '@/routes/audit';
 import { omit } from '@/lib/obj';
 import type { ScanInfo, ScanProgress, ScanQueue, ScannedUrl } from '@/types';
 import type {
+    CancelledWsEvent,
     CompletedWsEvent,
     FailedWsEvent,
     PageCompletedWsEvent,
@@ -29,6 +30,7 @@ type WsEvents =
     | ProgressWsEvent
     | CompletedWsEvent
     | FailedWsEvent
+    | CancelledWsEvent
     | PageStartedWsEvent
     | PageFailedWsEvent
     | PageSkippedWsEvent
@@ -89,6 +91,23 @@ function StatusBadge({ status }: { status: ScanInfo['status'] }) {
             </span>
         );
     }
+    if (status === 'cancelled') {
+        return (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                >
+                    <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+                cancelled
+            </span>
+        );
+    }
     return (
         <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
             <svg
@@ -107,16 +126,37 @@ function StatusBadge({ status }: { status: ScanInfo['status'] }) {
     );
 }
 
-function WaitingPanel({ scanQueue }: { scanQueue: ScanQueue }) {
+function CancelButton({ onCancel }: { onCancel: () => void }) {
+    return (
+        <button
+            type="button"
+            onClick={onCancel}
+            className="flex h-9 shrink-0 items-center rounded-lg px-3.5 text-xs font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+        >
+            cancel audit
+        </button>
+    );
+}
+
+function WaitingPanel({
+    scanQueue,
+    onCancel,
+}: {
+    scanQueue: ScanQueue;
+    onCancel: () => void;
+}) {
     const position = scanQueue.position ?? 0;
     const estMinutes = Math.max(1, Math.round(position * 1.5));
     const totalDots = Math.max(position + 2, 4);
 
     return (
         <>
-            <h1 className="mb-1 font-display text-xl font-medium">
-                your audit is in line
-            </h1>
+            <div className="mb-1 flex items-start justify-between gap-4">
+                <h1 className="font-display text-xl font-medium">
+                    your audit is in line
+                </h1>
+                <CancelButton onCancel={onCancel} />
+            </div>
             <p className="mb-8 text-sm text-slate-500 dark:text-slate-400">
                 we'll start crawling as soon as a slot opens up — this page
                 updates on its own.
@@ -297,9 +337,11 @@ function FeedRow({ url, entry }: { url: string; entry: ScannedUrl }) {
 function CrawlingPanel({
     scanProgress,
     scanUrls,
+    onCancel,
 }: {
     scanProgress: ScanProgress;
     scanUrls: Record<string, ScannedUrl>;
+    onCancel: () => void;
 }) {
     const scanned = scanProgress.completedRequests ?? 0;
     const total = scanProgress.totalRequests ?? 0;
@@ -318,9 +360,12 @@ function CrawlingPanel({
 
     return (
         <>
-            <h1 className="mb-6 font-display text-xl font-medium">
-                checking every page for accessibility issues
-            </h1>
+            <div className="mb-6 flex items-start justify-between gap-4">
+                <h1 className="font-display text-xl font-medium">
+                    checking every page for accessibility issues
+                </h1>
+                <CancelButton onCancel={onCancel} />
+            </div>
 
             <div className="mb-2 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
                 <div
@@ -432,6 +477,7 @@ export default function Progress({
             '.audit.progress',
             '.audit.completed',
             '.audit.failed',
+            '.audit.cancelled',
             '.audit.page.started',
             '.audit.page.skipped',
             '.audit.page.failed',
@@ -492,6 +538,19 @@ export default function Progress({
                             ...current.scanInfo,
                             status: 'failed',
                             failureReason: error,
+                        },
+                    }),
+                });
+            } else if (e.type === 'audit.cancelled') {
+                const { timestamp } = e as CancelledWsEvent;
+                router.replace<ScanProgressPageProps>({
+                    preserveScroll: true,
+                    props: (current) => ({
+                        ...current,
+                        scanInfo: {
+                            ...current.scanInfo,
+                            status: 'cancelled',
+                            cancelledAt: timestamp,
                         },
                     }),
                 });
@@ -568,10 +627,26 @@ export default function Progress({
         },
     );
 
+    const handleCancel = () => {
+        if (
+            !window.confirm(
+                'Cancel this audit? It will stay in your history marked as cancelled.',
+            )
+        ) {
+            return;
+        }
+
+        router.delete(cancel(scanInfo.auditId).url, {
+            preserveScroll: true,
+        });
+    };
+
     const activePanel =
         scanInfo.status === 'started' || scanInfo.status === 'completed'
             ? 'crawling'
-            : 'waiting';
+            : scanInfo.status === 'queued'
+              ? 'waiting'
+              : null;
     const issuesCount = Object.values(scanUrls).reduce(
         (sum, u) => sum + (u.violationsCount ?? 0),
         0,
@@ -603,12 +678,16 @@ export default function Progress({
                 </div>
 
                 {activePanel === 'waiting' && (
-                    <WaitingPanel scanQueue={scanQueue} />
+                    <WaitingPanel
+                        scanQueue={scanQueue}
+                        onCancel={handleCancel}
+                    />
                 )}
                 {activePanel === 'crawling' && (
                     <CrawlingPanel
                         scanProgress={scanProgress}
                         scanUrls={scanUrls}
+                        onCancel={handleCancel}
                     />
                 )}
 
@@ -625,6 +704,15 @@ export default function Progress({
                             <strong>Scan failed.</strong>{' '}
                             {scanInfo.failureReason ??
                                 'An unexpected error occurred.'}
+                        </p>
+                    </div>
+                )}
+
+                {scanInfo.status === 'cancelled' && (
+                    <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3.5 dark:border-slate-800 dark:bg-slate-900/40">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                            <strong>Audit cancelled.</strong> No report will
+                            be generated for this run.
                         </p>
                     </div>
                 )}

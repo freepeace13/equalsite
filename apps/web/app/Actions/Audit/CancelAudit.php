@@ -2,8 +2,8 @@
 
 namespace App\Actions\Audit;
 
-use App\Models\Audit;
 use App\Contracts\Spider;
+use App\Models\Audit;
 use App\Value\Status;
 
 class CancelAudit
@@ -14,11 +14,15 @@ class CancelAudit
 
     public function cancel(Audit $audit): void
     {
+        if (! $audit->status->cancellable()) {
+            return;
+        }
+
         $this->spider->cancel($audit->crawler_id);
 
         $audit->update([
             'status' => Status::Cancelled,
-            'cancelled_at' => now()
+            'cancelled_at' => now(),
         ]);
     }
 }

@@ -34,4 +34,9 @@ enum Status: string
     {
         return $this === self::Cancelled;
     }
+
+    public function cancellable(): bool
+    {
+        return $this === self::Queued || $this === self::Started;
+    }
 }
