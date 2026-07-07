@@ -5,12 +5,14 @@ namespace App\Models;
 use App\Value\Status;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
 
 class Audit extends Model
 {
     protected $fillable = [
+        'user_id',
         'url',
         'domain',
         'status', // queued, started, cancelled, failed, completed
@@ -18,7 +20,7 @@ class Audit extends Model
         'crawler_id',
         'cancelled_at',
         'started_at',
-        'completed_at'
+        'completed_at',
     ];
 
     protected $casts = [
@@ -26,14 +28,13 @@ class Audit extends Model
         'custom_data' => 'array',
         'cancelled_at' => 'datetime',
         'completed_at' => 'datetime',
-        'started_at' => 'datetime'
+        'started_at' => 'datetime',
     ];
 
     public static function findById(string $crawlerId): ?Audit
     {
         return static::where('crawler_id', $crawlerId)->first();
     }
-
 
     public function getCustomData(string $key, $default = null)
     {
@@ -47,15 +48,15 @@ class Audit extends Model
         Arr::set($customData, $key, $value);
 
         $this->forceFill([
-            'custom_data' => $customData
+            'custom_data' => $customData,
         ])->save();
 
         return $this;
     }
 
     /**
-     * @param string[] | string $key
-     * @param \Closure $callback
+     * @param  string[] | string  $key
+     *
      * @deprecated use tapCustomData instead
      */
     public function patchCustomData($key, Closure $callback, $default = null): self
@@ -81,7 +82,7 @@ class Audit extends Model
         }
 
         $this->forceFill([
-            'custom_data' => $customData
+            'custom_data' => $customData,
         ])->save();
 
         return $this;
@@ -90,5 +91,10 @@ class Audit extends Model
     public function violations(): HasMany
     {
         return $this->hasMany(Violation::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

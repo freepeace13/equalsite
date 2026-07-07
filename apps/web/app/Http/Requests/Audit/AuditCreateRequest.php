@@ -14,6 +14,7 @@ class AuditCreateRequest extends FormRequest
             'include' => ['sometimes', 'nullable', 'string', 'max:500'],
             'exclude' => ['sometimes', 'nullable', 'string', 'max:500'],
             'sameDomain' => ['sometimes', 'boolean'],
+            'email' => ['sometimes', 'nullable', 'email'],
         ];
     }
 }

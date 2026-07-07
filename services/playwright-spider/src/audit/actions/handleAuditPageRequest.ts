@@ -1,11 +1,30 @@
-import type { PlaywrightCrawlerOptions } from "crawlee";
-import type { EnqueueStrategy } from "crawlee";
+import type { PlaywrightCrawlerOptions, RequestOptions } from "crawlee";
+import { Request, EnqueueStrategy } from "crawlee";
 import { pageStartedEvent } from "../events/pageStartedEvent";
 import type { EventPublisher } from "../repositories/eventPublisher";
 import { createProcessAxeResultAction } from "./processAxeResult";
 import AxeBuilder from "@axe-core/playwright";
 import { progressEvent } from "../events/progressEvent";
 import type { AuditOptions } from "@equalsite/types";
+
+/**
+ * SameDomain/SameHostname enqueue strategies treat http/https and www/non-www
+ * as equivalent, but Crawlee's default uniqueKey does not - so the same page
+ * reached via two href forms (e.g. seed uses https://example.com, a nav link
+ * uses https://www.example.com/) would enqueue as two separate requests.
+ * Canonicalize scheme + host before computing the uniqueKey so those collapse
+ * to one request, without changing the actual URL that gets navigated to.
+ */
+const canonicalizeRequestUniqueKey = (request: RequestOptions): RequestOptions => {
+    const url = new URL(request.url);
+    url.protocol = 'https:';
+    url.hostname = url.hostname.replace(/^www\./, '');
+
+    return {
+        ...request,
+        uniqueKey: Request.computeUniqueKey({ url: url.href, method: 'GET' }),
+    };
+};
 
 export const createAuditPageRequestHandler = (
     auditId: string,
@@ -57,6 +76,7 @@ export const createAuditPageRequestHandler = (
             globs: options.includeGlobs?.length ? options.includeGlobs : undefined,
             exclude: options.excludeGlobs?.length ? options.excludeGlobs : undefined,
             userData: { depth: currentDepth + 1 },
+            transformRequestFunction: canonicalizeRequestUniqueKey,
         });
     }
 }

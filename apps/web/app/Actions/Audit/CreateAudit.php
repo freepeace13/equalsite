@@ -15,7 +15,7 @@ class CreateAudit
     ) {}
 
     /**
-     * @param  array{crawlDepth?: int, include?: ?string, exclude?: ?string, sameDomain?: bool}  $settings
+     * @param  array{crawlDepth?: int, include?: ?string, exclude?: ?string, sameDomain?: bool, userId?: ?int}  $settings
      */
     public function create(string $url, array $settings = []): Audit
     {
@@ -36,6 +36,7 @@ class CreateAudit
         );
 
         return Audit::create([
+            'user_id' => $settings['userId'] ?? null,
             'domain' => parse_url($url, PHP_URL_HOST),
             'url' => $url,
             'status' => Status::Queued,

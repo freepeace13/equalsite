@@ -37,6 +37,7 @@ export default function Index() {
         include: '',
         exclude: '',
         sameDomain: true,
+        email: '',
     });
     const [advancedOpen, setAdvancedOpen] = useState(false);
     const [showEmailModal, setShowEmailModal] = useState(false);
@@ -61,6 +62,13 @@ export default function Index() {
 
     const submitAudit = () => {
         setShowEmailModal(false);
+        form.transform((data) => ({ ...data, email: modalEmail.trim() }));
+        form.submit(store());
+    };
+
+    const submitAsGuest = () => {
+        setShowEmailModal(false);
+        form.transform((data) => ({ ...data, email: '' }));
         form.submit(store());
     };
 
@@ -218,8 +226,7 @@ export default function Index() {
                                                     name="depth"
                                                     value={depth.value}
                                                     checked={
-                                                        form.data
-                                                            .crawlDepth ===
+                                                        form.data.crawlDepth ===
                                                         depth.value
                                                     }
                                                     onChange={() =>
@@ -304,9 +311,7 @@ export default function Index() {
                                             type="button"
                                             id="same-domain"
                                             role="switch"
-                                            aria-checked={
-                                                form.data.sameDomain
-                                            }
+                                            aria-checked={form.data.sameDomain}
                                             onClick={() =>
                                                 form.setData(
                                                     'sameDomain',
@@ -423,6 +428,9 @@ export default function Index() {
                         onChange={(e) => setModalEmail(e.target.value)}
                         className="h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm placeholder:text-slate-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600 focus:outline-none dark:border-slate-700 dark:bg-slate-900"
                     />
+                    {form.errors.email && (
+                        <InputError message={form.errors.email} />
+                    )}
                     <button
                         type="button"
                         onClick={submitAudit}
@@ -433,7 +441,7 @@ export default function Index() {
                     </button>
                     <button
                         type="button"
-                        onClick={submitAudit}
+                        onClick={submitAsGuest}
                         disabled={form.processing}
                         className="h-9 w-full rounded-lg text-sm text-slate-500 hover:text-slate-700 focus:ring-2 focus:ring-indigo-600 focus:outline-none dark:text-slate-400 dark:hover:text-slate-200"
                     >
