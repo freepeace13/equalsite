@@ -16,6 +16,10 @@ It's a **pnpm + Turbo monorepo**:
   that runs Playwright/Crawlee crawls and axe-core scans.
 - `packages/types` — `@equalsite/types`: shared TS contracts (API payloads, stream events, WS payloads)
   consumed by both `apps/web`'s React code and the crawler service.
+- `packages/ui` — `@equalsite/ui`: shared shadcn-style React component library (Button, StatusBadge,
+  SeverityBadge, ProgressBar, MetricCard, StatPair, Callout, Collapsible), developed and visually
+  verified in Storybook. Not yet wired into `apps/web` as a dependency — see
+  `packages/ui/README.md` for development guidelines before adding a component here.
 - `packages/eslint-config`, `packages/tsconfig` — shared lint/TS bases.
 
 ## Architecture — how the two services talk
@@ -99,6 +103,19 @@ Run `pnpm --filter @equalsite/types dev` to watch-build it. When adding an expor
 (e.g. `./node/index`, not `./node`) — the shorthand collides with `@types/node` resolution during DTS
 builds.
 
+### packages/ui — run from `packages/ui/`
+```bash
+pnpm dev / storybook       # Storybook dev server on :6006
+pnpm build-storybook       # static Storybook build (used to verify all stories compile)
+pnpm build                 # tsup → dist/index.{js,mjs}
+pnpm typecheck / lintcheck # tsc --noEmit / eslint (no fix)
+```
+Same dual `source`/`dist` consumption pattern as `packages/types`. Every component under
+`src/components/ui/*.tsx` must have a sibling `*.stories.tsx` and an explicit named export from
+`src/index.ts`. Read `packages/ui/README.md` before adding or changing a component — it covers
+shadcn conventions, which colors must stay literal (severity/status) vs. theme-variable-driven, and
+why `Collapsible` deliberately avoids Radix.
+
 ### Docker stack (root)
 ```bash
 docker compose up -d --build
@@ -130,3 +147,7 @@ rather than hand-rolling Playwright — it already knows the login flow, the `/d
   patterns, and UX design principles. Read before any UI work.
 - `docs/architecture.md` — user journey, state machines, data model, and
   engineering notes. Read before any backend/frontend logic work.
+- `packages/ui/README.md` — development guidelines for the shared component
+  library: shadcn/cva conventions, which colors must stay literal vs. theme-
+  driven, Storybook conventions, and the component-addition checklist. Read
+  before adding or changing anything under `packages/ui/src/components/ui/`.

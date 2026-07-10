@@ -91,6 +91,7 @@ equalsite/
 │   └── playwright-spider/      # @equalsite/playwright-spider — Express API + BullMQ worker
 ├── packages/
 │   ├── types/                  # @equalsite/types — shared TS contracts (API, events, WS)
+│   ├── ui/                     # @equalsite/ui — shared React components (shadcn + Storybook)
 │   ├── eslint-config/          # Shared ESLint presets
 │   └── tsconfig/               # Shared TypeScript bases
 ├── compose.yaml                # Docker Compose stack
@@ -103,11 +104,13 @@ equalsite/
 | `@equalsite/web` | PHP 8.3+, Laravel 13, React 19, Vite 8 | User-facing app, auth, reporting, artifact processing |
 | `@equalsite/playwright-spider` | Node, Express 5, Playwright, Crawlee, BullMQ | Headless crawling and axe-core scanning |
 | `@equalsite/types` | TypeScript (tsup) | Shared types consumed by both runtimes |
+| `@equalsite/ui` | TypeScript, React 19, Tailwind CSS 4, Storybook | Shared shadcn-style component library |
 
 See package-level READMEs for deeper detail:
 
 - [`apps/web/README.md`](apps/web/README.md)
 - [`services/playwright-spider/README.md`](services/playwright-spider/README.md)
+- [`packages/ui/README.md`](packages/ui/README.md)
 
 ---
 
