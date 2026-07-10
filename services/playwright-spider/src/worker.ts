@@ -21,7 +21,7 @@ import { bullClient } from "./app/services/redis";
 
 const crawlerWorker = new Worker<{ auditId: string }>(
     Config.bullmq.queue,
-    async job => {
+    async ({ data }) => {
         await createRunAuditAction(
             auditRepository,
             publishEvent,
@@ -30,7 +30,7 @@ const crawlerWorker = new Worker<{ auditId: string }>(
                 archiveDirectory: Config.crawler.archiveDirectory,
                 secretKey: Config.secretKey
             }
-        ).run(job.data.auditId);
+        ).run(data.auditId);
     },
     {
         connection: bullClient,
