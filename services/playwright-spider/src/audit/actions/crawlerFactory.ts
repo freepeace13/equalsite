@@ -4,7 +4,6 @@ import { Configuration, PlaywrightCrawler } from 'crawlee';
 
 import type { EventPublisher } from '../repositories/eventPublisher';
 import { pageFailedEvent } from '../events/pageFailedEvent';
-import { pageSkippedEvent } from '../events/pageSkippedEvent';
 import { createAuditPageRequestHandler } from './handleAuditPageRequest';
 import type { AuditOptions } from '@equalsite/types';
 

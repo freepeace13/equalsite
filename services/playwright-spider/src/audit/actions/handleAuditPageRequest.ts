@@ -1,5 +1,5 @@
-import type { PlaywrightCrawlerOptions, RequestOptions } from "crawlee";
-import { Request, EnqueueStrategy } from "crawlee";
+import type { EnqueueStrategy, PlaywrightCrawlerOptions , RequestOptions } from "crawlee";
+import { Request } from "crawlee";
 import { pageStartedEvent } from "../events/pageStartedEvent";
 import type { EventPublisher } from "../repositories/eventPublisher";
 import { createProcessAxeResultAction } from "./processAxeResult";
@@ -67,7 +67,7 @@ export const createAuditPageRequestHandler = (
     }));
 
     const currentDepth = (request.userData?.depth as number | undefined) ?? 0;
-    const withinMaxDepth = options.maxDepth == null || currentDepth < options.maxDepth;
+    const withinMaxDepth = options.maxDepth === undefined || options.maxDepth === null || currentDepth < options.maxDepth;
 
     if (options.enqueueLinks && withinMaxDepth) {
         await enqueueLinks({

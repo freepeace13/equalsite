@@ -1,4 +1,3 @@
-import { cancelledEvent } from "../events/cancelledEvent";
 import type { AuditRepository } from "../repositories/auditRepository";
 import type { EventPublisher } from "../repositories/eventPublisher";
 import { createAuditService } from "../services/auditService";
