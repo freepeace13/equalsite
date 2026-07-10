@@ -45,9 +45,9 @@ class ReportPresenter
     {
         $groups = $this->audit->violations
             ->sort(
-                fn(Violation $left, Violation $right): int => $this->compareViolations($left, $right)
+                fn (Violation $left, Violation $right): int => $this->compareViolations($left, $right)
             )
-            ->map(fn(Violation $violation): array => $this->remediationGroup($violation, $discoveredPageUrls))
+            ->map(fn (Violation $violation): array => $this->remediationGroup($violation, $discoveredPageUrls))
             ->values()
             ->all();
 
@@ -91,13 +91,13 @@ class ReportPresenter
                     'fingerprint' => is_string($node['fingerprint'] ?? null) ? $node['fingerprint'] : '',
                 ];
             })
-            ->filter(fn(array $node): bool => $node['url'] !== '')
+            ->filter(fn (array $node): bool => $node['url'] !== '')
             ->values();
 
         $discoveredLookup = array_flip($discoveredPageUrls);
         $affectedPages = $nodes
             ->pluck('url')
-            ->filter(fn(string $url): bool => isset($discoveredLookup[$url]))
+            ->filter(fn (string $url): bool => isset($discoveredLookup[$url]))
             ->unique()
             ->values()
             ->all();
@@ -117,11 +117,11 @@ class ReportPresenter
             ->all();
 
         $sampleNodes = $nodes
-            ->unique(fn(array $node): string => $node['fingerprint'] !== ''
+            ->unique(fn (array $node): string => $node['fingerprint'] !== ''
                 ? $node['fingerprint']
-                : $node['url'] . '|' . $node['target'] . '|' . $node['html'])
+                : $node['url'].'|'.$node['target'].'|'.$node['html'])
             ->take(3)
-            ->map(fn(array $node): array => $node)
+            ->map(fn (array $node): array => $node)
             ->values()
             ->all();
 
@@ -162,10 +162,10 @@ class ReportPresenter
         $pagesAtRisk = $this->totalPagesAtRisk($discoveredPageUrls);
         $pagesAtRiskCount = max(
             collect($pagesAtRisk)
-                ->filter(fn(array $page): bool => ($page['issuesFound'] ?? 0) > 0)
+                ->filter(fn (array $page): bool => ($page['issuesFound'] ?? 0) > 0)
                 ->count(),
             collect($this->violationsByDiscoveredPageUrl($discoveredPageUrls))
-                ->filter(fn(array $violations): bool => $violations !== [])
+                ->filter(fn (array $violations): bool => $violations !== [])
                 ->count(),
         );
 
@@ -188,18 +188,18 @@ class ReportPresenter
     public function totalPagesAtRisk(array $discoveredPageUrls): array
     {
         $issuesFoundByUrl = $this->audit->violations
-            ->flatMap(fn(Violation $violation) => collect($violation->nodes ?? [])
-                ->filter(fn(array $node): bool => is_string($node['url'] ?? null) && $node['url'] !== '')
-                ->map(fn(array $node): array => [
+            ->flatMap(fn (Violation $violation) => collect($violation->nodes ?? [])
+                ->filter(fn (array $node): bool => is_string($node['url'] ?? null) && $node['url'] !== '')
+                ->map(fn (array $node): array => [
                     'url' => $node['url'],
                     'violation_id' => $violation->id,
                 ]))
-            ->unique(fn(array $item): string => $item['url'] . '|' . $item['violation_id'])
+            ->unique(fn (array $item): string => $item['url'].'|'.$item['violation_id'])
             ->countBy('url');
 
         return collect($discoveredPageUrls)
-            ->filter(fn($url): bool => is_string($url) && $url !== '')
-            ->map(fn(string $pageUrl) => [
+            ->filter(fn ($url): bool => is_string($url) && $url !== '')
+            ->map(fn (string $pageUrl) => [
                 'url' => $pageUrl,
                 'issuesFound' => (int) $issuesFoundByUrl->get($pageUrl, 0),
             ])
@@ -234,7 +234,7 @@ class ReportPresenter
             $items = [];
             foreach ($violations as $violation) {
                 $nodesOnPage = collect($violation->nodes ?? [])
-                    ->filter(fn(array $node): bool => ($node['url'] ?? '') === $pageUrl);
+                    ->filter(fn (array $node): bool => ($node['url'] ?? '') === $pageUrl);
 
                 if ($nodesOnPage->isEmpty()) {
                     continue;
@@ -253,7 +253,7 @@ class ReportPresenter
 
             usort(
                 $items,
-                fn(array $a, array $b): int => Impact::from((string) $a['impact'])->priority()
+                fn (array $a, array $b): int => Impact::from((string) $a['impact'])->priority()
                     <=> Impact::from((string) $b['impact'])->priority()
             );
 
@@ -291,9 +291,9 @@ class ReportPresenter
     {
         $topIssues = $this->audit->violations
             ->sort(
-                fn(Violation $left, Violation $right): int => $this->compareViolations($left, $right)
+                fn (Violation $left, Violation $right): int => $this->compareViolations($left, $right)
             )
-            ->map(fn(Violation $violation): array => $this->topIssue($violation, $discoveredPageUrls))
+            ->map(fn (Violation $violation): array => $this->topIssue($violation, $discoveredPageUrls))
             ->values()
             ->all();
 
@@ -321,8 +321,8 @@ class ReportPresenter
         $discoveredUrlLookup = array_flip($discoveredPageUrls);
         $samplePageUrl = $nodes
             ->pluck('url')
-            ->filter(fn(?string $url): bool => is_string($url) && $url !== '')
-            ->first(fn(string $url): bool => isset($discoveredUrlLookup[$url]));
+            ->filter(fn (?string $url): bool => is_string($url) && $url !== '')
+            ->first(fn (string $url): bool => isset($discoveredUrlLookup[$url]));
 
         return [
             'id' => $violation->id,
@@ -334,7 +334,7 @@ class ReportPresenter
             'helpUrl' => $violation->help_url,
             'affectedPagesCount' => $nodes
                 ->pluck('url')
-                ->filter(fn(?string $url): bool => is_string($url) && $url !== '')
+                ->filter(fn (?string $url): bool => is_string($url) && $url !== '')
                 ->unique()
                 ->count(),
             'instancesCount' => $this->violationInstanceCount($violation),
@@ -419,7 +419,7 @@ class ReportPresenter
     protected function violationInstanceCount(Violation $violation): int
     {
         return collect($violation->nodes ?? [])
-            ->map(fn(array $node): string => (string) ($node['fingerprint'] ?? ''))
+            ->map(fn (array $node): string => (string) ($node['fingerprint'] ?? ''))
             ->filter()
             ->unique()
             ->count();

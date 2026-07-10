@@ -14,7 +14,7 @@ class UnzipCrawlerArtifacts
 
     public function unzip(string $crawlId, string $zipFilePath)
     {
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         $destination = $this->repository->getPath($crawlId);
 
         if (! is_dir($destination)) {

@@ -12,17 +12,17 @@ class NodeCollection implements Arrayable, JsonSerializable
     ) {}
 
     /**
-     * @param array{fingerprint: string, html: string, target: string, url: string} $node
+     * @param  array{fingerprint: string, html: string, target: string, url: string}  $node
      */
     public function sync(array $node)
     {
-        $fingerprint = md5($node['target'] . $node['html']);
+        $fingerprint = md5($node['target'].$node['html']);
 
         $state = $this->nodes[$fingerprint] ?? [
             'fingerprint' => $fingerprint,
             'html' => $node['html'],
             'target' => $node['target'],
-            'urls' => []
+            'urls' => [],
         ];
 
         if (! in_array($node['url'], $state['urls'])) {

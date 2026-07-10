@@ -62,7 +62,7 @@ class ScannedUrl implements Arrayable
             'errorMessage' => $this->errorMessage,
             'skippingReason' => $this->skippingReason,
             'violationsCount' => $this->violationsCount,
-            'severityBreakdown' => $this->severityBreakdown?->toArray()
+            'severityBreakdown' => $this->severityBreakdown?->toArray(),
         ];
     }
 }

@@ -27,7 +27,7 @@ class CrawlerCallbackController extends Controller
         }
 
         return response()->json([
-            'ok' => true
+            'ok' => true,
         ]);
     }
 }

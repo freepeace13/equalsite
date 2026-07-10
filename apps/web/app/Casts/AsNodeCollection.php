@@ -5,7 +5,6 @@ namespace App\Casts;
 use App\Support\NodeCollection;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
-use InvalidArgumentException;
 
 class AsNodeCollection implements CastsAttributes
 {

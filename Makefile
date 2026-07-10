@@ -123,6 +123,9 @@ crawler-typecheck: ## Run crawler TypeScript type checking
 # Composer
 # =========================================================
 
+composer-exec: ## Execute composer command
+	$(DOCKER) exec web composer $(cmd)
+
 composer-require: ## Install new composer dependency
 	@if [ -z "$(pkg)" ]; then \
 		echo "Usage: make composer-require pkg=\"vendor/package\""; \

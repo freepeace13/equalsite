@@ -5,13 +5,13 @@ namespace App\Value;
 use Illuminate\Contracts\Support\Arrayable;
 
 /**
- * @property \App\Value\AxeItem[] $violations
- * @property \App\Value\AxeItem[] $passes
+ * @property AxeItem[] $violations
+ * @property AxeItem[] $passes
  **/
 class AxeResult implements Arrayable
 {
     /**
-     * @param \App\Value\AxeItem[] $violations
+     * @param  AxeItem[]  $violations
      */
     public function __construct(
         public readonly string $crawlId,
@@ -23,7 +23,7 @@ class AxeResult implements Arrayable
     public static function fromArray(array $array): static
     {
         $violations = collect($array['violations'])
-            ->map(fn(array $i) => AxeItem::fromArray($i))
+            ->map(fn (array $i) => AxeItem::fromArray($i))
             ->all();
 
         // $passes = collect($array['passes'] ?? [])

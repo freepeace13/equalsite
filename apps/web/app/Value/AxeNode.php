@@ -38,7 +38,7 @@ class AxeNode implements Arrayable
             'impact' => $this->impact,
             'html' => $this->html,
             'target' => $this->target,
-            'failureSummary' => $this->failureSummary
+            'failureSummary' => $this->failureSummary,
         ];
     }
 }

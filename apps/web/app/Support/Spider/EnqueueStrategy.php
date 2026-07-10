@@ -10,7 +10,7 @@ namespace App\Support\Spider;
 enum EnqueueStrategy: string
 {
     case All = 'all';
-    case SameHostname = "same-hostname";
-    case SameDomain = "same-domain";
-    case SameOrigin = "same-origin";
+    case SameHostname = 'same-hostname';
+    case SameDomain = 'same-domain';
+    case SameOrigin = 'same-origin';
 }

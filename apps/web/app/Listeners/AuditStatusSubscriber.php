@@ -4,10 +4,6 @@ namespace App\Listeners;
 
 use App\Events\Audit\AuditCompleted;
 use App\Events\Audit\AuditFailed;
-use App\Events\Audit\AuditPageCompleted;
-use App\Events\Audit\AuditPageFailed;
-use App\Events\Audit\AuditPageStarted;
-use App\Events\Audit\AuditQueued;
 use App\Events\Audit\AuditStarted;
 use App\Events\Audit\BaseEvent;
 use App\Models\Audit;
@@ -31,7 +27,7 @@ class AuditStatusSubscriber implements ShouldQueue
     {
         $this->updateAudit($event->crawlerId(), [
             'status' => Status::Started,
-            'started_at' => $this->carbonTimestamp($event->timestamp())
+            'started_at' => $this->carbonTimestamp($event->timestamp()),
         ]);
     }
 
@@ -39,7 +35,7 @@ class AuditStatusSubscriber implements ShouldQueue
     {
         $this->updateAudit($event->crawlerId(), [
             'status' => Status::Failed,
-            'failure_reason' => $event->payload()['error'] ?? ''
+            'failure_reason' => $event->payload()['error'] ?? '',
         ]);
     }
 
@@ -47,7 +43,7 @@ class AuditStatusSubscriber implements ShouldQueue
     {
         $this->updateAudit($event->crawlerId(), [
             'status' => Status::Completed,
-            'completed_at' => $this->carbonTimestamp($event->timestamp())
+            'completed_at' => $this->carbonTimestamp($event->timestamp()),
         ]);
     }
 

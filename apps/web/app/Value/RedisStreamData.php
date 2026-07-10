@@ -35,7 +35,7 @@ class RedisStreamData implements Arrayable
             'type' => $this->type,
             'payload' => $this->payload,
             'version' => $this->version,
-            'timestamp' => $this->timestamp
+            'timestamp' => $this->timestamp,
         ];
     }
 }

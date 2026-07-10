@@ -11,9 +11,7 @@ use App\Models\Audit;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Events\Dispatcher;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -50,7 +48,7 @@ class AuditPageSubscriber implements ShouldQueue
         $this->updatePage($event->crawlerId(), $payload['pageUrl'], [
             'status' => 'skipped',
             'skippingReason' => $payload['reason'],
-            'skippedAt' => $timestamp->toDateTimeString()
+            'skippedAt' => $timestamp->toDateTimeString(),
         ]);
     }
 
@@ -65,7 +63,7 @@ class AuditPageSubscriber implements ShouldQueue
             'status' => 'failed',
             'attemptsCount' => $payload['attemptsCount'],
             'errorMessage' => $payload['errorMessage'],
-            'failedAt' => $timestamp->toDateTimeString()
+            'failedAt' => $timestamp->toDateTimeString(),
         ]);
     }
 
@@ -80,7 +78,7 @@ class AuditPageSubscriber implements ShouldQueue
             'status' => 'completed',
             'violationsCount' => $payload['violationsCount'],
             'severityBreakdown' => $payload['severityBreakdown'],
-            'completedAt' => $timestamp->toDateTimeString()
+            'completedAt' => $timestamp->toDateTimeString(),
         ]);
     }
 
@@ -95,6 +93,7 @@ class AuditPageSubscriber implements ShouldQueue
                 $audit->tapCustomData('scanned_urls', function (array $prev) use ($url, $attributes) {
                     $prevAttr = $prev[$url] ?? [];
                     $prev[$url] = [...$prevAttr, ...$attributes];
+
                     return $prev;
                 }, []);
             }
