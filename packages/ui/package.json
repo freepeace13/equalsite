@@ -1,0 +1,60 @@
+{
+    "name": "@equalsite/ui",
+    "private": true,
+    "version": "1.0.0",
+    "main": "./dist/index.js",
+    "types": "./src/index.ts",
+    "exports": {
+        ".": {
+            "types": "./src/index.ts",
+            "source": "./src/index.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js",
+            "default": "./dist/index.mjs"
+        },
+        "./styles.css": "./src/styles.css"
+    },
+    "files": [
+        "dist",
+        "src/styles.css"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "dev": "storybook dev -p 6006 --no-open",
+        "storybook": "storybook dev -p 6006",
+        "build-storybook": "storybook build",
+        "clean": "rm -rf dist storybook-static",
+        "prepare": "pnpm run build",
+        "lint": "eslint . --fix",
+        "lintcheck": "eslint .",
+        "typecheck": "tsc --noEmit"
+    },
+    "peerDependencies": {
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0"
+    },
+    "dependencies": {
+        "@radix-ui/react-slot": "^1.2.3",
+        "class-variance-authority": "^0.7.1",
+        "clsx": "^2.1.1",
+        "tailwind-merge": "^3.0.1"
+    },
+    "devDependencies": {
+        "@equalsite/eslint-config": "workspace:*",
+        "@equalsite/tsconfig": "workspace:*",
+        "@storybook/addon-a11y": "^10.4.6",
+        "@storybook/react-vite": "^10.4.6",
+        "@tailwindcss/vite": "^4.1.11",
+        "@types/react": "^19.2.0",
+        "@types/react-dom": "^19.2.0",
+        "@vitejs/plugin-react": "^5.2.0",
+        "eslint": "^9.17.0",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+        "storybook": "^10.4.6",
+        "tailwindcss": "^4.0.0",
+        "tsup": "^8.5.1",
+        "typescript": "^6.0.3",
+        "vite": "^8.0.0"
+    }
+}

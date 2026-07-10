@@ -123,6 +123,9 @@ crawler-typecheck: ## Run crawler TypeScript type checking
 # Composer
 # =========================================================
 
+composer-exec: ## Execute composer command
+	$(DOCKER) exec web composer $(cmd)
+
 composer-require: ## Install new composer dependency
 	@if [ -z "$(pkg)" ]; then \
 		echo "Usage: make composer-require pkg=\"vendor/package\""; \
@@ -213,6 +216,25 @@ crawler-secret: ## Generate crawler secret env
 	fi
 
 # =========================================================
+# UI Package (Storybook)
+# =========================================================
+
+ui-storybook: ## Run Storybook dev server for @equalsite/ui
+	pnpm --filter @equalsite/ui storybook
+
+ui-build-storybook: ## Build static Storybook site for @equalsite/ui
+	pnpm --filter @equalsite/ui build-storybook
+
+ui-build: ## Build @equalsite/ui package
+	pnpm --filter @equalsite/ui build
+
+ui-lint: ## Lint @equalsite/ui
+	pnpm --filter @equalsite/ui lintcheck
+
+ui-typecheck: ## Typecheck @equalsite/ui
+	pnpm --filter @equalsite/ui typecheck
+
+# =========================================================
 # Project Setup
 # =========================================================
 
@@ -252,4 +274,5 @@ fix-permissions: ## Fix Laravel storage permissions
 	pnpm-install dev build-assets lint test-js \
 	web-dev web-build web-lint \
 	crawler-dev crawler-build crawler-test crawler-lint \
+	ui-storybook ui-build-storybook ui-build ui-lint ui-typecheck \
 	setup fix-permissions

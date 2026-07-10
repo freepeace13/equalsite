@@ -6,13 +6,13 @@ use Illuminate\Contracts\Support\Arrayable;
 
 /**
  * @property string[] $tags
- * @property \App\Value\AxeNode[] $nodes
+ * @property AxeNode[] $nodes
  */
 class AxeItem implements Arrayable
 {
     /**
-     * @param string[] $tags
-     * @param \App\Value\AxeNode[] $nodes
+     * @param  string[]  $tags
+     * @param  AxeNode[]  $nodes
      */
     public function __construct(
         public readonly string $id,
@@ -34,7 +34,7 @@ class AxeItem implements Arrayable
             help: $array['help'],
             helpUrl: $array['helpUrl'],
             nodes: collect($array['nodes'])
-                ->map(fn(array $i) => AxeNode::fromArray($i))
+                ->map(fn (array $i) => AxeNode::fromArray($i))
                 ->all()
         );
     }
@@ -48,7 +48,7 @@ class AxeItem implements Arrayable
             'description' => $this->description,
             'help' => $this->help,
             'helpUrl' => $this->helpUrl,
-            'nodes' => collect($this->nodes)->toArray()
+            'nodes' => collect($this->nodes)->toArray(),
         ];
     }
 }

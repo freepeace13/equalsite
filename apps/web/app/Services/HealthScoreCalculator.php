@@ -22,7 +22,7 @@ class HealthScoreCalculator implements ScoreCalculator
         $score = 100;
 
         foreach (Impact::cases() as $impact) {
-            $violations = Arr::where($violations, fn(Violation $violation) => $impact->is($violation->impact_level));
+            $violations = Arr::where($violations, fn (Violation $violation) => $impact->is($violation->impact_level));
 
             foreach ($violations as $violation) {
                 $score -= $this->pointsDeduction($violation);

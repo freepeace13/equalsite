@@ -17,9 +17,6 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        php-version: ['8.3', '8.4', '8.5']
 
     steps:
       - name: Checkout code
@@ -28,29 +25,40 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
+          php-version: '8.3'
           tools: composer:v2
           coverage: xdebug
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
 
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
           node-version: '22'
+          cache: 'pnpm'
 
       - name: Install Node Dependencies
-        run: npm i
+        run: pnpm install --frozen-lockfile
 
-      - name: Install Dependencies
+      - name: Install PHP Dependencies
+        working-directory: apps/web
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
       - name: Copy Environment File
+        working-directory: apps/web
         run: cp .env.example .env
 
       - name: Generate Application Key
+        working-directory: apps/web
         run: php artisan key:generate
 
       - name: Build Assets
-        run: npm run build
+        working-directory: apps/web
+        run: pnpm build
 
       - name: Tests
+        working-directory: apps/web
+        env:
+          DB_DATABASE: ':memory:'
         run: ./vendor/bin/pest

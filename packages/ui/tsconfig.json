@@ -1,0 +1,17 @@
+{
+    "extends": "@equalsite/tsconfig/react.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "declarationMap": true,
+        "emitDeclarationOnly": false,
+        "moduleResolution": "Bundler",
+        "paths": {
+            "@/*": ["./src/*"]
+        }
+    },
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        ".storybook/**/*.ts"
+    ]
+}

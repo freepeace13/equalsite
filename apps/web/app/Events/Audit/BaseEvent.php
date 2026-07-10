@@ -36,7 +36,7 @@ abstract class BaseEvent implements ShouldBroadcast
     public function broadcastOn()
     {
         return [
-            new Channel('audit-' . $this->crawlerId() . '-scanning')
+            new Channel('audit-'.$this->crawlerId().'-scanning'),
         ];
     }
 
@@ -53,6 +53,7 @@ abstract class BaseEvent implements ShouldBroadcast
     public function broadcastWith(): array
     {
         $carbonTimestamp = Carbon::createFromTimestampMs($this->streamData->timestamp);
+
         return [
             'type' => $this->streamData->type,
             'version' => $this->streamData->version,

@@ -25,7 +25,7 @@ class SpiderServiceProvider extends ServiceProvider
 
         Http::macro('spider', function () use ($config) {
             $crawler = $config->get('services.crawler');
-            $hostname = $crawler['host'] . ':' . $crawler['port'];
+            $hostname = $crawler['host'].':'.$crawler['port'];
 
             return Http::withToken($crawler['secret'])
                 ->baseUrl("http://{$hostname}/api/v1")

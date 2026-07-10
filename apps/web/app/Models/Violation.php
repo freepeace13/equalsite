@@ -36,7 +36,7 @@ class Violation extends Model
     public function addNode(array $node): void
     {
         $nodes = $this->nodes ?? [];
-        $fingerprint = md5($node['target'] . $node['html']);
+        $fingerprint = md5($node['target'].$node['html']);
 
         $nodes[] = [
             'url' => $node['url'],

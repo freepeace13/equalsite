@@ -196,6 +196,9 @@ type AuditOptions = {
     maxPages: number;
     enqueueLinks: boolean;
     enqueueStrategy: string;
+    maxDepth?: number | null;
+    includeGlobs?: string[];
+    excludeGlobs?: string[];
 };
 type CreateAuditRequestBody = {
     urls: string[];

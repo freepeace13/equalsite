@@ -1,9 +1,15 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\EventServiceProvider;
+use App\Providers\FortifyServiceProvider;
+use App\Providers\HorizonServiceProvider;
+use App\Providers\SpiderServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\EventServiceProvider::class,
-    App\Providers\FortifyServiceProvider::class,
-    App\Providers\HorizonServiceProvider::class,
-    App\Providers\SpiderServiceProvider::class,
+    AppServiceProvider::class,
+    EventServiceProvider::class,
+    FortifyServiceProvider::class,
+    HorizonServiceProvider::class,
+    SpiderServiceProvider::class,
 ];

@@ -5,7 +5,6 @@ namespace App\Support;
 use App\Contracts\StreamBus;
 use App\Value\RedisStreamData;
 use Illuminate\Redis\Connections\Connection;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Redis;
 use Throwable;
 
@@ -23,11 +22,10 @@ class RedisStream implements StreamBus
     /**
      * Publish event message into a Redis stream.
      *
-     * @param string $stream Stream name.
-     * @param string $event Event name.
-     * @param array $payload Event payload data.
-     * @param int $maxLen Approximate max stream length.
-     *
+     * @param  string  $stream  Stream name.
+     * @param  string  $event  Event name.
+     * @param  array  $payload  Event payload data.
+     * @param  int  $maxLen  Approximate max stream length.
      * @return string Redis message ID.
      */
     public function publish(
@@ -53,16 +51,16 @@ class RedisStream implements StreamBus
             'version',
             '1',
             'payload',
-            $payload
+            $payload,
         ]);
     }
 
     /**
      * Create consumer group for a stream.
      *
-     * @param string $stream Stream name.
-     * @param string $group Consumer group name.
-     * @param string $start Starting stream position.
+     * @param  string  $stream  Stream name.
+     * @param  string  $group  Consumer group name.
+     * @param  string  $start  Starting stream position.
      */
     public function createConsumerGroup(
         string $stream,
@@ -86,15 +84,16 @@ class RedisStream implements StreamBus
             }
         }
     }
+
     /**
      * Consume messages from a stream consumer group.
      *
-     * @param string $stream Stream name.
-     * @param string $group Consumer group name.
-     * @param string $consumer Unique consumer name.
-     * @param callable(RedisStreamData): void $handler Message handler callback.
-     * @param int $blockMs Blocking timeout in milliseconds.
-     * @param int $count Number of messages per read.
+     * @param  string  $stream  Stream name.
+     * @param  string  $group  Consumer group name.
+     * @param  string  $consumer  Unique consumer name.
+     * @param  callable(RedisStreamData): void  $handler  Message handler callback.
+     * @param  int  $blockMs  Blocking timeout in milliseconds.
+     * @param  int  $count  Number of messages per read.
      */
     public function consume(
         string $stream,
@@ -155,9 +154,9 @@ class RedisStream implements StreamBus
     /**
      * Acknowledge processed message.
      *
-     * @param string $stream Stream name.
-     * @param string $group Consumer group name.
-     * @param string $messageId Redis message ID.
+     * @param  string  $stream  Stream name.
+     * @param  string  $group  Consumer group name.
+     * @param  string  $messageId  Redis message ID.
      */
     public function ack(
         string $stream,
@@ -175,9 +174,8 @@ class RedisStream implements StreamBus
     /**
      * Get pending messages for a consumer group.
      *
-     * @param string $stream Stream name.
-     * @param string $group Consumer group name.
-     *
+     * @param  string  $stream  Stream name.
+     * @param  string  $group  Consumer group name.
      * @return array Pending message info.
      */
     public function pending(
@@ -194,12 +192,11 @@ class RedisStream implements StreamBus
     /**
      * Claim idle/stuck messages for another consumer.
      *
-     * @param string $stream Stream name.
-     * @param string $group Consumer group name.
-     * @param string $consumer Consumer name.
-     * @param int $idleMs Minimum idle time in milliseconds.
-     * @param array $messageIds Message IDs to claim.
-     *
+     * @param  string  $stream  Stream name.
+     * @param  string  $group  Consumer group name.
+     * @param  string  $consumer  Consumer name.
+     * @param  int  $idleMs  Minimum idle time in milliseconds.
+     * @param  array  $messageIds  Message IDs to claim.
      * @return array Claimed messages.
      */
     public function claim(
@@ -222,8 +219,7 @@ class RedisStream implements StreamBus
     /**
      * Convert flat Redis field array into associative array.
      *
-     * @param array $fields Raw Redis fields.
-     *
+     * @param  array  $fields  Raw Redis fields.
      * @return array Parsed fields.
      */
     protected function parseFields($fields): array

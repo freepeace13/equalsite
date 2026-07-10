@@ -16,6 +16,22 @@ import type {
     QueuedWsEvent,
     StartedWsEvent,
 } from '@equalsite/types';
+import {
+    AlertTriangleIcon,
+    ArrowRightIcon,
+    Button,
+    Callout,
+    CheckCircleIcon,
+    GlobeIcon,
+    MetricCard,
+    MinusCircleIcon,
+    ProgressBar,
+    SpinnerIcon,
+    StatPair,
+    StatusBadge,
+    type StatusBadgeStatus,
+    XCircleIcon,
+} from '@equalsite/ui';
 
 type ScanProgressPageProps = {
     scanInfo: ScanInfo;
@@ -36,105 +52,45 @@ type WsEvents =
     | PageSkippedWsEvent
     | PageCompletedWsEvent;
 
-function StatusBadge({ status }: { status: ScanInfo['status'] }) {
-    if (status === 'started') {
-        return (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-xs text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
-                <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="animate-spin"
-                >
-                    <path d="M21 12a9 9 0 11-3.5-7.1" />
-                </svg>
-                crawling
-            </span>
-        );
+const SCAN_STATUS_BADGE: Record<
+    ScanInfo['status'],
+    { status: StatusBadgeStatus; label?: string }
+> = {
+    queued: { status: 'queued' },
+    started: { status: 'processing', label: 'crawling' },
+    completed: { status: 'complete' },
+    failed: { status: 'failed' },
+    cancelled: { status: 'cancelled' },
+};
+
+function hostnameOf(url: string) {
+    try {
+        return new URL(url).hostname;
+    } catch {
+        return url;
     }
-    if (status === 'completed') {
-        return (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                >
-                    <path d="M9 12l2 2 4-4" />
-                    <circle cx="12" cy="12" r="10" />
-                </svg>
-                complete
-            </span>
-        );
+}
+
+function pathnameOf(url: string) {
+    try {
+        return new URL(url).pathname || '/';
+    } catch {
+        return url;
     }
-    if (status === 'failed') {
-        return (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs text-red-700 dark:bg-red-900/40 dark:text-red-300">
-                <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M15 9l-6 6M9 9l6 6" />
-                </svg>
-                failed
-            </span>
-        );
-    }
-    if (status === 'cancelled') {
-        return (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                >
-                    <path d="M6 6l12 12M18 6L6 18" />
-                </svg>
-                cancelled
-            </span>
-        );
-    }
-    return (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-            <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-            >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 6v6l4 2" />
-            </svg>
-            queued
-        </span>
+}
+
+function countIssues(scanUrls: Record<string, ScannedUrl>) {
+    return Object.values(scanUrls).reduce(
+        (sum, u) => sum + (u.violationsCount ?? 0),
+        0,
     );
 }
 
 function CancelButton({ onCancel }: { onCancel: () => void }) {
     return (
-        <button
-            type="button"
-            onClick={onCancel}
-            className="flex h-9 shrink-0 items-center rounded-lg px-3.5 text-xs font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
-        >
+        <Button variant="ghost-destructive" size="sm" onClick={onCancel}>
             cancel audit
-        </button>
+        </Button>
     );
 }
 
@@ -162,25 +118,13 @@ function WaitingPanel({
                 updates on its own.
             </p>
 
-            <div className="mb-6 flex items-center justify-center gap-8 rounded-lg bg-slate-100 py-7 dark:bg-slate-800/60">
-                <div className="text-center">
-                    <p className="text-3xl leading-none font-medium">
-                        {position}
-                    </p>
-                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                        position in queue
-                    </p>
-                </div>
-                <div className="h-10 w-px bg-slate-300 dark:bg-slate-700" />
-                <div className="text-center">
-                    <p className="text-3xl leading-none font-medium">
-                        ~{estMinutes}
-                    </p>
-                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                        min estimated wait
-                    </p>
-                </div>
-            </div>
+            <StatPair
+                className="mb-6"
+                items={[
+                    { value: position, label: 'position in queue' },
+                    { value: `~${estMinutes}`, label: 'min estimated wait' },
+                ]}
+            />
 
             <div className="mb-6 flex items-center gap-1" aria-hidden="true">
                 {Array.from({ length: totalDots }).map((_, i) => (
@@ -191,42 +135,19 @@ function WaitingPanel({
                 ))}
             </div>
 
-            <div className="flex items-center gap-3 rounded-lg border border-slate-200 px-4 py-3.5 dark:border-slate-800">
-                <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="shrink-0 text-slate-400"
-                >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 16v-4M12 8h.01" />
-                </svg>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                    2 audits run at a time so every scan gets a full, accurate
-                    crawl. no need to keep this tab open — bookmark the link to
-                    check back later.
-                </p>
-            </div>
+            <Callout>
+                2 audits run at a time so every scan gets a full, accurate
+                crawl. no need to keep this tab open — bookmark the link to
+                check back later.
+            </Callout>
         </>
     );
 }
 
-type UrlStatus = 'started' | 'completed' | 'failed' | 'skipped';
-
 function FeedRow({ url, entry }: { url: string; entry: ScannedUrl }) {
-    const status = entry.status as UrlStatus | undefined;
-    const path = (() => {
-        try {
-            return new URL(url).pathname || '/';
-        } catch {
-            return url;
-        }
-    })();
+    const path = pathnameOf(url);
 
-    if (status === 'completed') {
+    if (entry.status === 'completed') {
         const count = entry.violationsCount ?? 0;
         const critical = entry.severityBreakdown?.critical ?? 0;
         const serious = entry.severityBreakdown?.serious ?? 0;
@@ -236,30 +157,17 @@ function FeedRow({ url, entry }: { url: string; entry: ScannedUrl }) {
         return (
             <div className="flex animate-in items-center gap-2.5 px-4 py-2.5 fade-in slide-in-from-bottom-1">
                 {count === 0 ? (
-                    <svg
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="shrink-0 text-emerald-600 dark:text-emerald-400"
-                    >
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M9 12l2 2 4-4" />
-                    </svg>
+                    <CheckCircleIcon className="text-emerald-600 dark:text-emerald-400" />
                 ) : (
-                    <svg
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className={`shrink-0 ${isCritical ? 'text-red-600 dark:text-red-400' : isModerate ? 'text-yellow-600 dark:text-yellow-400' : 'text-slate-500'}`}
-                    >
-                        <path d="M12 9v4M12 17h.01M10.3 3.9L2.5 18a2 2 0 001.7 3h15.6a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" />
-                    </svg>
+                    <AlertTriangleIcon
+                        className={
+                            isCritical
+                                ? 'text-red-600 dark:text-red-400'
+                                : isModerate
+                                  ? 'text-yellow-600 dark:text-yellow-400'
+                                  : 'text-slate-500'
+                        }
+                    />
                 )}
                 <span className="flex-1 truncate text-sm">{path}</span>
                 <span
@@ -273,42 +181,20 @@ function FeedRow({ url, entry }: { url: string; entry: ScannedUrl }) {
         );
     }
 
-    if (status === 'failed') {
+    if (entry.status === 'failed') {
         return (
             <div className="flex animate-in items-center gap-2.5 px-4 py-2.5 fade-in slide-in-from-bottom-1">
-                <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="shrink-0 text-red-500"
-                >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M15 9l-6 6M9 9l6 6" />
-                </svg>
+                <XCircleIcon className="text-red-500" />
                 <span className="flex-1 truncate text-sm">{path}</span>
                 <span className="text-xs text-red-500">failed</span>
             </div>
         );
     }
 
-    if (status === 'skipped') {
+    if (entry.status === 'skipped') {
         return (
             <div className="flex animate-in items-center gap-2.5 px-4 py-2.5 fade-in slide-in-from-bottom-1">
-                <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="shrink-0 text-slate-400"
-                >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M8 12h8" />
-                </svg>
+                <MinusCircleIcon className="text-slate-400" />
                 <span className="flex-1 truncate text-sm">{path}</span>
                 <span className="text-xs text-slate-400">skipped</span>
             </div>
@@ -317,17 +203,7 @@ function FeedRow({ url, entry }: { url: string; entry: ScannedUrl }) {
 
     return (
         <div className="flex animate-in items-center gap-2.5 px-4 py-2.5 fade-in slide-in-from-bottom-1">
-            <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="shrink-0 animate-spin text-slate-400"
-            >
-                <path d="M21 12a9 9 0 11-3.5-7.1" />
-            </svg>
+            <SpinnerIcon className="text-slate-400" />
             <span className="flex-1 truncate text-sm">{path}</span>
             <span className="text-xs text-slate-400">scanning…</span>
         </div>
@@ -349,10 +225,7 @@ function CrawlingPanel({
         total > 0
             ? Math.round((scanned / total) * 100)
             : (scanProgress.progressPercentage ?? 0);
-    const issuesCount = Object.values(scanUrls).reduce(
-        (sum, u) => sum + (u.violationsCount ?? 0),
-        0,
-    );
+    const issuesCount = countIssues(scanUrls);
 
     const orderedUrls = Object.entries(scanUrls).filter(
         ([, e]) => e.status && e.status !== 'started',
@@ -367,37 +240,19 @@ function CrawlingPanel({
                 <CancelButton onCancel={onCancel} />
             </div>
 
-            <div className="mb-2 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-                <div
-                    className="h-full rounded-full bg-indigo-700 transition-all duration-700 ease-out"
-                    style={{ width: `${pct}%` }}
-                />
-            </div>
+            <ProgressBar value={pct} className="mb-2" />
             <p className="mb-8 text-xs text-slate-400 dark:text-slate-500">
                 {scanned} of {total} pages
             </p>
 
             <div className="mb-8 grid grid-cols-3 gap-3">
-                <div className="rounded-lg bg-slate-100 p-4 dark:bg-slate-800/60">
-                    <p className="mb-1 text-xs text-slate-500 dark:text-slate-400">
-                        pages found
-                    </p>
-                    <p className="text-xl font-medium">{total}</p>
-                </div>
-                <div className="rounded-lg bg-slate-100 p-4 dark:bg-slate-800/60">
-                    <p className="mb-1 text-xs text-slate-500 dark:text-slate-400">
-                        pages scanned
-                    </p>
-                    <p className="text-xl font-medium">{scanned}</p>
-                </div>
-                <div className="rounded-lg bg-yellow-50 p-4 dark:bg-yellow-900/20">
-                    <p className="mb-1 text-xs text-yellow-700 dark:text-yellow-400">
-                        issues found so far
-                    </p>
-                    <p className="text-xl font-medium text-yellow-700 dark:text-yellow-400">
-                        {issuesCount}
-                    </p>
-                </div>
+                <MetricCard label="pages found" value={total} />
+                <MetricCard label="pages scanned" value={scanned} />
+                <MetricCard
+                    label="issues found so far"
+                    value={issuesCount}
+                    tone="warning"
+                />
             </div>
 
             <p className="mb-2 text-xs text-slate-400 dark:text-slate-500">
@@ -435,22 +290,12 @@ function ReportCta({
                 <span className="font-medium">audit complete</span> —{' '}
                 {issuesCount} issue{issuesCount !== 1 ? 's' : ''} found
             </p>
-            <Link
-                href={result(auditId).url}
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-indigo-700 px-4 text-xs font-medium text-white hover:bg-indigo-800"
-            >
-                view report
-                <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                >
-                    <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-            </Link>
+            <Button size="sm" asChild>
+                <Link href={result(auditId).url}>
+                    view report
+                    <ArrowRightIcon />
+                </Link>
+            </Button>
         </div>
     );
 }
@@ -461,13 +306,7 @@ export default function Progress({
     scanQueue,
     scanUrls,
 }: ScanProgressPageProps) {
-    const domain = (() => {
-        try {
-            return new URL(scanInfo.siteUrl).hostname;
-        } catch {
-            return scanInfo.siteUrl;
-        }
-    })();
+    const domain = hostnameOf(scanInfo.siteUrl);
 
     useEchoPublic<WsEvents>(
         `audit-${scanInfo.auditId}-scanning`,
@@ -647,10 +486,8 @@ export default function Progress({
             : scanInfo.status === 'queued'
               ? 'waiting'
               : null;
-    const issuesCount = Object.values(scanUrls).reduce(
-        (sum, u) => sum + (u.violationsCount ?? 0),
-        0,
-    );
+    const issuesCount = countIssues(scanUrls);
+    const badge = SCAN_STATUS_BADGE[scanInfo.status];
 
     return (
         <>
@@ -661,20 +498,10 @@ export default function Progress({
             <main className="mx-auto max-w-3xl px-6 py-10">
                 <div className="mb-6 flex items-center justify-between">
                     <p className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
-                        <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                        >
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M2 12h20M12 2a15 15 0 010 20 15 15 0 010-20z" />
-                        </svg>
+                        <GlobeIcon />
                         {domain}
                     </p>
-                    <StatusBadge status={scanInfo.status} />
+                    <StatusBadge status={badge.status} label={badge.label} />
                 </div>
 
                 {activePanel === 'waiting' && (
@@ -699,22 +526,20 @@ export default function Progress({
                 )}
 
                 {scanInfo.status === 'failed' && (
-                    <div className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3.5 dark:border-red-900/40 dark:bg-red-900/20">
-                        <p className="text-sm text-red-700 dark:text-red-400">
-                            <strong>Scan failed.</strong>{' '}
-                            {scanInfo.failureReason ??
-                                'An unexpected error occurred.'}
-                        </p>
-                    </div>
+                    <Callout
+                        variant="danger"
+                        title="Scan failed."
+                        className="mt-6"
+                    >
+                        {scanInfo.failureReason ??
+                            'An unexpected error occurred.'}
+                    </Callout>
                 )}
 
                 {scanInfo.status === 'cancelled' && (
-                    <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3.5 dark:border-slate-800 dark:bg-slate-900/40">
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                            <strong>Audit cancelled.</strong> No report will
-                            be generated for this run.
-                        </p>
-                    </div>
+                    <Callout title="Audit cancelled." className="mt-6">
+                        No report will be generated for this run.
+                    </Callout>
                 )}
             </main>
         </>

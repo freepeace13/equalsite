@@ -40,7 +40,7 @@ class ResultController extends Controller
                 'pages' => $presenter->pages($presenter->scannedUrls()),
                 'remediation' => $presenter->remediation($presenter->scannedUrls()),
                 'violations' => $this->violations($audit),
-            ]
+            ],
         ]);
     }
 
@@ -59,11 +59,12 @@ class ResultController extends Controller
     {
         return $audit->violations
             ->sort(
-                fn(Violation $left, Violation $right): int => $this->compareViolations($left, $right)
+                fn (Violation $left, Violation $right): int => $this->compareViolations($left, $right)
             )
             ->map(function (Violation $violation) {
                 $nodes = collect($violation->nodes->toArray())->values();
                 $affectedUrls = $nodes->pluck('urls')->flatten()->unique();
+
                 return [
                     'auditId' => $violation->audit->crawler_id,
                     'ruleId' => $violation->rule_id,
@@ -76,7 +77,7 @@ class ResultController extends Controller
                     'clusterReason' => 'clusterReason',
                     'affectedPagesCount' => count($affectedUrls),
                     'instancesCount' => $nodes->count(),
-                    'nodes' => $nodes->all()
+                    'nodes' => $nodes->all(),
                 ];
             })
             ->values()

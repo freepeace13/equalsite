@@ -2,9 +2,11 @@
 
 namespace App\Contracts;
 
+use App\Value\AxeResult;
+
 interface ArtifactRepository
 {
-    /** @return \App\Value\AxeResult[] */
+    /** @return AxeResult[] */
     public function getAxeResults(string $id): array;
 
     public function getPath(string $id): string;

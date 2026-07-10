@@ -19,12 +19,12 @@ class TeaserReport implements Arrayable
     public static function fromAudit(Audit $audit): static
     {
         $score = $audit->violations->reduce(
-            fn(int $acc, Violation $value) => $acc - $value->impact_level->scoreDeduction(),
+            fn (int $acc, Violation $value) => $acc - $value->impact_level->scoreDeduction(),
             100
         );
 
-        $severityBreakdown = collect(Impact::cases())->mapWithKeys(fn(Impact $impact) => [
-            $impact->value => $audit->violations->where('impact_level', $impact->value)->count()
+        $severityBreakdown = collect(Impact::cases())->mapWithKeys(fn (Impact $impact) => [
+            $impact->value => $audit->violations->where('impact_level', $impact->value)->count(),
         ])->toArray();
 
         return static::fromArray([
@@ -32,7 +32,7 @@ class TeaserReport implements Arrayable
             'siteUrl' => $audit->url,
             'score' => (int) max(0, $score),
             'scannedUrlsCount' => count($audit->getCustomData('scanned_urls', [])),
-            'severityBreakdown' => $severityBreakdown
+            'severityBreakdown' => $severityBreakdown,
         ]);
     }
 

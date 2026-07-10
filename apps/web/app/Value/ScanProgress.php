@@ -21,7 +21,7 @@ class ScanProgress implements Arrayable
                 'completedRequests' => 0,
                 'pendingRequests' => 0,
                 'totalRequests' => 0,
-                'progressPercentage' => 0
+                'progressPercentage' => 0,
             ])
         );
     }
@@ -42,7 +42,7 @@ class ScanProgress implements Arrayable
             'completedRequests' => $this->completedRequests,
             'pendingRequests' => $this->pendingRequests,
             'totalRequests' => $this->totalRequests,
-            'progressPercentage' => $this->progressPercentage
+            'progressPercentage' => $this->progressPercentage,
         ];
     }
 }

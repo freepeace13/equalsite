@@ -28,7 +28,7 @@ class ScanInfo implements Arrayable
             'startedAt' => $audit->started_at?->toIso8601String(),
             'completedAt' => $audit->completed_at?->toIso8601String(),
             'cancelledAt' => $audit->cancelled_at?->toIso8601String(),
-            'createdAt' => $audit->created_at->toIso8601String()
+            'createdAt' => $audit->created_at->toIso8601String(),
         ]);
     }
 
@@ -56,7 +56,7 @@ class ScanInfo implements Arrayable
             'startedAt' => $this->startedAt,
             'completedAt' => $this->completedAt,
             'cancelledAt' => $this->cancelledAt,
-            'createdAt' => $this->createdAt
+            'createdAt' => $this->createdAt,
         ];
     }
 }

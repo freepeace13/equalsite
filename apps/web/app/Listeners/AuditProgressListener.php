@@ -32,7 +32,7 @@ class AuditProgressListener implements ShouldQueue
                     'completedRequests' => $payload['completedRequests'],
                     'pendingRequests' => $payload['pendingRequests'],
                     'totalRequests' => $payload['totalRequests'],
-                    'progressPercentage' => $payload['progressPercentage']
+                    'progressPercentage' => $payload['progressPercentage'],
                 ]);
             }
         });

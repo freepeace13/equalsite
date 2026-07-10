@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\File;
 use App\Contracts\ArtifactRepository as ArtifactRepositoryContract;
 use App\Value\AxeResult;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 class ArtifactRepository implements ArtifactRepositoryContract
@@ -13,11 +13,11 @@ class ArtifactRepository implements ArtifactRepositoryContract
 
     public function getAxeResults(string $id): array
     {
-        $pattern = $this->getPath($id) . 'datasets/default/*.json';
+        $pattern = $this->getPath($id).'datasets/default/*.json';
 
         return collect(File::glob($pattern))
-            ->map(fn(string $path) => File::json($path))
-            ->map(fn(array $array) => AxeResult::fromArray($array))
+            ->map(fn (string $path) => File::json($path))
+            ->map(fn (array $array) => AxeResult::fromArray($array))
             ->all();
     }
 

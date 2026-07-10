@@ -2,23 +2,29 @@
 
 namespace App\Providers;
 
+use App\Events\Audit\AuditProgress;
+use App\Events\Audit\AuditQueued;
+use App\Listeners\AuditPageSubscriber;
+use App\Listeners\AuditProgressListener;
+use App\Listeners\AuditQueueStateListener;
+use App\Listeners\AuditStatusSubscriber;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
 {
     protected $listen = [
-        \App\Events\Audit\AuditQueued::class => [
-            \App\Listeners\AuditQueueStateListener::class
+        AuditQueued::class => [
+            AuditQueueStateListener::class,
         ],
 
-        \App\Events\Audit\AuditProgress::class => [
-            \App\Listeners\AuditProgressListener::class
+        AuditProgress::class => [
+            AuditProgressListener::class,
         ],
     ];
 
     protected $subscribe = [
-        \App\Listeners\AuditPageSubscriber::class,
-        \App\Listeners\AuditStatusSubscriber::class
+        AuditPageSubscriber::class,
+        AuditStatusSubscriber::class,
     ];
 
     public function boot(): void

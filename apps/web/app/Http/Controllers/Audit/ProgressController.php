@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Audit;
 
-use Inertia\Inertia;
-use App\Models\Audit;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Value\{ScanInfo, ScannedUrl, ScanProgress, ScanQueue};
+use App\Models\Audit;
+use App\Value\ScanInfo;
+use App\Value\ScannedUrl;
+use App\Value\ScanProgress;
+use App\Value\ScanQueue;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ProgressController extends Controller
 {
