@@ -93,6 +93,29 @@ declare function CollapsibleContent({ className, children, ...props }: Collapsib
 type CollapsibleChevronProps = React.ComponentProps<'svg'>;
 declare function CollapsibleChevron({ className, ...props }: CollapsibleChevronProps): react_jsx_runtime.JSX.Element;
 
+type IconProps = React.ComponentProps<'svg'>;
+declare function LockIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function ArrowRightIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function SlidersIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function SearchIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function UsersIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function ZapIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function CheckCircleIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function AlertTriangleIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function XCircleIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function MinusCircleIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function SpinnerIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function GlobeIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function BellIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function KeyboardIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function EyeIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function InfoCircleIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function ImagePlaceholderIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function ClockIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function FileTextIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function PackageIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+declare function CheckIcon({ className, ...props }: IconProps): react_jsx_runtime.JSX.Element;
+
 declare function cn(...inputs: ClassValue[]): string;
 
-export { Button, type ButtonProps, Callout, type CalloutProps, type CalloutVariant, Collapsible, CollapsibleChevron, type CollapsibleChevronProps, CollapsibleContent, type CollapsibleContentProps, type CollapsibleProps, CollapsibleTrigger, type CollapsibleTriggerProps, MetricCard, type MetricCardProps, type MetricCardTone, ProgressBar, type ProgressBarProps, SeverityBadge, type SeverityBadgeProps, type SeverityBadgeSeverity, StatPair, type StatPairItem, type StatPairProps, StatusBadge, type StatusBadgeProps, type StatusBadgeStatus, buttonVariants, calloutVariants, cn, metricCardVariants, severityBadgeVariants, statusBadgeVariants };
+export { AlertTriangleIcon, ArrowRightIcon, BellIcon, Button, type ButtonProps, Callout, type CalloutProps, type CalloutVariant, CheckCircleIcon, CheckIcon, ClockIcon, Collapsible, CollapsibleChevron, type CollapsibleChevronProps, CollapsibleContent, type CollapsibleContentProps, type CollapsibleProps, CollapsibleTrigger, type CollapsibleTriggerProps, EyeIcon, FileTextIcon, GlobeIcon, type IconProps, ImagePlaceholderIcon, InfoCircleIcon, KeyboardIcon, LockIcon, MetricCard, type MetricCardProps, type MetricCardTone, MinusCircleIcon, PackageIcon, ProgressBar, type ProgressBarProps, SearchIcon, SeverityBadge, type SeverityBadgeProps, type SeverityBadgeSeverity, SlidersIcon, SpinnerIcon, StatPair, type StatPairItem, type StatPairProps, StatusBadge, type StatusBadgeProps, type StatusBadgeStatus, UsersIcon, XCircleIcon, ZapIcon, buttonVariants, calloutVariants, cn, metricCardVariants, severityBadgeVariants, statusBadgeVariants };

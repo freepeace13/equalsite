@@ -2,8 +2,14 @@ import { Head, Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { PublicHeader } from '@/components/public-header';
 import { create } from '@/routes/audit';
+import {
+    Button,
+    ProgressBar,
+    StatusBadge,
+    type StatusBadgeStatus,
+} from '@equalsite/ui';
 
-type CardState = 'queued' | 'processing' | 'complete' | 'cancelled' | 'failed';
+type CardState = StatusBadgeStatus;
 
 const CARD_SHELL: Record<CardState, string> = {
     queued: 'border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/60 dark:bg-indigo-900/10',
@@ -64,21 +70,8 @@ function CurrentAuditCard({
             {cardState === 'queued' && (
                 <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                        <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-indigo-700 dark:text-indigo-300">
-                            <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                            >
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M12 6v6l4 2" />
-                            </svg>
-                            queued
-                        </p>
-                        <p className="truncate text-sm font-medium">
+                        <StatusBadge status="queued" className="mb-1" />
+                        <p className="mt-1 truncate text-sm font-medium">
                             acme-shop.com
                         </p>
                         <p className="mt-1 text-xs text-slate-500 tabular-nums dark:text-slate-400">
@@ -88,19 +81,16 @@ function CurrentAuditCard({
                         </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                        <button
-                            type="button"
-                            className="flex h-9 items-center rounded-lg border border-indigo-300 px-3.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-900/30"
-                        >
+                        <Button variant="outline" size="sm">
                             view progress
-                        </button>
-                        <button
-                            type="button"
+                        </Button>
+                        <Button
+                            variant="ghost-destructive"
+                            size="sm"
                             onClick={onCancel}
-                            className="h-9 rounded-lg px-3.5 text-xs font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                         >
                             cancel
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}
@@ -109,173 +99,68 @@ function CurrentAuditCard({
                 <>
                     <div className="mb-3 flex items-start justify-between gap-4">
                         <div className="min-w-0">
-                            <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-indigo-700 dark:text-indigo-300">
-                                <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    className="animate-spin"
-                                >
-                                    <path d="M21 12a9 9 0 11-3.5-7.1" />
-                                </svg>
-                                processing
-                            </p>
-                            <p className="truncate text-sm font-medium">
+                            <StatusBadge status="processing" className="mb-1" />
+                            <p className="mt-1 truncate text-sm font-medium">
                                 acme-shop.com
                             </p>
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
-                            <button
-                                type="button"
-                                className="flex h-9 items-center rounded-lg border border-indigo-300 px-3.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-900/30"
-                            >
+                            <Button variant="outline" size="sm">
                                 view progress
-                            </button>
-                            <button
-                                type="button"
+                            </Button>
+                            <Button
+                                variant="ghost-destructive"
+                                size="sm"
                                 onClick={onCancel}
-                                className="h-9 rounded-lg px-3.5 text-xs font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                             >
                                 cancel
-                            </button>
+                            </Button>
                         </div>
                     </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-indigo-100 dark:bg-indigo-900/40">
-                        <div
-                            className="h-full rounded-full bg-indigo-700 transition-[width] duration-500 ease-out"
-                            style={{ width: `${processPct}%` }}
-                        />
-                    </div>
+                    <ProgressBar value={processPct} size="sm" />
                 </>
             )}
 
             {cardState === 'complete' && (
                 <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                        <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                            <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                            >
-                                <path d="M9 12l2 2 4-4" />
-                                <circle cx="12" cy="12" r="10" />
-                            </svg>
-                            complete
-                        </p>
-                        <p className="truncate text-sm font-medium">
+                        <StatusBadge status="complete" className="mb-1" />
+                        <p className="mt-1 truncate text-sm font-medium">
                             acme-shop.com — 31 issues found
                         </p>
                     </div>
-                    <button
-                        type="button"
-                        className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-indigo-700 px-3.5 text-xs font-medium text-white hover:bg-indigo-800"
-                    >
-                        view report
-                    </button>
+                    <Button size="sm">view report</Button>
                 </div>
             )}
 
             {cardState === 'cancelled' && (
                 <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                        <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-                            <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                            >
-                                <path d="M6 6l12 12M18 6L6 18" />
-                            </svg>
-                            cancelled
-                        </p>
-                        <p className="truncate text-sm font-medium">
+                        <StatusBadge status="cancelled" className="mb-1" />
+                        <p className="mt-1 truncate text-sm font-medium">
                             acme-shop.com
                         </p>
                     </div>
-                    <Link
-                        href={create().url}
-                        className="flex h-9 shrink-0 items-center rounded-lg border border-slate-300 px-3.5 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/40"
-                    >
-                        run another
-                    </Link>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href={create().url}>run another</Link>
+                    </Button>
                 </div>
             )}
 
             {cardState === 'failed' && (
                 <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                        <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-red-700 dark:text-red-400">
-                            <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                            >
-                                <path d="M12 9v4M12 17h.01" />
-                                <circle cx="12" cy="12" r="10" />
-                            </svg>
-                            failed
-                        </p>
-                        <p className="truncate text-sm font-medium">
+                        <StatusBadge status="failed" className="mb-1" />
+                        <p className="mt-1 truncate text-sm font-medium">
                             acme-shop.com — couldn't reach the site
                         </p>
                     </div>
-                    <Link
-                        href={create().url}
-                        className="flex h-9 shrink-0 items-center rounded-lg border border-slate-300 px-3.5 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/40"
-                    >
-                        try again
-                    </Link>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href={create().url}>try again</Link>
+                    </Button>
                 </div>
             )}
         </div>
-    );
-}
-
-function HistoryStatusBadge({ status }: { status: 'complete' | 'cancelled' }) {
-    if (status === 'complete') {
-        return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                <svg
-                    width="10"
-                    height="10"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                >
-                    <path d="M20 6L9 17l-5-5" />
-                </svg>
-                complete
-            </span>
-        );
-    }
-    return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-            <svg
-                width="10"
-                height="10"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-            >
-                <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-            cancelled
-        </span>
     );
 }
 
@@ -398,9 +283,7 @@ export default function Lobby() {
                                         {row.site}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <HistoryStatusBadge
-                                            status={row.status}
-                                        />
+                                        <StatusBadge status={row.status} />
                                     </td>
                                     <td
                                         className={`px-4 py-3 ${row.score === '—' ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'}`}

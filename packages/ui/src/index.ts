@@ -37,4 +37,29 @@ export type {
   CollapsibleChevronProps,
 } from './components/ui/collapsible';
 
+export {
+  LockIcon,
+  ArrowRightIcon,
+  SlidersIcon,
+  SearchIcon,
+  UsersIcon,
+  ZapIcon,
+  CheckCircleIcon,
+  AlertTriangleIcon,
+  XCircleIcon,
+  MinusCircleIcon,
+  SpinnerIcon,
+  GlobeIcon,
+  BellIcon,
+  KeyboardIcon,
+  EyeIcon,
+  InfoCircleIcon,
+  ImagePlaceholderIcon,
+  ClockIcon,
+  FileTextIcon,
+  PackageIcon,
+  CheckIcon,
+} from './components/icons/icons';
+export type { IconProps } from './components/icons/icons';
+
 export { cn } from './lib/utils';
