@@ -1,5 +1,5 @@
+import { Stack } from '@equalsite/ui';
 import { Head, usePage } from '@inertiajs/react';
-import { Stack } from '@/components/stack';
 
 export default function Welcome({
     canRegister = true,

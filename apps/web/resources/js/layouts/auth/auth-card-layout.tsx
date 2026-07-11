@@ -1,13 +1,7 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@equalsite/ui';
 import { Link } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
 import AppLogo from '@/components/app-logo';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
 import { home } from '@/routes';
 
 export default function AuthCardLayout({

@@ -1,13 +1,7 @@
+import { Button, ButtonGroup, ButtonGroupSeparator, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Separator, Spinner, Stack, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@equalsite/ui';
 import { CheckCircle, ChevronLeft, ChevronRight, CircleX, Minus } from "lucide-react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Stack } from "@/components/stack";
-import { ButtonGroup, ButtonGroupSeparator } from "@/components/ui/button-group";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { cn, match } from "@/lib/utils";
 import { type ScannedUrl } from "@/types";
-import { Spinner } from "@/components/ui/spinner";
 import usePagination from "@/hooks/use-pagination";
 import { normalizeUrls } from "./utils";
 import { BreakdownResult } from "./breakdown-result";

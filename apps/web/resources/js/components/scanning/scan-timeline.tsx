@@ -1,7 +1,6 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemSeparator, ItemTitle } from '@equalsite/ui';
 import * as React from "react";
 import { Ban, CheckCircle, CircleX, Clock, PlayCircle } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemSeparator, ItemTitle } from "@/components/ui/item";
 import { cn } from "@/lib/utils";
 
 interface Stage {

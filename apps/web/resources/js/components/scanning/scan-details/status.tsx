@@ -1,4 +1,4 @@
-import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
+import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@equalsite/ui';
 import { cn, match, str } from '@/lib/utils';
 import type { ScanStatus } from '@/types';
 import { CircleDot, CircleSmall } from 'lucide-react';

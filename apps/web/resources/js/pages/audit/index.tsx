@@ -1,13 +1,7 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle, InputError } from '@equalsite/ui';
 import { Head, useForm } from '@inertiajs/react';
 import { PublicHeader } from '@/components/public-header';
 import { store } from '@/routes/audit';
-import InputError from '@/components/input-error';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import {
     ArrowRightIcon,
     Button,

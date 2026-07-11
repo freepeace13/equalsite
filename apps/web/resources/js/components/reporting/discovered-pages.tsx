@@ -1,5 +1,5 @@
 import type React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@equalsite/ui';
 
 export type DiscoveredPagesProps = {
     title?: string;

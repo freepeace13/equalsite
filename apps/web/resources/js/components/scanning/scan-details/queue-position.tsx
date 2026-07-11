@@ -1,5 +1,5 @@
+import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@equalsite/ui';
 import type { ScanQueue, ScanStatus } from "@/types";
-import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { Ban, CheckCircle, Layers, Loader, TriangleAlert } from "lucide-react";
 
 type QueuePositionProps = {

@@ -1,12 +1,9 @@
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge, Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Stack } from '@equalsite/ui';
 import { Ban, CircleSmall, ExternalLink } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Link } from "@inertiajs/react";
 import { TimeElapsed } from "./time-elapsed";
 import { cn } from "@/lib/utils";
 import type { ScanInfo, ScanQueue } from "@/types";
-import { Stack } from "@/components/stack";
 import { show } from '@/actions/App/Http/Controllers/Audit/ReportController';
 import { QueuePosition } from "./queue-position";
 import { Status } from "./status";

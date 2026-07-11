@@ -1,4 +1,4 @@
-import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
+import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@equalsite/ui';
 import { humanReadableDateTime } from '@/lib/utils';
 import { Play } from 'lucide-react';
 

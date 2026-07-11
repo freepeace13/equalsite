@@ -1,5 +1,5 @@
+import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@equalsite/ui';
 import { Clock } from "lucide-react";
-import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item";
 import { useEffect, useState } from "react";
 
 type Props = {

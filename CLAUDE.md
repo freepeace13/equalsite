@@ -16,10 +16,15 @@ It's a **pnpm + Turbo monorepo**:
   that runs Playwright/Crawlee crawls and axe-core scans.
 - `packages/types` — `@equalsite/types`: shared TS contracts (API payloads, stream events, WS payloads)
   consumed by both `apps/web`'s React code and the crawler service.
-- `packages/ui` — `@equalsite/ui`: shared shadcn-style React component library (Button, StatusBadge,
-  SeverityBadge, ProgressBar, MetricCard, StatPair, Callout, Collapsible), developed and visually
-  verified in Storybook. Not yet wired into `apps/web` as a dependency — see
-  `packages/ui/README.md` for development guidelines before adding a component here.
+- `packages/ui` — `@equalsite/ui`: shared React component library structured as Atomic Design
+  atoms (shadcn primitives — Button, Card, Dialog, Sidebar, Table, …) and molecules built from them
+  (StatusBadge, SeverityBadge, ProgressBar, MetricCard, StatPair, Callout, Collapsible, AlertError, …),
+  developed and visually verified in Storybook. It's the **only** source of shadcn primitives in the
+  monorepo — `apps/web` has no local `components/ui/` or `components.json` of its own and consumes
+  everything via `"@equalsite/ui": "workspace:*"`. Organism-shaped pieces (`reporting/*`, `scanning/**`
+  under `apps/web/resources/js/components/`) and anything Inertia/Wayfinder/auth-coupled (nav, app
+  shell, 2FA forms) deliberately stay in `apps/web` rather than living here — see
+  `packages/ui/README.md` for development guidelines and the reasoning before adding a component here.
 - `packages/eslint-config`, `packages/tsconfig` — shared lint/TS bases.
 
 ## Architecture — how the two services talk
@@ -111,10 +116,10 @@ pnpm build                 # tsup → dist/index.{js,mjs}
 pnpm typecheck / lintcheck # tsc --noEmit / eslint (no fix)
 ```
 Same dual `source`/`dist` consumption pattern as `packages/types`. Every component under
-`src/components/ui/*.tsx` must have a sibling `*.stories.tsx` and an explicit named export from
-`src/index.ts`. Read `packages/ui/README.md` before adding or changing a component — it covers
-shadcn conventions, which colors must stay literal (severity/status) vs. theme-variable-driven, and
-why `Collapsible` deliberately avoids Radix.
+`src/components/atoms/*.tsx` or `src/components/molecules/*.tsx` must have a sibling `*.stories.tsx` and
+an explicit named export from `src/index.ts`. Read `packages/ui/README.md` before adding or changing a
+component — it covers shadcn conventions, atom vs. molecule placement, which colors must stay literal
+(severity/status) vs. theme-variable-driven, and why `Collapsible` deliberately avoids Radix.
 
 ### Docker stack (root)
 ```bash
@@ -156,6 +161,7 @@ rather than hand-rolling Playwright — it already knows the login flow, the `/d
   limits) that architecture.md's v3 sections reference throughout. Read
   before building plan-gating or billing-adjacent logic.
 - `packages/ui/README.md` — development guidelines for the shared component
-  library: shadcn/cva conventions, which colors must stay literal vs. theme-
-  driven, Storybook conventions, and the component-addition checklist. Read
-  before adding or changing anything under `packages/ui/src/components/ui/`.
+  library: atoms vs. molecules, shadcn/cva conventions, which colors must stay
+  literal vs. theme-driven, Storybook conventions, and the component-addition
+  checklist. Read before adding or changing anything under
+  `packages/ui/src/components/atoms/` or `packages/ui/src/components/molecules/`.

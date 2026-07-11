@@ -1,8 +1,5 @@
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Field, FieldDescription, FieldLabel, Item, ItemContent, ItemDescription, ItemMedia, ItemTitle, Progress } from '@equalsite/ui';
 import { CircleCheck, CircleX, Globe, Hourglass } from "lucide-react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item";
-import { Progress } from "@/components/ui/progress";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import type { ScanProgress } from "@/types";
 
 type ScanOverviewProps = {

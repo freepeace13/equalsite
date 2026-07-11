@@ -1,9 +1,16 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight } from "lucide-react";
-import type { ReactNode} from "react";
-import { useState } from "react";
+import {
+    Card,
+    CardAction,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+    Collapsible,
+    CollapsibleChevron,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@equalsite/ui';
+import type { ReactNode } from 'react';
+import { useState } from 'react';
 
 type ClusterShellProps = {
     children: ReactNode;
@@ -28,10 +35,8 @@ export function ClusterShell({
                     <CardTitle>{title}</CardTitle>
                     <CardDescription>{description}</CardDescription>
                     <CardAction>
-                        <CollapsibleTrigger asChild>
-                            <Button variant="ghost" size="icon" className="rounded-full">
-                                {isOpen ? <ChevronDown /> : <ChevronRight />}
-                            </Button>
+                        <CollapsibleTrigger className="w-auto justify-center gap-0 rounded-full p-0 size-8 hover:bg-accent hover:text-accent-foreground">
+                            <CollapsibleChevron />
                         </CollapsibleTrigger>
                     </CardAction>
                 </CardHeader>

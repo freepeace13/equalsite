@@ -1,9 +1,8 @@
 import type React from 'react';
 
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CodeBlock } from '@equalsite/ui';
 import { impactToneClasses } from './reportColors';
 import type { IViolation } from '@/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { CodeBlock } from '../code-block';
 import { ClusterShell } from './cluster-shell';
 
 type RemediationClustersProps = {

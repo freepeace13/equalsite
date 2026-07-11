@@ -1,5 +1,5 @@
+import { type ChartConfig, ChartContainer } from "@equalsite/ui";
 import { Label, PolarGrid, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
-import { type ChartConfig, ChartContainer } from "../ui/chart";
 
 interface ScoreGuageProps extends React.HTMLAttributes<HTMLDivElement> {
     value: number;

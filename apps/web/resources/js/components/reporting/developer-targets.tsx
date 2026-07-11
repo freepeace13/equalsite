@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@equalsite/ui';
 import type { Remediation } from '@/types';
 import { impactToneClasses } from './reportColors';
 

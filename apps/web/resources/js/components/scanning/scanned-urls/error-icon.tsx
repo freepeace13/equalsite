@@ -1,4 +1,4 @@
-import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from '@equalsite/ui';
 import { TriangleAlert } from "lucide-react";
 
 type ErrorIconProps = {

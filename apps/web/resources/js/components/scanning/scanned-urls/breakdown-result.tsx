@@ -1,6 +1,6 @@
+import { Badge } from '@equalsite/ui';
 import type { ServerityBreakdown } from "@equalsite/types";
 import { sortSeverityBreakdown } from "./utils";
-import { Badge } from "@/components/ui/badge";
 import { str } from "@/lib/utils";
 
 type BreakdownResultProps = {
