@@ -146,7 +146,15 @@ rather than hand-rolling Playwright — it already knows the login flow, the `/d
 - `docs/style-guide.md` — brand identity, color/type tokens, component
   patterns, and UX design principles. Read before any UI work.
 - `docs/architecture.md` — user journey, state machines, data model, and
-  engineering notes. Read before any backend/frontend logic work.
+  engineering notes. Read before any backend/frontend logic work. As of v3
+  this documents a target design — mandatory auth via Fortify, no more guest
+  audits, a Dashboard/User Audits/Site page replacing the old lobby, and
+  plan-gated limits — that is **ahead of the current codebase**: `audits.user_id`
+  is still nullable and guest audits still work today. Don't assume a v3
+  detail is live without checking the actual schema/routes first.
+- `docs/monetization.md` — free/Pro plan model (queue priority + access-scope
+  limits) that architecture.md's v3 sections reference throughout. Read
+  before building plan-gating or billing-adjacent logic.
 - `packages/ui/README.md` — development guidelines for the shared component
   library: shadcn/cva conventions, which colors must stay literal vs. theme-
   driven, Storybook conventions, and the component-addition checklist. Read

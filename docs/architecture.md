@@ -1,202 +1,123 @@
-# Equalsite — system architecture & MVP behavior
+# Equalsite — system architecture & MVP behavior (v3)
 
-This doc covers how Equalsite behaves — page flow, state machines, data
-model, and engineering decisions. For brand, color, typography, and
-component visuals, see `style-guide.md`. Static Tailwind reference mockups:
-`./markups/index.html` (landing/audit request), `./markups/lobby.html` (lobby), `./markups/progress.html`
-(live progress), `./markups/result.html` (audit result).
+This doc covers how Equalsite behaves — page flow, state machines, data model, and engineering decisions. For brand, color, typography, and component visuals, see `style-guide`. Static Tailwind reference mockups: `index.html` (landing/audit request), `progress.html` (live progress), `result.html` (audit result), `dashboard.html`, `user-audits.html`, and `site.html` (new pages, mockups now built — see `03_Design_&_Assets/`). `waiting.html` (formerly "lobby") is superseded by `site.html` — see section 7 for the mapping.
+
+**v2 reversed the "no-signup" and "optional passwordless account" decisions locked in v1** — auth is now mandatory for every audit. **This version (v3) adds no new product decisions of its own beyond one: how in-progress audits are shown in the User Audits list (section 3.2.1)** — everything else is unchanged from v2, carried forward with references updated to the now-built mockups.
 
 ---
 
-## 1. Product framing
+## 1\. Product framing
 
-Equalsite is a free, no-signup web accessibility diagnostic. Core flow:
+Equalsite is a WCAG 2.2 AA web accessibility diagnostic. Core flow:
 
-```
-audit request form → crawler (queued → processing → complete/cancelled/failed) → audit result
-```
+audit request form → login/register → crawler (queued → processing →
 
-No auth, no dashboard, no billing in MVP — those are phase 2. An audit's UUID
-is its own access credential (same pattern as PageSpeed Insights / GTmetrix).
-See §2 for the optional-account layer that sits on top of this without
-reopening that decision.
+complete/cancelled/failed) → audit result
 
-## 2. User journey — optional passwordless accounts (locked)
+Every audit belongs to an authenticated account — no anonymous/guest path. Free and Pro are both real accounts; the difference is plan limits (see `monetization` doc) and queue priority, not whether sign-in is required.
 
-The MVP stays no-signup by default, but supports an **optional** lightweight
-account so someone can retrieve history across sessions/devices. This does
-not reopen the "defer Fortify" decision — no passwords, no dashboard, no
-billing. Exact sequence:
+## 2\. User accounts & authentication (locked)
 
-1. **Audit request form submit** (`./markups/index.html`).
-2. **Email capture modal** — fires on submit, before the audit is created.
-   Optional: "Save & continue" (email) or "Skip, continue as guest." Landing
-   page copy ("no sign up needed") stays accurate either way — this is an
-   offer, not a gate.
-   - **Guest path:** no backend user created, goes straight to
-     `./markups/progress.html` (waiting → processing → complete/cancelled/failed). No
-     lobby, no history. **No client-side recovery token either** — closing
-     the tab or losing the URL loses the audit, full stop. The form's own
-     rate limit (no new audit for the same site within X duration of the
-     last one) is what actually discourages skipping, since a lost guest
-     audit can't just be silently re-run. The modal's "heads up" copy makes
-     this consequence explicit rather than letting people find out the hard
-     way.
-   - **Email path:** backend creates a passwordless user, associates the
-     audit, emails a signed link (`URL::temporarySignedRoute`, not Fortify).
-     **The current browser session gets instant access** to the lobby — the
-     emailed link is a backup/cross-device access method, not a required
-     verification step.
-3. **Lobby** (`./markups/lobby.html`) — only reachable by email-path users. Shows:
-   - A compact **current audit card** — its own mini state machine, see §3.2:
-     status badge, queue position or processing progress, cancel button, and
-     a "view progress" link to `./markups/progress.html` for the full live experience.
-   - **Audit history list**, one row per past audit: URL, runtime duration,
-     status (including `cancelled` and `failed`), `total_url_with_issue` /
-     `total_scanned_urls`, score, request date, total issues found.
-   - Cancelling from either the lobby card or `./markups/progress.html` sets status to
-     `cancelled` and **keeps the row in history** (not deleted) — a
-     cancelled scan is still useful information (e.g. "I meant to audit
-     this, didn't finish").
-4. **Progress** (`./markups/progress.html`) — same state machine described in §3.1
-   (waiting/processing/cancelled/failed, complete shown in place), plus:
-   - Cancel button, visible during `waiting` and `processing`.
-   - "Back to lobby" link — only rendered for email-path (logged-in) users;
-     guests see no equivalent (there's nothing to go back to).
-   - "View report" CTA — revealed in place once status is `complete`,
-     without navigating to a separate screen.
-5. **Result** (`./markups/result.html`) — header metadata block includes audit request
-   date, and `total_url_with_issue` displayed alongside "X pages scanned"
-   (e.g. "14 of 22 pages have issues").
+Auth uses **Laravel Fortify** — not a custom passwordless flow. A dashboard, per-site history, and billing all need real session security (password reset, 2FA-ready), which passwordless magic links don't cover well once money and account-scoped data are involved.
 
-## 3. State machines
+Sequence:
 
-### 3.1 Progress page (`./markups/progress.html`)
+1. **Audit request form submit** (`index.html`).  
+2. **Login/register modal** — fires on submit, before the audit is created. Tabbed single modal (Login / Register), not two separate modals. Replaces v1's email-capture modal entirely — there is no "skip, continue as guest" option anymore.  
+3. On successful auth: backend creates the audit, associates it with `user_id`, and the browser **redirects straight to `progress.html`** — no intermediate lobby stop on first run.  
+4. From here on, the account's audits are always reachable via **User Audits** and **Site page** (section 3\) — there's no separate "logged in vs. guest" branching anywhere downstream.
 
-Covers the full audit lifecycle behind one URL — for guests, it's their
-landing page for this audit; for email-path users, it's reachable via "view
-progress" from the lobby. States:
+## 3\. New pages
 
-**`waiting`** — job accepted, sitting in the BullMQ queue (concurrency is
-capped at 2 Playwright instances per the deployment plan, so queuing is
-expected under load, not an error state). Shows queue position, an estimated
-wait (position × average job duration — rough heuristic is fine for MVP),
-and an explainer for *why* there's a queue, reframing the wait as a trust
-signal rather than a broken page.
+### 3.1 Dashboard (`dashboard.html`)
 
-**`processing`** — the live activity feed: real page paths streaming in,
-running counts (pages found / scanned / issues so far), progress bar.
-**There is no separate "audit complete" screen.** Once status flips to
-complete, the page stays on this same view and reveals a "view report" CTA
-in place at the bottom — swapping to a whole new screen for what's
-essentially "the last row of the feed" was an unnecessary context switch.
+Portfolio-level view across all of an account's sites. Four metrics, deliberately minimal rather than a wall of charts:
 
-**`cancelled`** / **`failed`** — distinct terminal screens (cancelled =
-person-initiated, failed = crawler couldn't complete — site unreachable,
-blocked robots, timeout). Both keep the audit in history rather than
-deleting it. `failed` matches the `audit.failed` Redis Stream event already
-defined in the crawler service.
+1. **Sites tracked / audits run** — also doubles as plan-usage display (ties directly to the free-tier site cap, see `monetization`).  
+2. **Overall score trend** — one line chart, aggregate across all sites.  
+3. **Open critical issues** — count, aggregated across sites, with the oldest open issue's age shown alongside it (e.g. "oldest open 12 days") per the issue-age mechanism in section 5\.  
+4. **Quick wins available** — count, aggregated across sites.
 
-**Chrome shared across all states:**
-- Cancel button — visible during `waiting`/`processing` only, hidden once
-  terminal.
-- "Back to lobby" link — hidden entirely for guests. In the static mockup
-  this is simulated via a `localStorage` flag set when `./markups/index.html`'s modal
-  is skipped; in production, drive it from an Inertia shared prop
-  (`auth.user` present or null), not client storage.
+Below the metrics, a "your sites" preview strip (top few domains with a compact score ring each) links out to the full User Audits list. Nothing else at launch — no industry benchmarking, no issue-category breakdowns — until real usage data shows what people actually look at.
 
-In production this is driven by Redis Stream events (`audit.started` fires
-waiting → processing, `audit.progress`/`audit.page.completed` drive the
-feed, `audit.completed` reveals the report CTA, `audit.failed` drives the
-failed screen); queue position comes from Horizon/BullMQ's own queue depth
-for that job.
+### 3.2 User Audits (`user-audits.html`)
 
-### 3.2 Lobby current-audit card (`./markups/lobby.html`)
+Flat list, **grouped by domain** (one row per site, not per audit), sorted by most-recent activity. Columns: domain, latest score, latest status, audit count for that domain, last run date, and a link into the **Site page**.
 
-Mirrors the same lifecycle in miniature: `queued` → `processing` →
-`complete`/`cancelled`/`failed`. It's a compact summary (status, queue
-position or progress bar, one action row), not a duplicate of the full
-`./markups/progress.html` experience — "view progress" is the link between the two.
-Cancelling from the card jumps straight to the `cancelled` terminal state
-without navigating away.
+#### 3.2.1 Showing in-progress audits (locked)
 
-## 4. Business logic
+An active audit (`queued`/`processing`) is shown **inline in its row**, not via a separate banner:
+
+- The score column shows a live progress bar \+ running page count (e.g. "12 of 22 pages") instead of a score, since the score isn't known yet.  
+- The status column shows a `processing`/`queued` badge — same visual language as `progress.html`'s badges, just applied at row scale.  
+- The last-run column reads "running now" instead of a date.  
+- The row's action link reads "view progress" (→ `progress.html`) instead of "view site" while active.
+
+**Why inline over a banner:** a Pro account can have several sites mid-audit simultaneously. A single banner doesn't scale past one — it either stacks awkwardly or hides all but one active audit. Row-level status reuses the existing badge/progress-bar patterns already established in `progress.html`, so this introduces no new visual vocabulary, just applies it at list scale. An in-progress row naturally sorts to the top, since it's definitionally the most recent activity for that site — no separate sort logic needed.
+
+### 3.3 Site page (`site.html`, replaces `waiting.html`/lobby as a route)
+
+Per-domain view. Composition:
+
+- **Current-audit card** — same mini state machine as v1's lobby card (see section 4.2): status badge, queue position or progress, cancel button, "view progress" link.  
+- **Score trend chart** — line chart across that domain's audit history only (not aggregate).  
+- **Open-issues snapshot** — stat pair (critical count, quick-wins count) plus the oldest-open-issue age for this domain, same issue-age mechanism as the Dashboard's aggregate count (section 5).  
+- **Audit history table** — same table as v1's lobby history, filtered to this domain.  
+- **"Run new audit" CTA** — disabled with a `title` tooltip and inline caption (e.g. "next scan available in 14h") when the free-tier re-scan cap is active, rather than hidden or silently grayed out — consistent with the style guide's "explain what happened and what to do next" rule for constrained states.
+
+This page fully replaces the lobby route — there's no separate global lobby. If an account has multiple sites mid-audit simultaneously, each is tracked on its own Site page; **User Audits** is the cross-site index (with the inline live-status treatment from section 3.2.1).
+
+## 4\. State machines
+
+### 4.1 Progress page (`progress.html`)
+
+Unchanged in structure — `waiting` → `processing` → `complete`/`cancelled`/`failed`, complete shown in place via a revealed report CTA rather than a separate screen.
+
+- **"Back to lobby" becomes "back to Site page"** — always rendered now (every audit belongs to an account with a Site page to return to).  
+- Driven by the same Redis Stream events as v1 (`audit.started`, `audit.progress`/`audit.page.completed`, `audit.completed`, `audit.failed`); queue position still comes from Horizon/BullMQ's queue depth for that job.
+
+### 4.2 Site page current-audit card
+
+Same lifecycle-in-miniature as v1's lobby card: `queued` → `processing` → `complete`/`cancelled`/`failed`. Compact summary (status, queue position/progress bar, one action row) — "view progress" is still the link to the full `progress.html` experience. Cancelling jumps straight to the `cancelled` terminal state without navigating away.
+
+## 5\. Business logic
 
 ### Fix-time estimate
 
-MVP: hardcoded `axe rule ID → effort tier` lookup table (quick win /
-structural), maintained by hand. Don't build dynamic effort scoring for
-MVP — not enough signal yet, and a static map is fast to ship and good
-enough to sort by. Drives the quick-wins-first sort described in
-`style-guide.md` §7.
+Unchanged: hardcoded `axe rule ID → effort tier` lookup table (quick win / structural), maintained by hand. Drives quick-wins-first sort per `style-guide` section 7\.
 
-## 5. Data model
+### Issue-age tracking
 
-- `audits` needs a nullable `user_id` (guest audits have none) and a
-  `status` enum that includes `cancelled` and `failed` alongside `queued` /
-  `processing` / `complete`.
-- Passwordless `users` row needs nothing beyond `email` — no password
-  column, no Fortify tables.
+Each `audit_violations` row gets a `first_seen_at` timestamp — the date a given violation (matched by rule \+ DOM fingerprint) was first detected on that domain, carried forward across re-audits rather than reset each scan. Surfaced as "open N days" on the Dashboard's open-critical-issues metric and the Site page's open-issues snapshot. This is the mechanism agreed on in place of any lawsuit/legal-risk scoring — see `style-guide` section 1\.
 
-## 6. Engineering notes (mockup fixes worth carrying into production)
+## 6\. Data model
 
-**URL field silently blocked the email modal.** `./markups/index.html`'s URL input
-was `type="url"`. Browsers won't fire the `submit` event on a scheme-less
-value like `acme.com` (native constraint validation blocks it silently), so
-the email modal never opened for anyone who didn't type the full `https://`.
-Fixed by using `type="text" inputmode="url"` and normalizing the value in JS
-(prepend `https://` if missing) before the modal opens. Don't reintroduce
-`type="url"` with `required` on this field in the real form.
+- `audits.user_id` — **required (not nullable)**. Every audit belongs to an account.  
+- `sites` concept — derived from distinct domains in an account's `audits`; no new table required for MVP unless per-site settings are needed later.  
+- `users` table has real Fortify auth columns (password hash, remember token, etc.).  
+- `users.plan` — free/pro flag, drives site cap, page cap, crawl-depth cap, re-scan-frequency cap, history retention, and queue priority (see `monetization`).  
+- `audit_violations.first_seen_at` — supports issue-age tracking (section 5).
 
-**A single script-block failure took down the whole page.** Root cause of a
-follow-up "modal still not showing" report, found by running the file
-through a headless browser rather than guessing: all of `./markups/index.html`'s JS
-lived in one `<script>` block, and the theme toggle read `localStorage` on
-the very first line. In any context where `localStorage` throws
-(sandboxed/cross-origin preview iframes without storage access are the
-common case), that single uncaught error halted the entire block — so the
-form's `submit` listener never registered, and the modal could never open,
-with no visible error to explain why. Fixed two ways, both worth carrying
-into the real app:
-1. **Isolate independent features** into separate script blocks (or React
-   components/effects) so one feature's failure can't silently disable
-   unrelated ones.
-2. **Guard all `localStorage` access** through small helpers that catch and
-   no-op on failure, rather than calling `localStorage` directly inline. In
-   the real Inertia app, prefer a persisted user preference (or default to
-   system theme) over local storage for anything that must not fail.
+## 7\. Engineering notes carried forward from v1 mockups
 
-Verified with a headless Playwright run that forces `localStorage` to throw
-on access.
+1. **Isolate independent features** into separate script blocks/React components so one feature's failure can't silently disable unrelated ones.  
+2. **Guard all `localStorage` access** through small helpers that catch and no-op on failure.  
+3. The `type="url"` input fix (`type="text" inputmode="url"` \+ JS normalization) still applies to the URL field on `index.html`.
 
-## 7. Implementation note for Claude Code
+The email-capture modal these were originally found in is now the login/register modal — same principles apply to whichever modal ships.
 
-The production app is Laravel 13 + React 19 (Inertia). The five HTML files
-referenced above are static Tailwind references, not the final components —
-translate each into an Inertia page + React components under
-`apps/web/resources/js/`, keeping:
+## 8\. Implementation note for Claude Code
 
-- Tailwind config additions: `fontFamily.display = Lexend`, `fontFamily.sans
-  = Inter`. No custom color palette needed — see `style-guide.md` §3.
-- The collapsible group behavior (vanilla JS in the mockup) becomes a
-  `<Disclosure>`-style React component with proper `aria-expanded` state.
-- `./markups/progress.html`'s state machine (§3.1) becomes React state driven by the
-  real Soketi/Redis Stream subscription, not the mockup's
-  `setTimeout`/`setInterval` demo logic — those are only there to preview
-  the intended feel and timing.
-- Queue position for the `waiting` state should come from Horizon/BullMQ's
-  queue depth API, scoped to the job's position among pending jobs — not
-  something the frontend estimates on its own.
-- Guest vs. email-path rendering (e.g. the "back to lobby" link) should come
-  from an Inertia shared prop (`auth.user` present or null), not a
-  client-side guess — the mockup's `localStorage` flag is a demo stand-in
-  only.
+- The login/register modal replaces the email-capture modal as the submit-triggered overlay.  
+- Guest-vs-logged-in conditional rendering (`auth.user` shared-prop checks from v1) can be **removed** — there's no guest state anymore.  
+- New React pages, now with built mockups to translate directly: `dashboard.html` → Dashboard, `user-audits.html` → User Audits (grouped-by-domain list with inline live-status rows per section 3.2.1), `site.html` → Site page.  
+- `progress.html`'s state machine (section 4.1) becomes React state driven by the real Soketi/Redis Stream subscription, not demo `setTimeout`/`setInterval` logic.  
+- The inline live-status row in User Audits needs the same Soketi/Redis Stream subscription as `progress.html` — each row subscribes to its own audit's channel while active, not a polling loop.  
+- Plan-limit checks (site cap, page cap, crawl depth, re-scan frequency) belong in the audit-creation request handler, reading `users.plan` — see `monetization` for the specific limit values.
 
-## 8. Related docs
+## 9\. Related docs
 
-- `style-guide.md` — brand identity, color/type tokens, component patterns,
-  and the locked UX design principles (narrative score, impact-first
-  grouping, quick-wins-first sort, progressive disclosure).
-- `CLAUDE.md` should reference **both** this file and `style-guide.md` —
-  update its pointer if it currently links only to a single
-  `design-system.md`.
+- `style-guide` — brand identity, color/type tokens, component patterns (including the inline live-status row pattern), locked UX design principles, and the explicit no-legal-risk-framing rule (section 1).  
+- `monetization` — free/Pro plan limits, combined queue-priority \+ access-scope model.  
+- `CLAUDE.md` should reference this doc, `style-guide`, and `monetization`.
+
