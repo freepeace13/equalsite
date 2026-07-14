@@ -1,0 +1,25 @@
+{
+  "projectId": "33a62df4-d768-463d-99a7-ab06e8103990",
+  "shape": "storybook",
+  "pkg": "@equalsite/ui",
+  "globalName": "EqualsiteUI",
+  "storybookConfigDir": "packages/ui/.storybook",
+  "storybookStatic": ".design-sync/sb-reference",
+  "titleMap": {
+    "Chart": "ChartContainer",
+    "Icons": null
+  },
+  "extraFonts": ["../../.design-sync/extra-fonts.css"],
+  "overrides": {
+    "ChartContainer": { "cardMode": "column" },
+    "Item": { "cardMode": "column" },
+    "Tabs": { "cardMode": "column" },
+    "Collapsible": { "cardMode": "column" },
+    "MetricCard": { "cardMode": "column" },
+    "Sidebar": { "cardMode": "single", "primaryStory": "Default" },
+    "InputError": { "skip": ["molecules-inputerror--no-message"] },
+    "InputOTP": { "skip": ["atoms-inputotp--default"] },
+    "Icon": { "skip": ["atoms-icon--empty"] }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}

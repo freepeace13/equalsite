@@ -21,20 +21,6 @@ export const CreateAudit = async (
     const options = request.body.options;
     const urlCallback = request.body.callbackUrl;
 
-    if (!urls || ! Array.isArray(urls)) {
-        return response.status(400).json({
-            error: 'Invalid request body',
-            message: 'JSON body with a array of string "url" field is required',
-        });
-    }
-
-    if (!urlCallback || typeof urlCallback !== 'string') {
-        return response.status(400).json({
-            error: 'Invalid query',
-            message: 'A "callback" query parameter is required',
-        });
-    }
-
     const auditId = await createAuditAction.run({
         urls,
         urlCallback,
