@@ -1,5 +1,8 @@
+import { Button } from '@equalsite/ui';
 import { Link } from '@inertiajs/react';
+import { useState } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
+import { AuthModal } from '@/components/auth/auth-modal';
 import { useAppearance } from '@/hooks/use-appearance';
 
 type NavLink = {
@@ -10,6 +13,11 @@ type NavLink = {
 
 type PublicHeaderProps = {
     navLinks?: NavLink[];
+    /** Pass to show "Log in" / "Sign up" actions that open the auth modal. Omit on pages the user already reached while authenticated. */
+    auth?: {
+        canRegister: boolean;
+        canResetPassword: boolean;
+    };
 };
 
 function ThemeToggle() {
@@ -36,7 +44,12 @@ function ThemeToggle() {
     );
 }
 
-export function PublicHeader({ navLinks }: PublicHeaderProps) {
+export function PublicHeader({ navLinks, auth }: PublicHeaderProps) {
+    const [authModal, setAuthModal] = useState<{
+        open: boolean;
+        tab: 'login' | 'register';
+    }>({ open: false, tab: 'login' });
+
     return (
         <header className="border-b border-slate-200 dark:border-slate-800">
             <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -76,9 +89,49 @@ export function PublicHeader({ navLinks }: PublicHeaderProps) {
                             )}
                         </nav>
                     )}
+
+                    {auth && (
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                    setAuthModal({ open: true, tab: 'login' })
+                                }
+                            >
+                                Log in
+                            </Button>
+                            {auth.canRegister && (
+                                <Button
+                                    size="sm"
+                                    onClick={() =>
+                                        setAuthModal({
+                                            open: true,
+                                            tab: 'register',
+                                        })
+                                    }
+                                >
+                                    Sign up
+                                </Button>
+                            )}
+                        </div>
+                    )}
+
                     <ThemeToggle />
                 </div>
             </div>
+
+            {auth && (
+                <AuthModal
+                    open={authModal.open}
+                    onOpenChange={(open) =>
+                        setAuthModal((state) => ({ ...state, open }))
+                    }
+                    defaultTab={authModal.tab}
+                    canRegister={auth.canRegister}
+                    canResetPassword={auth.canResetPassword}
+                />
+            )}
         </header>
     );
 }

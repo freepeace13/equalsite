@@ -190,7 +190,12 @@ function AdvancedSettings({
     );
 }
 
-export default function Index() {
+type Props = {
+    canRegister: boolean;
+    canResetPassword: boolean;
+};
+
+export default function Index({ canRegister, canResetPassword }: Props) {
     const form = useForm({
         url: '',
         crawlDepth: '3',
@@ -235,7 +240,10 @@ export default function Index() {
         <>
             <Head title="Free WCAG accessibility audit" />
 
-            <PublicHeader navLinks={NAV_LINKS} />
+            <PublicHeader
+                navLinks={NAV_LINKS}
+                auth={{ canRegister, canResetPassword }}
+            />
 
             <main>
                 {/* Hero */}

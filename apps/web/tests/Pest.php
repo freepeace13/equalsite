@@ -1,5 +1,10 @@
 <?php
 
+use App\Models\Audit;
+use App\Models\User;
+use App\Models\Violation;
+use App\Value\Impact;
+use App\Value\Status;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,4 +52,43 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+function makeUserAudit(
+    User $user,
+    string $crawlerId,
+    string $domain,
+    Status $status,
+    array $customData = []
+): Audit {
+    $audit = Audit::create([
+        'user_id' => $user->id,
+        'crawler_id' => $crawlerId,
+        'url' => "https://{$domain}",
+        'domain' => $domain,
+        'status' => $status,
+    ]);
+
+    // 'custom_data' isn't mass-assignable (see Audit::$fillable), so it's set
+    // the same way the app itself writes it — via setCustomData.
+    foreach ($customData as $key => $value) {
+        $audit->setCustomData($key, $value);
+    }
+
+    return $audit;
+}
+
+function makeAuditViolation(
+    Audit $audit,
+    Impact $impact,
+    string $ruleId = 'color-contrast'
+): Violation {
+    return Violation::create([
+        'audit_id' => $audit->id,
+        'rule_id' => $ruleId,
+        'impact_level' => $impact,
+        'description' => 'Elements must meet minimum color contrast ratio requirements',
+        'failure_summary' => 'Fix any of the following',
+        'help_url' => 'https://dequeuniversity.com/rules/axe/4.7/color-contrast',
+    ]);
 }

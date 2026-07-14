@@ -6,6 +6,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Radix data-state/data-orientation shorthands used across atoms (tabs,
+   popover, scroll-area, button-group) — bare `data-active:`/`data-open:`/
+   etc. instead of `data-[state=...]:`, matching shadcn's own convention. */
+@custom-variant data-active (&[data-state='active']);
+@custom-variant data-open (&[data-state='open']);
+@custom-variant data-closed (&[data-state='closed']);
+@custom-variant data-horizontal (&[data-orientation='horizontal']);
+@custom-variant data-vertical (&[data-orientation='vertical']);
+
 @theme {
     --font-sans:
         'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
