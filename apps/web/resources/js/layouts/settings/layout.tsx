@@ -4,6 +4,7 @@ import type { PropsWithChildren } from 'react';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
+import { edit as editBilling } from '@/routes/billing';
 import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
@@ -20,6 +21,11 @@ const sidebarNavItems: NavItem[] = [
         icon: null,
     },
     {
+        title: 'Billing',
+        href: editBilling(),
+        icon: null,
+    },
+    {
         title: 'Appearance',
         href: editAppearance(),
         icon: null,
@@ -30,7 +36,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
 
     return (
-        <div className="px-4 py-6">
+        <div className="mx-auto container py-10">
             <Heading
                 title="Settings"
                 description="Manage your profile and account settings"

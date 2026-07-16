@@ -27,6 +27,9 @@ var pageFailedEvent = (payload) => ({
   payload
 });
 
+// src/audit/actions/handleAuditPageRequest.ts
+import { Request } from "crawlee";
+
 // src/audit/events/pageStartedEvent.ts
 import { EventEnum as EventEnum2 } from "@equalsite/types";
 var pageStartedEvent = (payload) => ({
@@ -81,6 +84,15 @@ var createProcessAxeResultAction = (pushData, eventPublisher) => ({
 
 // src/audit/actions/handleAuditPageRequest.ts
 import AxeBuilder from "@axe-core/playwright";
+var canonicalizeRequestUniqueKey = (request) => {
+  const url = new URL(request.url);
+  url.protocol = "https:";
+  url.hostname = url.hostname.replace(/^www\./, "");
+  return {
+    ...request,
+    uniqueKey: Request.computeUniqueKey({ url: url.href, method: "GET" })
+  };
+};
 var createAuditPageRequestHandler = (auditId, eventPublisher, options) => async ({
   request,
   page,
@@ -108,10 +120,16 @@ var createAuditPageRequestHandler = (auditId, eventPublisher, options) => async 
     pendingRequests: info?.pendingRequestCount ?? 0,
     totalRequests: info?.totalRequestCount ?? 0
   }));
-  if (options.enqueueLinks) {
+  const currentDepth = request.userData?.depth ?? 0;
+  const withinMaxDepth = options.maxDepth === void 0 || options.maxDepth === null || currentDepth < options.maxDepth;
+  if (options.enqueueLinks && withinMaxDepth) {
     await enqueueLinks({
       strategy: options.enqueueStrategy,
-      selector: "a"
+      selector: "a",
+      globs: options.includeGlobs?.length ? options.includeGlobs : void 0,
+      exclude: options.excludeGlobs?.length ? options.excludeGlobs : void 0,
+      userData: { depth: currentDepth + 1 },
+      transformRequestFunction: canonicalizeRequestUniqueKey
     });
   }
 };
@@ -304,7 +322,7 @@ var createRunAuditAction = (auditRepository2, eventPublisher, config) => {
 // src/worker.ts
 var crawlerWorker = new Worker(
   bullmq.queue,
-  async (job) => {
+  async ({ data }) => {
     await createRunAuditAction(
       auditRepository,
       publishEvent,
@@ -313,7 +331,7 @@ var crawlerWorker = new Worker(
         archiveDirectory: crawler.archiveDirectory,
         secretKey
       }
-    ).run(job.data.auditId);
+    ).run(data.auditId);
   },
   {
     connection: bullClient,

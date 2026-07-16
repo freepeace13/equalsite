@@ -106,6 +106,12 @@ describe("auditValidators", () => {
             });
         });
 
+        it("accepts a callbackUrl pointing at an internal hostname without a TLD", async () => {
+            const response = await postAudit({ ...validAuditBody, callbackUrl: 'http://web/api/crawler/callback' });
+
+            expect(response.status).toBe(202);
+        });
+
         it("rejects a callbackUrl that is not a valid URL", async () => {
             const response = await postAudit({ ...validAuditBody, callbackUrl: 'not-a-url' });
             const payload = await response.json() as ErrorPayload;

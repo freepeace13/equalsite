@@ -3,9 +3,13 @@
 namespace App\Actions\Audit;
 
 use App\Contracts\Spider;
+use App\Exceptions\Audit\RescanTooSoonException;
 use App\Models\Audit;
+use App\Models\User;
+use App\Support\Plan\PlanLimits;
 use App\Support\Spider\EnqueueStrategy;
 use App\Support\Spider\SpiderOptions;
+use App\Value\CrawlDepth;
 use App\Value\Status;
 
 class CreateAudit
@@ -15,33 +19,67 @@ class CreateAudit
     ) {}
 
     /**
-     * @param  array{crawlDepth?: int, include?: ?string, exclude?: ?string, sameDomain?: bool, userId?: ?int}  $settings
+     * @param  array{crawlDepth?: int, include?: ?string, exclude?: ?string, sameDomain?: bool}  $settings
      */
-    public function create(string $url, array $settings = []): Audit
+    public function create(User $user, string $url, array $settings = []): Audit
     {
+        $limits = PlanLimits::for($user->plan);
+
+        $this->assertRescanAllowed($user, $url, $limits);
+
+        $requestedDepth = isset($settings['crawlDepth'])
+            ? CrawlDepth::from((int) $settings['crawlDepth'])
+            : CrawlDepth::Standard;
+        $depth = $limits->clampCrawlDepth($requestedDepth);
+
+        $callbackUrl = config('app.url').route('api.crawler.callback', absolute: false);
+
         $response = $this->spider->create(
             SpiderOptions::make(
                 urls: [$url],
-                callbackUrl: 'http://web'.route('api.crawler.callback', absolute: false)
+                callbackUrl: $callbackUrl
             )->setOptions([
-                'maxPages' => 50,
+                'maxPages' => $limits->pageCap(),
                 'enqueueLinks' => true,
                 'enqueueStrategy' => filter_var($settings['sameDomain'] ?? true, FILTER_VALIDATE_BOOLEAN)
                     ? EnqueueStrategy::SameDomain
                     : EnqueueStrategy::All,
-                'maxDepth' => isset($settings['crawlDepth']) ? (int) $settings['crawlDepth'] : 3,
+                'maxDepth' => $depth->value,
                 'includeGlobs' => $this->parsePatterns($settings['include'] ?? null),
                 'excludeGlobs' => $this->parsePatterns($settings['exclude'] ?? null),
             ])
         );
 
         return Audit::create([
-            'user_id' => $settings['userId'] ?? null,
+            'user_id' => $user->id,
             'domain' => parse_url($url, PHP_URL_HOST),
             'url' => $url,
             'status' => Status::Queued,
             'crawler_id' => $response['id'],
         ]);
+    }
+
+    /**
+     * @throws RescanTooSoonException
+     */
+    protected function assertRescanAllowed(User $user, string $url, PlanLimits $limits): void
+    {
+        $hours = $limits->rescanFrequencyHours();
+
+        if ($hours === null) {
+            return; // Pro: no cap
+        }
+
+        $domain = parse_url($url, PHP_URL_HOST);
+
+        $lastAudit = $user->audits()
+            ->where('domain', $domain)
+            ->latest()
+            ->first();
+
+        if ($lastAudit && $lastAudit->created_at->isAfter(now()->subHours($hours))) {
+            throw new RescanTooSoonException($lastAudit->created_at->addHours($hours));
+        }
     }
 
     /**

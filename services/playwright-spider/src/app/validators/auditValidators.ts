@@ -16,7 +16,7 @@ export const createAuditValidationRules: ValidationChain[] = [
         .isString()
         .withMessage('callbackUrl is required and must be a string')
         .bail()
-        .isURL()
+        .isURL({ require_tld: false, require_protocol: true })
         .withMessage('callbackUrl must be a valid URL'),
 
     body('options')

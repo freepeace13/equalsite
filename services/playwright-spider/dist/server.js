@@ -17,6 +17,68 @@ import express from "express";
 // src/routes/index.ts
 import { Router } from "express";
 
+// src/app/middleware/validationMiddleware.ts
+import { validationResult } from "express-validator";
+function validationMiddleware(validations) {
+  return async (request, response, next) => {
+    await Promise.all(validations.map((validation) => validation.run(request)));
+    const result = validationResult(request).formatWith((error) => ({
+      field: error.type === "field" ? error.path : error.type,
+      message: normalizeMessage(error.msg)
+    }));
+    if (result.isEmpty()) {
+      return next();
+    }
+    return response.status(400).json({
+      error: "Invalid request body",
+      message: "The request failed validation.",
+      errors: result.array({ onlyFirstError: true })
+    });
+  };
+}
+function normalizeMessage(message) {
+  const text = typeof message === "string" && message.trim().length > 0 ? message.trim() : "Invalid value";
+  return text.endsWith(".") ? text : `${text}.`;
+}
+
+// src/app/validators/auditValidators.ts
+import { body, param } from "express-validator";
+var createAuditValidationRules = [
+  body("urls").isArray({ min: 1 }).withMessage("urls is required and must be a non-empty array of strings"),
+  body("urls.*").isString().withMessage("each url must be a string").bail().isURL().withMessage("each url must be a valid URL"),
+  body("callbackUrl").isString().withMessage("callbackUrl is required and must be a string").bail().isURL({ require_tld: false, require_protocol: true }).withMessage("callbackUrl must be a valid URL"),
+  body("options").isObject().withMessage("options is required and must be an object"),
+  body("options.maxPages").isInt({ min: 1 }).withMessage("options.maxPages is required and must be a positive integer"),
+  body("options.enqueueLinks").isBoolean().withMessage("options.enqueueLinks is required and must be a boolean"),
+  body("options.enqueueStrategy").isString().withMessage("options.enqueueStrategy is required and must be a string").bail().notEmpty().withMessage("options.enqueueStrategy must not be empty"),
+  body("options.maxDepth").optional({ nullable: true }).isInt({ min: 0 }).withMessage("options.maxDepth must be a non-negative integer or null"),
+  body("options.includeGlobs").optional().isArray().withMessage("options.includeGlobs must be an array of strings"),
+  body("options.includeGlobs.*").optional().isString().withMessage("each options.includeGlobs entry must be a string"),
+  body("options.excludeGlobs").optional().isArray().withMessage("options.excludeGlobs must be an array of strings"),
+  body("options.excludeGlobs.*").optional().isString().withMessage("each options.excludeGlobs entry must be a string")
+];
+var cancelAuditValidationRules = [
+  param("auditId").isString().trim().notEmpty().withMessage("auditId is required")
+];
+
+// src/app/services/queue.ts
+import { Queue } from "bullmq";
+var crawlerQueue = new Queue(
+  bullmq.queue,
+  {
+    connection: bullClient,
+    defaultJobOptions: {
+      removeOnComplete: 100,
+      removeOnFail: 1e3,
+      attempts: 1,
+      backoff: {
+        type: "exponential",
+        delay: 5e3
+      }
+    }
+  }
+);
+
 // src/audit/actions/createAudit.ts
 var createAuditAction = (auditRepository2, secretKey2) => ({
   run: async ({
@@ -61,26 +123,26 @@ async function validateCallbackUrl(urlCallback, secretKey2) {
   }
 }
 
-// src/app/services/queue.ts
-import { Queue } from "bullmq";
-var crawlerQueue = new Queue(
-  bullmq.queue,
-  {
-    connection: bullClient,
-    defaultJobOptions: {
-      removeOnComplete: 100,
-      removeOnFail: 1e3,
-      attempts: 1,
-      backoff: {
-        type: "exponential",
-        delay: 5e3
-      }
-    }
-  }
-);
+// src/app/controllers/createAuditController.ts
+var createAuditAction2 = createAuditAction(auditRepository, secretKey);
+var CreateAuditController = async (request, response) => {
+  const urls = request.body.urls;
+  const options = request.body.options;
+  const urlCallback = request.body.callbackUrl;
+  const auditId = await createAuditAction2.run({
+    urls,
+    urlCallback,
+    options
+  });
+  await crawlerQueue.add("audit", { auditId }, { jobId: auditId });
+  return response.status(202).json({
+    id: auditId,
+    options
+  });
+};
 
 // src/audit/actions/cancelAudit.ts
-var createCancelAuditAction = (auditRepository2, eventPublisher, artifactDirectory2) => {
+var createCancelAuditAction = (auditRepository2, eventPublisher, artifactDirectory) => {
   const auditService = createAuditService(auditRepository2, eventPublisher);
   return {
     run: async (auditId) => {
@@ -95,7 +157,7 @@ var createCancelAuditAction = (auditRepository2, eventPublisher, artifactDirecto
           await auditService.cancelAudit(audit, crawler2);
           await crawler2.teardown();
         }
-        await deleteDirectoryIfExists(artifactDirectory2);
+        await deleteDirectoryIfExists(artifactDirectory);
       } catch (err) {
         console.error(err);
       } finally {
@@ -106,44 +168,13 @@ var createCancelAuditAction = (auditRepository2, eventPublisher, artifactDirecto
   };
 };
 
-// src/app/controllers/auditController.ts
-var {
-  artifactDirectory
-} = crawler;
-var createAuditAction2 = createAuditAction(auditRepository, secretKey);
-var CreateAudit = async (request, response) => {
-  const urls = request.body.urls;
-  const options = request.body.options;
-  const urlCallback = request.body.callbackUrl;
-  if (!urls || !Array.isArray(urls)) {
-    return response.status(400).json({
-      error: "Invalid request body",
-      message: 'JSON body with a array of string "url" field is required'
-    });
-  }
-  if (!urlCallback || typeof urlCallback !== "string") {
-    return response.status(400).json({
-      error: "Invalid query",
-      message: 'A "callback" query parameter is required'
-    });
-  }
-  const auditId = await createAuditAction2.run({
-    urls,
-    urlCallback,
-    options
-  });
-  await crawlerQueue.add("audit", { auditId }, { jobId: auditId });
-  return response.status(202).json({
-    id: auditId,
-    options
-  });
-};
+// src/app/controllers/cancelAuditController.ts
 var cancelAuditAction = createCancelAuditAction(
   auditRepository,
   publishEvent,
-  artifactDirectory
+  crawler.artifactDirectory
 );
-var CancelAudit = async (request, response) => {
+var CancelAuditController = async (request, response) => {
   const auditId = request.params.auditId;
   await cancelAuditAction.run(auditId);
   const job = await crawlerQueue.getJob(auditId);
@@ -158,8 +189,8 @@ var CancelAudit = async (request, response) => {
 
 // src/routes/index.ts
 var router = Router();
-router.post("/audit", CreateAudit);
-router.delete("/audit/:auditId", CancelAudit);
+router.post("/audit", validationMiddleware(createAuditValidationRules), CreateAuditController);
+router.delete("/audit/:auditId", validationMiddleware(cancelAuditValidationRules), CancelAuditController);
 router.get("/ping", (req, res) => {
   console.log(config_exports);
   res.json({ ok: true });

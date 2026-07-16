@@ -165,3 +165,9 @@ rather than hand-rolling Playwright — it already knows the login flow, the `/d
   literal vs. theme-driven, Storybook conventions, and the component-addition
   checklist. Read before adding or changing anything under
   `packages/ui/src/components/atoms/` or `packages/ui/src/components/molecules/`.
+- `docs/docker-native-engine-migration.md` — runbook for replacing Docker
+  Desktop with native Docker Engine on this machine, written after diagnosing
+  a virtiofs bug where rename-based file writes (the atomic save pattern most
+  editors use) never propagate into the `web` container's bind mount without
+  a manual restart. Not yet applied — read before touching local Docker setup
+  or if backend edits stop reflecting in the container.

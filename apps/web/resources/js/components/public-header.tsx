@@ -1,8 +1,10 @@
-import { Button } from '@equalsite/ui';
-import { Link } from '@inertiajs/react';
+import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@equalsite/ui';
+import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { AuthModal } from '@/components/auth/auth-modal';
+import { UserInfo } from '@/components/user-info';
+import { UserMenuContent } from '@/components/user-menu-content';
 import { useAppearance } from '@/hooks/use-appearance';
 
 type NavLink = {
@@ -44,7 +46,8 @@ function ThemeToggle() {
     );
 }
 
-export function PublicHeader({ navLinks, auth }: PublicHeaderProps) {
+export function PublicHeader({ navLinks, auth: modalAuth }: PublicHeaderProps) {
+    const { auth } = usePage().props;
     const [authModal, setAuthModal] = useState<{
         open: boolean;
         tab: 'login' | 'register';
@@ -90,46 +93,63 @@ export function PublicHeader({ navLinks, auth }: PublicHeaderProps) {
                         </nav>
                     )}
 
-                    {auth && (
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                    setAuthModal({ open: true, tab: 'login' })
-                                }
-                            >
-                                Log in
-                            </Button>
-                            {auth.canRegister && (
+                    {auth.user ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    type="button"
+                                    className="flex items-center gap-2 rounded-full"
+                                    data-test="public-header-user-menu"
+                                >
+                                    <UserInfo user={auth.user} />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                                <UserMenuContent user={auth.user} />
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : (
+                        modalAuth && (
+                            <div className="flex items-center gap-2">
                                 <Button
+                                    variant="ghost"
                                     size="sm"
                                     onClick={() =>
-                                        setAuthModal({
-                                            open: true,
-                                            tab: 'register',
-                                        })
+                                        setAuthModal({ open: true, tab: 'login' })
                                     }
                                 >
-                                    Sign up
+                                    Log in
                                 </Button>
-                            )}
-                        </div>
+                                {modalAuth.canRegister && (
+                                    <Button
+                                        size="sm"
+                                        onClick={() =>
+                                            setAuthModal({
+                                                open: true,
+                                                tab: 'register',
+                                            })
+                                        }
+                                    >
+                                        Sign up
+                                    </Button>
+                                )}
+                            </div>
+                        )
                     )}
 
                     <ThemeToggle />
                 </div>
             </div>
 
-            {auth && (
+            {!auth.user && modalAuth && (
                 <AuthModal
                     open={authModal.open}
                     onOpenChange={(open) =>
                         setAuthModal((state) => ({ ...state, open }))
                     }
                     defaultTab={authModal.tab}
-                    canRegister={auth.canRegister}
-                    canResetPassword={auth.canResetPassword}
+                    canRegister={modalAuth.canRegister}
+                    canResetPassword={modalAuth.canResetPassword}
                 />
             )}
         </header>

@@ -2,6 +2,8 @@
 
 namespace App\Contracts;
 
+use App\Exceptions\Spider\SpiderUnavailableException;
+use App\Exceptions\Spider\SpiderValidationException;
 use App\Support\Spider\SpiderOptions;
 
 /**
@@ -9,9 +11,21 @@ use App\Support\Spider\SpiderOptions;
  * */
 interface Spider
 {
-    public function ping();
+    /**
+     * @throws SpiderValidationException
+     * @throws SpiderUnavailableException
+     */
+    public function ping(): array;
 
-    public function create(SpiderOptions $options);
+    /**
+     * @throws SpiderValidationException
+     * @throws SpiderUnavailableException
+     */
+    public function create(SpiderOptions $options): array;
 
-    public function cancel(string $id);
+    /**
+     * @throws SpiderValidationException
+     * @throws SpiderUnavailableException
+     */
+    public function cancel(string $id): array;
 }

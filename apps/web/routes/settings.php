@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\BillingController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Support\Facades\Route;
@@ -21,4 +22,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('user-password.update');
 
     Route::inertia('settings/appearance', 'settings/appearance')->name('appearance.edit');
+
+    Route::get('settings/billing', [BillingController::class, 'edit'])->name('billing.edit');
+
+    Route::post('settings/billing/checkout', [BillingController::class, 'checkout'])
+        ->middleware('throttle:6,1')
+        ->name('billing.checkout');
+
+    Route::delete('settings/billing/subscription', [BillingController::class, 'cancel'])
+        ->name('billing.cancel');
 });

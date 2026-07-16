@@ -29,6 +29,8 @@ class SpiderServiceProvider extends ServiceProvider
 
             return Http::withToken($crawler['secret'])
                 ->baseUrl("http://{$hostname}/api/v1")
+                ->timeout(10)
+                ->connectTimeout(3)
                 ->throw()
                 ->asJson();
         });
