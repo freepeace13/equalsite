@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, InputError } from '@e
 import { Head, useForm } from '@inertiajs/react';
 import { PublicHeader } from '@/components/public-header';
 import { store } from '@/routes/audit';
+import { CrawlDepth } from '@/components/form/crawl-depth';
 import {
     ArrowRightIcon,
     Button,
@@ -23,6 +24,8 @@ import {
     type SubmitEventHandler,
     useState,
 } from 'react';
+import { EnqueueStrategy } from '@/components/form/enqueue-strategy';
+import { PagePattern } from '@/components/form/page-pattern';
 
 const NAV_LINKS = [
     { label: 'How it works', href: '#how' },
@@ -38,7 +41,7 @@ const CRAWL_DEPTHS = [
     { label: 'shallow', value: '1' },
     { label: 'standard', value: '3' },
     { label: 'deep', value: '5' },
-] as const;
+];
 
 const FEATURE_CARDS: {
     title: string;
@@ -93,98 +96,42 @@ function AdvancedSettings({
             </CollapsibleTrigger>
 
             <CollapsibleContent className="border-t border-slate-200 px-4 pt-1 pb-4 dark:border-slate-800">
-                <label className="mt-4 mb-2 block text-xs font-medium">
-                    crawl depth
-                </label>
-                <div
-                    role="radiogroup"
-                    aria-label="Crawl depth"
-                    className="flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800/60"
-                >
-                    {CRAWL_DEPTHS.map((depth) => (
-                        <label key={depth.value} className="flex-1">
-                            <input
-                                type="radio"
-                                name="depth"
-                                value={depth.value}
-                                checked={form.data.crawlDepth === depth.value}
-                                onChange={() =>
-                                    form.setData('crawlDepth', depth.value)
-                                }
-                                className="peer sr-only"
-                            />
-                            <span className="block cursor-pointer rounded-lg py-2 text-center text-xs text-slate-500 peer-checked:bg-white peer-checked:font-medium peer-checked:text-slate-900 peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-600 dark:text-slate-400 dark:peer-checked:bg-slate-700 dark:peer-checked:text-white">
-                                {depth.label}
-                            </span>
-                        </label>
-                    ))}
-                </div>
+                <CrawlDepth
+                    options={CRAWL_DEPTHS}
+                    value={form.data.crawlDepth}
+                    onValueChange={(value) => {
+                        form.setData('crawlDepth', value);
+                    }}
+                />
                 <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
                     standard follows links up to 3 levels from the homepage.
                 </p>
-
-                <label
-                    htmlFor="include-patterns"
-                    className="mt-4 mb-1.5 block text-xs font-medium"
-                >
-                    include only pages matching
-                </label>
-                <input
+                <PagePattern
+                    label="include only pages matching"
                     id="include-patterns"
-                    name="include"
-                    type="text"
                     placeholder="/blog/*, /products/*"
+                    name="include"
                     value={form.data.include}
-                    onChange={(e) => form.setData('include', e.target.value)}
-                    className="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm placeholder:text-slate-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600 focus:outline-none dark:border-slate-700 dark:bg-slate-900"
+                    onValueChange={(value) => form.setData('include', value)}
                 />
 
-                <label
-                    htmlFor="exclude-patterns"
-                    className="mt-3 mb-1.5 block text-xs font-medium"
-                >
-                    exclude pages matching
-                </label>
-                <input
+                <PagePattern
+                    label="exclude pages matching"
                     id="exclude-patterns"
-                    name="exclude"
-                    type="text"
                     placeholder="/admin/*, /account/*"
+                    name="exclude"
                     value={form.data.exclude}
-                    onChange={(e) => form.setData('exclude', e.target.value)}
-                    className="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm placeholder:text-slate-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600 focus:outline-none dark:border-slate-700 dark:bg-slate-900"
+                    onValueChange={(value) => form.setData('exclude', value)}
                 />
                 <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
                     leave blank to crawl your whole site, up to 25 pages.
                 </p>
-
-                <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-3 dark:border-slate-800">
-                    <div>
-                        <label
-                            htmlFor="same-domain"
-                            className="block text-xs font-medium"
-                        >
-                            stay on this domain
-                        </label>
-                        <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
-                            won't follow links to other sites
-                        </p>
-                    </div>
-                    <button
-                        type="button"
-                        id="same-domain"
-                        role="switch"
-                        aria-checked={form.data.sameDomain}
-                        onClick={() =>
-                            form.setData('sameDomain', !form.data.sameDomain)
-                        }
-                        className={`relative h-5 w-9 shrink-0 rounded-full focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 focus:outline-none dark:focus:ring-offset-slate-950 ${form.data.sameDomain ? 'bg-indigo-700' : 'bg-slate-300 dark:bg-slate-700'}`}
-                    >
-                        <span
-                            className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-[right,left] duration-150 ease-out ${form.data.sameDomain ? 'right-0.5' : 'left-0.5'}`}
-                        />
-                    </button>
-                </div>
+                <EnqueueStrategy
+                    value={form.data.sameDomain}
+                    onValueChange={(value) => {
+                        form.setData('sameDomain', value);
+                    }}
+                />
             </CollapsibleContent>
         </Collapsible>
     );
