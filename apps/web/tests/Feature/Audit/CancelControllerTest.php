@@ -2,14 +2,19 @@
 
 use App\Contracts\Spider;
 use App\Models\Audit;
+use App\Models\User;
 use App\Value\Status;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-function makeAudit(string $crawlerId, Status $status): Audit
+// user_id is required (NOT NULL) since the monetization migration — every
+// audit now belongs to an account, so the helper takes the owning User
+// explicitly rather than omitting user_id like it used to.
+function makeAudit(User $user, string $crawlerId, Status $status): Audit
 {
     return Audit::create([
+        'user_id' => $user->id,
         'crawler_id' => $crawlerId,
         'url' => 'https://example.com',
         'domain' => 'example.com',
@@ -17,15 +22,21 @@ function makeAudit(string $crawlerId, Status $status): Audit
     ]);
 }
 
+test('guests are redirected to login', function () {
+    $this->delete(route('audit.cancel', ['id' => 'does-not-exist']))
+        ->assertRedirect(route('login'));
+});
+
 test('cancelling a queued audit tells the spider to cancel and marks it cancelled', function () {
-    $audit = makeAudit('crawler-queued', Status::Queued);
+    $user = User::factory()->create();
+    $audit = makeAudit($user, 'crawler-queued', Status::Queued);
 
     test()->mock(Spider::class)
         ->shouldReceive('cancel')
         ->once()
         ->with('crawler-queued');
 
-    $response = $this->delete(route('audit.cancel', ['id' => 'crawler-queued']));
+    $response = $this->actingAs($user)->delete(route('audit.cancel', ['id' => 'crawler-queued']));
 
     $response->assertRedirect();
 
@@ -35,27 +46,29 @@ test('cancelling a queued audit tells the spider to cancel and marks it cancelle
 });
 
 test('cancelling a started audit tells the spider to cancel and marks it cancelled', function () {
-    $audit = makeAudit('crawler-started', Status::Started);
+    $user = User::factory()->create();
+    $audit = makeAudit($user, 'crawler-started', Status::Started);
 
     test()->mock(Spider::class)
         ->shouldReceive('cancel')
         ->once()
         ->with('crawler-started');
 
-    $this->delete(route('audit.cancel', ['id' => 'crawler-started']));
+    $this->actingAs($user)->delete(route('audit.cancel', ['id' => 'crawler-started']));
 
     $audit->refresh();
     expect($audit->status)->toBe(Status::Cancelled);
 });
 
 test('cancelling an already-completed audit is a no-op and does not touch the spider', function () {
-    $audit = makeAudit('crawler-completed', Status::Completed);
+    $user = User::factory()->create();
+    $audit = makeAudit($user, 'crawler-completed', Status::Completed);
 
     test()->mock(Spider::class)
         ->shouldReceive('cancel')
         ->never();
 
-    $this->delete(route('audit.cancel', ['id' => 'crawler-completed']));
+    $this->actingAs($user)->delete(route('audit.cancel', ['id' => 'crawler-completed']));
 
     $audit->refresh();
     expect($audit->status)->toBe(Status::Completed);
@@ -63,6 +76,9 @@ test('cancelling an already-completed audit is a no-op and does not touch the sp
 });
 
 test('cancelling an unknown audit id 404s', function () {
-    $this->delete(route('audit.cancel', ['id' => 'does-not-exist']))
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->delete(route('audit.cancel', ['id' => 'does-not-exist']))
         ->assertNotFound();
 });

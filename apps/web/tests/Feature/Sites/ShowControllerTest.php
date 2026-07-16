@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Value\Impact;
 use App\Value\Status;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -76,4 +77,66 @@ test('an in-progress current audit has no score yet but still reports scan state
             ->where('issuesSnapshot', null)
             ->has('scoreTrend', 0),
         );
+});
+
+test('history is capped to 5 audits for free accounts with more than 5 audits on a domain', function () {
+    $user = User::factory()->create();
+
+    foreach (range(1, 7) as $i) {
+        $audit = makeUserAudit($user, "acme-{$i}", 'acme.com', Status::Completed);
+        $audit->forceFill(['created_at' => now()->subDays(7 - $i)])->save();
+    }
+
+    $this->actingAs($user)
+        ->get(route('sites.show', ['domain' => 'acme.com']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('sites/show')
+            ->has('history', 5),
+        );
+});
+
+test('history is not capped for pro accounts', function () {
+    $user = User::factory()->pro()->create();
+
+    foreach (range(1, 7) as $i) {
+        $audit = makeUserAudit($user, "acme-{$i}", 'acme.com', Status::Completed);
+        $audit->forceFill(['created_at' => now()->subDays(7 - $i)])->save();
+    }
+
+    $this->actingAs($user)
+        ->get(route('sites.show', ['domain' => 'acme.com']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('sites/show')
+            ->has('history', 7),
+        );
+});
+
+test('rescan.availableAt is a future timestamp for a free account within the 24h re-scan window', function () {
+    $user = User::factory()->create();
+    makeUserAudit($user, 'recent', 'acme.com', Status::Completed);
+
+    $this->actingAs($user)
+        ->get(route('sites.show', ['domain' => 'acme.com']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('rescan.availableAt', fn ($value) => $value !== null && Carbon::parse($value)->isFuture()),
+        );
+});
+
+test('rescan.availableAt is null for a free account once the 24h window has passed', function () {
+    $user = User::factory()->create();
+    $audit = makeUserAudit($user, 'old', 'acme.com', Status::Completed);
+    $audit->forceFill(['created_at' => now()->subHours(25)])->save();
+
+    $this->actingAs($user)
+        ->get(route('sites.show', ['domain' => 'acme.com']))
+        ->assertInertia(fn (Assert $page) => $page->where('rescan.availableAt', null));
+});
+
+test('rescan.availableAt is always null for pro accounts', function () {
+    $user = User::factory()->pro()->create();
+    makeUserAudit($user, 'just-scanned', 'acme.com', Status::Completed);
+
+    $this->actingAs($user)
+        ->get(route('sites.show', ['domain' => 'acme.com']))
+        ->assertInertia(fn (Assert $page) => $page->where('rescan.availableAt', null));
 });

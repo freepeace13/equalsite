@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\User;
+use App\Value\Plan;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -56,5 +57,20 @@ class UserFactory extends Factory
             'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
             'two_factor_confirmed_at' => now(),
         ]);
+    }
+
+    /**
+     * Indicate that the user is on the Pro plan.
+     *
+     * 'plan' is deliberately excluded from User's #[Fillable], so it can't be
+     * set via a plain state() array (that goes through mass-assignment-guarded
+     * fill() same as any other write) — forceFill() after creation is the only
+     * legitimate way, mirroring how SyncUserPlanFromSubscription itself writes it.
+     */
+    public function pro(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $user->forceFill(['plan' => Plan::Pro])->save();
+        });
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Sites;
 use App\Http\Controllers\Controller;
 use App\Models\Audit;
 use App\Services\ReportPresenter;
+use App\Support\Plan\PlanLimits;
 use App\Value\Impact;
 use App\Value\ScanProgress;
 use App\Value\ScanQueue;
@@ -15,11 +16,17 @@ class ShowController extends Controller
 {
     public function __invoke(Request $request, string $domain)
     {
+        $limits = PlanLimits::for($request->user()->plan);
+
         $audits = $request->user()
             ->audits()
-            ->with('violations')
+            // History/snapshot rendering below only ever reads impact_level and
+            // a bare count() — not the full row (nodes, description, etc. are
+            // sizeable columns that would otherwise be hydrated for nothing).
+            ->with(['violations' => fn ($query) => $query->select('id', 'audit_id', 'impact_level')])
             ->where('domain', $domain)
             ->latest()
+            ->when($limits->historyRetention(), fn ($query, int $n) => $query->limit($n))
             ->get();
 
         abort_if($audits->isEmpty(), 404);
@@ -53,7 +60,23 @@ class ShowController extends Controller
             'scoreTrend' => $scoreTrend,
             'history' => $history,
             'lastAuditUrl' => $latest->url,
+            'rescan' => [
+                'availableAt' => $this->rescanAvailableAt($latest, $limits),
+            ],
         ]);
+    }
+
+    protected function rescanAvailableAt(Audit $lastAudit, PlanLimits $limits): ?string
+    {
+        $hours = $limits->rescanFrequencyHours();
+
+        if ($hours === null) {
+            return null;
+        }
+
+        $threshold = $lastAudit->created_at->addHours($hours);
+
+        return $threshold->isFuture() ? $threshold->toIso8601String() : null;
     }
 
     protected function presentHistoryRow(Audit $audit): array

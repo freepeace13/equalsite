@@ -32,6 +32,8 @@ type AuthModalProps = {
     canRegister?: boolean;
     canResetPassword?: boolean;
     status?: string;
+    /** Optional context shown under the title, e.g. why the modal interrupted the user's flow. */
+    description?: string;
 };
 
 export function AuthModal({
@@ -41,6 +43,7 @@ export function AuthModal({
     canRegister = true,
     canResetPassword = true,
     status,
+    description,
 }: AuthModalProps) {
     const [tab, setTab] = useState<AuthTab>(defaultTab);
 
@@ -67,6 +70,11 @@ export function AuthModal({
                             ? 'Log in to equalsite'
                             : 'Create your account'}
                     </DialogTitle>
+                    {description && (
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                            {description}
+                        </p>
+                    )}
                 </DialogHeader>
 
                 {canRegister ? (
@@ -184,7 +192,7 @@ function RegisterForm() {
     return (
         <Form
             {...registerStore.form()}
-            resetOnSuccess={['password', 'password_confirmation']}
+            resetOnSuccess={['password']}
             disableWhileProcessing
             className="flex flex-col gap-5"
         >
@@ -226,20 +234,6 @@ function RegisterForm() {
                             placeholder="Password"
                         />
                         <InputError message={errors.password} />
-                    </div>
-
-                    <div className="grid gap-2">
-                        <Label htmlFor="register-password-confirmation">
-                            Confirm password
-                        </Label>
-                        <PasswordInput
-                            id="register-password-confirmation"
-                            required
-                            autoComplete="new-password"
-                            name="password_confirmation"
-                            placeholder="Confirm password"
-                        />
-                        <InputError message={errors.password_confirmation} />
                     </div>
 
                     <Button

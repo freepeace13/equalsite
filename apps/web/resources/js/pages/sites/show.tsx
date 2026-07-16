@@ -12,7 +12,7 @@ import { PublicHeader } from '@/components/public-header';
 import { dashboard } from '@/routes';
 import { cancel, progress, result, store } from '@/routes/audit';
 import { index as sitesIndex } from '@/routes/sites';
-import { humanReadableDateTime, str } from '@/lib/utils';
+import { humanReadableDateTime, relativeTimeUntil, str } from '@/lib/utils';
 import type { ScanProgress, ScanQueue, ScanStatus } from '@/types';
 import type {
     CancelledWsEvent,
@@ -65,6 +65,10 @@ type IssuesSnapshot = {
     quickWins: number;
 };
 
+type Rescan = {
+    availableAt: string | null;
+};
+
 type SiteShowProps = {
     domain: string;
     currentAudit: CurrentAudit;
@@ -72,6 +76,7 @@ type SiteShowProps = {
     scoreTrend: HistoryRow[];
     history: HistoryRow[];
     lastAuditUrl: string;
+    rescan: Rescan;
 };
 
 type WsEvents =
@@ -304,7 +309,14 @@ export default function Show({
     scoreTrend,
     history,
     lastAuditUrl,
+    rescan,
 }: SiteShowProps) {
+    const rescanBlocked =
+        rescan.availableAt !== null && new Date(rescan.availableAt).getTime() > Date.now();
+    const rescanCaption = rescanBlocked
+        ? `next scan available in ${relativeTimeUntil(rescan.availableAt as string)}`
+        : undefined;
+
     return (
         <>
             <Head title={`Audit history for ${domain}`} />
@@ -325,10 +337,22 @@ export default function Show({
                             {history.length} {str.plural('audit', history.length)} run
                         </p>
                     </div>
-                    <Button size="sm" onClick={() => runNewAudit(lastAuditUrl)}>
-                        run new audit
-                        <ArrowRightIcon />
-                    </Button>
+                    <div className="flex flex-col items-end gap-1">
+                        <Button
+                            size="sm"
+                            onClick={() => runNewAudit(lastAuditUrl)}
+                            disabled={rescanBlocked}
+                            title={rescanCaption}
+                        >
+                            run new audit
+                            <ArrowRightIcon />
+                        </Button>
+                        {rescanCaption && (
+                            <p className="text-xs text-slate-400 dark:text-slate-500">
+                                {rescanCaption}
+                            </p>
+                        )}
+                    </div>
                 </div>
 
                 <CurrentAuditCard audit={currentAudit} />

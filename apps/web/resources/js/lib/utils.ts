@@ -24,6 +24,32 @@ export function match<T = unknown>(value: string, obj: { [key: string]: T }) {
     return obj.default || null;
 }
 
+/**
+ * Coarse "in Xh" / "in Xd" style countdown to a future timestamp. Not a
+ * general-purpose relative-time formatter — just enough precision for a
+ * "next scan available in ..." caption.
+ */
+export function relativeTimeUntil(target: number | string | Date): string {
+    const diffMs = new Date(target).getTime() - Date.now();
+
+    if (diffMs <= 0) {
+        return 'now';
+    }
+
+    const minutes = Math.round(diffMs / 60_000);
+    if (minutes < 60) {
+        return `${minutes}m`;
+    }
+
+    const hours = Math.round(minutes / 60);
+    if (hours < 24) {
+        return `${hours}h`;
+    }
+
+    const days = Math.round(hours / 24);
+    return `${days}d`;
+}
+
 export function humanReadableDateTime(targetDate: number | string | Date | undefined) {
     if (!targetDate) {
         return '-';

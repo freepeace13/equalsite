@@ -87,4 +87,11 @@ return [
 
     'sandbox' => env('PADDLE_SANDBOX', false),
 
+    /**
+     * The paddle dashboard price ids
+     */
+    'prices' => [
+        'pri_01kxmzptktzwpnqfpr9b8hefry',
+        'pri_01kxmzqzp19cxhmbk6v23f4qez',
+    ],
 ];

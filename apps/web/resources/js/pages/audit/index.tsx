@@ -1,18 +1,17 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, InputError } from '@equalsite/ui';
-import { Head, useForm } from '@inertiajs/react';
+import { InputError } from '@equalsite/ui';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { PublicHeader } from '@/components/public-header';
+import { AuthModal } from '@/components/auth/auth-modal';
 import { store } from '@/routes/audit';
 import { CrawlDepth } from '@/components/form/crawl-depth';
 import {
     ArrowRightIcon,
     Button,
-    Callout,
     Collapsible,
     CollapsibleChevron,
     CollapsibleContent,
     CollapsibleTrigger,
     type IconProps,
-    LockIcon,
     SearchIcon,
     SlidersIcon,
     UsersIcon,
@@ -26,15 +25,11 @@ import {
 } from 'react';
 import { EnqueueStrategy } from '@/components/form/enqueue-strategy';
 import { PagePattern } from '@/components/form/page-pattern';
+import { clearPendingAudit, savePendingAudit } from '@/lib/pending-audit';
 
 const NAV_LINKS = [
     { label: 'How it works', href: '#how' },
-    { label: 'Docs', href: '#' },
-    {
-        label: 'GitHub',
-        href: 'https://github.com/freepeace13/equalsite',
-        external: true,
-    },
+    { label: 'Pricing', href: '#pricing' },
 ];
 
 const CRAWL_DEPTHS = [
@@ -48,25 +43,25 @@ const FEATURE_CARDS: {
     description: string;
     Icon: ComponentType<IconProps>;
 }[] = [
-    {
-        title: 'real browser scans',
-        description:
-            'crawls your site like a visitor would, running axe-core on every page.',
-        Icon: SearchIcon,
-    },
-    {
-        title: "grouped by who's affected",
-        description:
-            'not raw rule IDs — keyboard, screen reader, and low-vision users.',
-        Icon: UsersIcon,
-    },
-    {
-        title: 'fix priority, not a wall of text',
-        description:
-            'quick wins vs structural work, ranked first in every list.',
-        Icon: ZapIcon,
-    },
-];
+        {
+            title: 'real browser scans',
+            description:
+                'crawls your site like a visitor would, running axe-core on every page.',
+            Icon: SearchIcon,
+        },
+        {
+            title: "grouped by who's affected",
+            description:
+                'not raw rule IDs — keyboard, screen reader, and low-vision users.',
+            Icon: UsersIcon,
+        },
+        {
+            title: 'fix priority, not a wall of text',
+            description:
+                'quick wins vs structural work, ranked first in every list.',
+            Icon: ZapIcon,
+        },
+    ];
 
 function AdvancedSettings({
     form,
@@ -78,7 +73,6 @@ function AdvancedSettings({
             include: string;
             exclude: string;
             sameDomain: boolean;
-            email: string;
         }>
     >;
 }) {
@@ -143,16 +137,15 @@ type Props = {
 };
 
 export default function Index({ canRegister, canResetPassword }: Props) {
+    const { auth } = usePage().props;
     const form = useForm({
         url: '',
         crawlDepth: '3',
         include: '',
         exclude: '',
         sameDomain: true,
-        email: '',
     });
-    const [showEmailModal, setShowEmailModal] = useState(false);
-    const [modalEmail, setModalEmail] = useState('');
+    const [authModalOpen, setAuthModalOpen] = useState(false);
 
     const handleChange: ChangeEventHandler<HTMLInputElement> = (e) => {
         form.setData('url', e.target.value);
@@ -168,18 +161,19 @@ export default function Index({ canRegister, canResetPassword }: Props) {
         if (!value) {
             return;
         }
-        setShowEmailModal(true);
-    };
 
-    const submitAudit = () => {
-        setShowEmailModal(false);
-        form.transform((data) => ({ ...data, email: modalEmail.trim() }));
-        form.submit(store());
-    };
+        if (!auth.user) {
+            savePendingAudit({
+                url: value,
+                crawlDepth: form.data.crawlDepth,
+                include: form.data.include,
+                exclude: form.data.exclude,
+                sameDomain: form.data.sameDomain,
+            });
+            setAuthModalOpen(true);
+            return;
+        }
 
-    const submitAsGuest = () => {
-        setShowEmailModal(false);
-        form.transform((data) => ({ ...data, email: '' }));
         form.submit(store());
     };
 
@@ -195,11 +189,6 @@ export default function Index({ canRegister, canResetPassword }: Props) {
             <main>
                 {/* Hero */}
                 <section className="mx-auto max-w-3xl px-6 pt-20 pb-16 text-center">
-                    <span className="mb-6 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                        <LockIcon />
-                        no sign up needed
-                    </span>
-
                     <h1 className="mx-auto max-w-xl font-display text-3xl leading-tight font-medium sm:text-4xl">
                         see your site the way everyone does
                     </h1>
@@ -272,57 +261,19 @@ export default function Index({ canRegister, canResetPassword }: Props) {
                 </section>
             </main>
 
-            {/* Email capture modal */}
-            <Dialog open={showEmailModal} onOpenChange={setShowEmailModal}>
-                <DialogContent className="rounded-xl border-slate-200 bg-white p-6 sm:max-w-sm dark:border-slate-800 dark:bg-slate-900">
-                    <DialogHeader>
-                        <DialogTitle className="font-display text-lg font-medium">
-                            save this audit?
-                        </DialogTitle>
-                    </DialogHeader>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                        optional — add your email to check back later and see
-                        your audit history. we'll send a link, no password
-                        needed.
-                    </p>
-                    <label htmlFor="modal-email" className="sr-only">
-                        Email address
-                    </label>
-                    <input
-                        id="modal-email"
-                        type="email"
-                        placeholder="you@example.com"
-                        value={modalEmail}
-                        onChange={(e) => setModalEmail(e.target.value)}
-                        className="h-11 w-full rounded-lg border border-slate-300 bg-white px-4 text-sm placeholder:text-slate-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600 focus:outline-none dark:border-slate-700 dark:bg-slate-900"
-                    />
-                    {form.errors.email && (
-                        <InputError message={form.errors.email} />
-                    )}
-                    <Button
-                        type="button"
-                        onClick={submitAudit}
-                        disabled={form.processing}
-                        className="h-11 w-full"
-                    >
-                        save &amp; continue
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={submitAsGuest}
-                        disabled={form.processing}
-                        className="h-9 w-full text-slate-500 dark:text-slate-400"
-                    >
-                        skip, continue as guest
-                    </Button>
-                    <Callout>
-                        heads up — as a guest, this page is your only way back
-                        in. if you lose it, you'll need to wait out the rate
-                        limit before you can run another audit for this site.
-                    </Callout>
-                </DialogContent>
-            </Dialog>
+            <AuthModal
+                open={authModalOpen}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        clearPendingAudit();
+                    }
+                    setAuthModalOpen(open);
+                }}
+                defaultTab="register"
+                canRegister={canRegister}
+                canResetPassword={canResetPassword}
+                description="log in or create an account to run this audit — we'll pick up right where you left off."
+            />
 
             <footer className="mx-auto max-w-5xl px-6 py-10 text-xs text-slate-400 dark:text-slate-600">
                 equalsite — an open accessibility diagnostic.{' '}
