@@ -41,13 +41,13 @@ jobs:
       - name: Install Node Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install PHP Dependencies
-        working-directory: apps/web
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
-
       - name: Copy Environment File
         working-directory: apps/web
         run: cp .env.example .env
+
+      - name: Install PHP Dependencies
+        working-directory: apps/web
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
       - name: Generate Application Key
         working-directory: apps/web
