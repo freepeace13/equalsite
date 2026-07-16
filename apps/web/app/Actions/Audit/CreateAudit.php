@@ -32,10 +32,12 @@ class CreateAudit
             : CrawlDepth::Standard;
         $depth = $limits->clampCrawlDepth($requestedDepth);
 
+        $callbackUrl = config('app.url').route('api.crawler.callback', absolute: false);
+
         $response = $this->spider->create(
             SpiderOptions::make(
                 urls: [$url],
-                callbackUrl: 'http://web'.route('api.crawler.callback', absolute: false)
+                callbackUrl: $callbackUrl
             )->setOptions([
                 'maxPages' => $limits->pageCap(),
                 'enqueueLinks' => true,

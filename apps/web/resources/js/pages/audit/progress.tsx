@@ -164,8 +164,8 @@ function FeedRow({ url, entry }: { url: string; entry: ScannedUrl }) {
                             isCritical
                                 ? 'text-red-600 dark:text-red-400'
                                 : isModerate
-                                  ? 'text-yellow-600 dark:text-yellow-400'
-                                  : 'text-slate-500'
+                                    ? 'text-yellow-600 dark:text-yellow-400'
+                                    : 'text-slate-500'
                         }
                     />
                 )}
@@ -484,8 +484,8 @@ export default function Progress({
         scanInfo.status === 'started' || scanInfo.status === 'completed'
             ? 'crawling'
             : scanInfo.status === 'queued'
-              ? 'waiting'
-              : null;
+                ? 'waiting'
+                : null;
     const issuesCount = countIssues(scanUrls);
     const badge = SCAN_STATUS_BADGE[scanInfo.status];
 
@@ -493,9 +493,7 @@ export default function Progress({
         <>
             <Head title={`Auditing ${domain}`} />
 
-            <PublicHeader />
-
-            <main className="mx-auto max-w-3xl px-6 py-10">
+            <main className="mx-auto container py-10">
                 <div className="mb-6 flex items-center justify-between">
                     <p className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
                         <GlobeIcon />

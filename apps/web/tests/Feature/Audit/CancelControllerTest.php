@@ -1,10 +1,12 @@
 <?php
 
 use App\Contracts\Spider;
+use App\Exceptions\Spider\SpiderUnavailableException;
 use App\Models\Audit;
 use App\Models\User;
 use App\Value\Status;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 
 uses(RefreshDatabase::class);
 
@@ -72,6 +74,24 @@ test('cancelling an already-completed audit is a no-op and does not touch the sp
 
     $audit->refresh();
     expect($audit->status)->toBe(Status::Completed);
+    expect($audit->cancelled_at)->toBeNull();
+});
+
+test('a spider failure while cancelling is reported and surfaced as a form error, leaving the audit untouched', function () {
+    $user = User::factory()->create();
+    $audit = makeAudit($user, 'crawler-unreachable', Status::Queued);
+
+    test()->mock(Spider::class)
+        ->shouldReceive('cancel')
+        ->once()
+        ->andThrow(SpiderUnavailableException::fromConnectionFailure(new ConnectionException('Connection refused')));
+
+    $response = $this->actingAs($user)->delete(route('audit.cancel', ['id' => 'crawler-unreachable']));
+
+    $response->assertRedirect()->assertSessionHasErrors('audit');
+
+    $audit->refresh();
+    expect($audit->status)->toBe(Status::Queued);
     expect($audit->cancelled_at)->toBeNull();
 });
 

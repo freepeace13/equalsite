@@ -238,9 +238,8 @@ export default function Dashboard(props: DashboardProps) {
     return (
         <>
             <Head title="Dashboard" />
-            <PublicHeader navLinks={[{ label: 'your sites', href: sitesIndex().url }]} />
 
-            <main className="mx-auto max-w-4xl px-6 py-10">
+            <main className="mx-auto container py-10">
                 <div className="mb-8">
                     <h1 className="font-display text-xl font-medium">dashboard</h1>
                     {story && <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{story}</p>}

@@ -86,6 +86,19 @@ class AppServiceProvider extends ServiceProvider
      * and in addition to, the 24h same-site re-scan business rule enforced in
      * CreateAudit::assertRescanAllowed(). It knows nothing about domains, only
      * a rolling per-hour window keyed by user id.
+     *
+     * ->after() defers the hit until the response is known instead of
+     * charging it up front. AuditCreateRequest's validation/authorization
+     * runs during controller dispatch, after this middleware would normally
+     * already have consumed an attempt — so without ->after(), a mistyped
+     * URL or a denied domain (e.g. the "1 in-flight audit" cap) burns quota
+     * before CreateAudit ever runs. Laravel's route-level pipeline renders
+     * the resulting ValidationException/AuthorizationException into a
+     * response (a redirect with flashed `errors`, or a 403) rather than
+     * letting it propagate as a thrown exception, so we can't detect those
+     * cases by catching an exception here — only by inspecting the
+     * response: anything other than a clean, error-free redirect is treated
+     * as never having reached CreateAudit and doesn't count.
      */
     protected function configureRateLimiting(): void
     {
@@ -93,9 +106,11 @@ class AppServiceProvider extends ServiceProvider
             $user = $request->user();
             $limits = PlanLimits::for($user->plan);
 
-            return $limits->siteCap() === null // Pro
-                ? Limit::perHour(20)->by($user->id)
-                : Limit::perHour(5)->by($user->id);
+            return ($limits->siteCap() === null // Pro
+                ? Limit::perHour(20)
+                : Limit::perHour(5))
+                ->by($user->id)
+                ->after(fn ($response) => $response->getStatusCode() < 400 && blank(session('errors')));
         });
     }
 }

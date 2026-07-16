@@ -73,8 +73,8 @@ function ScoreCell({ score }: { score: number | null }) {
         score >= 90
             ? 'text-emerald-600 dark:text-emerald-400'
             : score >= 60
-              ? 'text-yellow-600 dark:text-yellow-400'
-              : 'text-red-600 dark:text-red-400';
+                ? 'text-yellow-600 dark:text-yellow-400'
+                : 'text-red-600 dark:text-red-400';
 
     return <span className={`font-medium tabular-nums ${tone}`}>{score}</span>;
 }
@@ -204,9 +204,8 @@ export default function Index({ sites }: SitesIndexProps) {
     return (
         <>
             <Head title="Your sites" />
-            <PublicHeader navLinks={[{ label: 'Dashboard', href: dashboard().url }]} />
 
-            <main className="mx-auto max-w-4xl px-6 py-10">
+            <main className="mx-auto container py-10">
                 <div className="mb-6 flex items-end justify-between gap-4">
                     <div>
                         <h1 className="font-display text-xl font-medium">your sites</h1>

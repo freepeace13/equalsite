@@ -11,7 +11,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Laravel\Paddle\PricePreview;
 
 class BillingController extends Controller
 {
@@ -32,8 +31,8 @@ class BillingController extends Controller
                 'endsAt' => $subscription->ends_at?->toIso8601String(),
             ] : null,
             'prices' => [
-                'monthly' => $this->presentPrice($prices['monthly']),
-                'yearly' => $this->presentPrice($prices['yearly']),
+                'monthly' => $prices['monthly'],
+                'yearly' => $prices['yearly'],
             ],
         ]);
     }
@@ -66,7 +65,7 @@ class BillingController extends Controller
 
         return response()->json([
             'customerId' => $customer->paddle_id,
-            'priceId' => $preview->price()->id,
+            'priceId' => $preview['id'],
         ]);
     }
 
@@ -83,21 +82,5 @@ class BillingController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Your subscription will end at the close of the current billing period.')]);
 
         return back();
-    }
-
-    /**
-     * @return array{id: ?string, formatted: ?string, currency: ?string}|null
-     */
-    protected function presentPrice(?PricePreview $preview): ?array
-    {
-        if ($preview === null) {
-            return null;
-        }
-
-        return [
-            'id' => $preview->price()->id,
-            'formatted' => $preview->total(),
-            'currency' => $preview->currency()->getCode(),
-        ];
     }
 }

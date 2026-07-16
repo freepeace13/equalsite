@@ -320,9 +320,8 @@ export default function Show({
     return (
         <>
             <Head title={`Audit history for ${domain}`} />
-            <PublicHeader navLinks={[{ label: 'Dashboard', href: dashboard().url }]} />
 
-            <main className="mx-auto max-w-4xl px-6 py-10">
+            <main className="mx-auto container py-10">
                 <Link
                     href={sitesIndex().url}
                     className="mb-3 inline-block text-xs text-slate-500 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-white"

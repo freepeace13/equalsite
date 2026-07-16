@@ -1,9 +1,0 @@
-{
-  "type": "module",
-  "dependencies": {
-    "@axe-core/playwright": "^4.11.3",
-    "crawlee": "^3.16.0",
-    "ioredis": "^5.10.1",
-    "playwright": "^1.59.1"
-  }
-}

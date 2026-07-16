@@ -24,7 +24,7 @@ use Throwable;
 class ResolvePlanPrices
 {
     /**
-     * @return array{monthly: ?PricePreview, yearly: ?PricePreview}
+     * @return array{monthly: ?array{id: string, formatted: string, currency: string}, yearly: ?array{id: string, formatted: string, currency: string}}
      */
     public function resolve(): array
     {
@@ -32,9 +32,12 @@ class ResolvePlanPrices
             return Cache::remember('billing.prices.preview', now()->addHour(), function (): array {
                 $previews = Cashier::previewPrices(config('cashier.prices'));
 
+                $monthly = $previews->first(fn (PricePreview $preview): bool => $preview->price()->interval() === 'month');
+                $yearly = $previews->first(fn (PricePreview $preview): bool => $preview->price()->interval() === 'year');
+
                 return [
-                    'monthly' => $previews->first(fn (PricePreview $preview): bool => $preview->price()->interval() === 'month'),
-                    'yearly' => $previews->first(fn (PricePreview $preview): bool => $preview->price()->interval() === 'year'),
+                    'monthly' => $this->present($monthly),
+                    'yearly' => $this->present($yearly),
                 ];
             });
         } catch (Throwable $e) {
@@ -42,5 +45,26 @@ class ResolvePlanPrices
 
             return ['monthly' => null, 'yearly' => null];
         }
+    }
+
+    /**
+     * Reduce a PricePreview to plain, safely-serializable data before it's
+     * handed to Cache::remember(). Caching the live Paddle SDK object graph
+     * directly is what caused stale cache entries to unserialize as
+     * __PHP_Incomplete_Class after the object's shape changed underneath it.
+     *
+     * @return array{id: string, formatted: string, currency: string}|null
+     */
+    protected function present(?PricePreview $preview): ?array
+    {
+        if ($preview === null) {
+            return null;
+        }
+
+        return [
+            'id' => $preview->price()->id,
+            'formatted' => $preview->total(),
+            'currency' => $preview->currency()->getCode(),
+        ];
     }
 }

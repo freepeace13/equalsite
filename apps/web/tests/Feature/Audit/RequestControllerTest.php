@@ -1,11 +1,17 @@
 <?php
 
 use App\Contracts\Spider;
+use App\Exceptions\Spider\SpiderUnavailableException;
+use App\Exceptions\Spider\SpiderValidationException;
 use App\Models\Audit;
 use App\Models\User;
 use App\Support\Spider\SpiderOptions;
 use App\Value\Status;
+use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\Response;
 
 uses(RefreshDatabase::class);
 
@@ -162,6 +168,40 @@ test('a free account resubmitting to its own existing site within the 24h window
     $response = $this->actingAs($user)->post(route('audit.store'), ['url' => 'https://acme.com']);
 
     $response->assertRedirect()->assertSessionHasErrors('url');
+});
+
+test('a spider validation failure is reported and surfaced as a form error, not a 500', function () {
+    $user = User::factory()->create();
+
+    $response = new Response(new Psr7Response(400, [], json_encode([
+        'error' => 'Invalid request body',
+        'message' => 'The request failed validation.',
+        'errors' => [['field' => 'options.maxPages', 'message' => 'options.maxPages is required.']],
+    ])));
+
+    test()->mock(Spider::class)
+        ->shouldReceive('create')
+        ->once()
+        ->andThrow(SpiderValidationException::fromResponse(new RequestException($response)));
+
+    $result = $this->actingAs($user)->post(route('audit.store'), ['url' => 'https://example.com']);
+
+    $result->assertRedirect()->assertSessionHasErrors('url');
+    expect(Audit::query()->count())->toBe(0);
+});
+
+test('a spider connection failure is reported and surfaced as a form error, not a 500', function () {
+    $user = User::factory()->create();
+
+    test()->mock(Spider::class)
+        ->shouldReceive('create')
+        ->once()
+        ->andThrow(SpiderUnavailableException::fromConnectionFailure(new ConnectionException('Connection refused')));
+
+    $result = $this->actingAs($user)->post(route('audit.store'), ['url' => 'https://example.com']);
+
+    $result->assertRedirect()->assertSessionHasErrors('url');
+    expect(Audit::query()->count())->toBe(0);
 });
 
 test('a free account adding a genuinely new site beyond its site cap is denied', function () {

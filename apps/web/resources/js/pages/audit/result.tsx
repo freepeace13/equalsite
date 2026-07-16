@@ -90,8 +90,8 @@ function ScoreGauge({ score }: { score: number }) {
         score >= 90
             ? 'text-emerald-500'
             : score >= 70
-              ? 'text-yellow-500'
-              : 'text-red-500';
+                ? 'text-yellow-500'
+                : 'text-red-500';
 
     return (
         <svg
@@ -316,9 +316,7 @@ export default function Report({ report }: ReportProps) {
         <>
             <Head title={`Accessibility report for ${domain}`} />
 
-            <PublicHeader />
-
-            <main className="mx-auto max-w-3xl px-6 py-10">
+            <main className="mx-auto container py-10">
                 {/* Score + narrative */}
                 <div className="mb-6 flex items-start gap-5 border-b border-slate-200 pb-6 dark:border-slate-800">
                     <ScoreGauge score={report.healthScore} />

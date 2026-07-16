@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Audit;
 
 use App\Actions\Audit\CreateAudit;
 use App\Exceptions\Audit\RescanTooSoonException;
+use App\Exceptions\Spider\SpiderException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Audit\AuditCreateRequest;
 use Illuminate\Http\RedirectResponse;
@@ -22,6 +23,12 @@ class RequestController extends Controller
             return back()
                 ->withErrors(['url' => $e->getMessage()])
                 ->with('rescanAvailableAt', $e->availableAt->toIso8601String());
+        } catch (SpiderException $e) {
+            report($e);
+
+            return back()->withErrors([
+                'url' => 'We could not start this scan right now. Please try again in a few minutes.',
+            ]);
         }
 
         return redirect()->route('audit.progress', [
