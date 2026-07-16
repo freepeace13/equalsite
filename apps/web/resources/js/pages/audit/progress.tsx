@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEchoPublic } from '@laravel/echo-react';
 import { PublicHeader } from '@/components/public-header';
-import { cancel, result } from '@/routes/audit';
+import { cancel, index, progress, result } from '@/routes/audit';
 import { omit } from '@/lib/obj';
 import type { ScanInfo, ScanProgress, ScanQueue, ScannedUrl } from '@/types';
 import type {
@@ -543,3 +543,13 @@ export default function Progress({
         </>
     );
 }
+
+Progress.layout = (props: ScanProgressPageProps) => ({
+    breadcrumbs: [
+        { title: 'Audits', href: index() },
+        {
+            title: hostnameOf(props.scanInfo.siteUrl),
+            href: progress(props.scanInfo.auditId),
+        },
+    ],
+});

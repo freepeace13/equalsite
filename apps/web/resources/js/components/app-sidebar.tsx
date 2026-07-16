@@ -1,10 +1,12 @@
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@equalsite/ui';
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { BookOpen, ClipboardList, FolderGit2, Globe, LayoutGrid } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
+import audit from '@/routes/audit';
+import sites from '@/routes/sites';
 import { dashboard, } from '@/routes';
 import type { NavItem } from '@/types';
 
@@ -14,17 +16,27 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
+    {
+        title: 'Sites',
+        href: sites.index(),
+        icon: Globe,
+    },
+    {
+        title: 'Audits',
+        href: audit.index(),
+        icon: ClipboardList,
+    },
 ];
 
 const footerNavItems: NavItem[] = [
     {
         title: 'Repository',
-        href: '#',
+        href: 'https://github.com/freepeace13/equalsite',
         icon: FolderGit2,
     },
     {
         title: 'Documentation',
-        href: '#',
+        href: 'https://github.com/freepeace13/equalsite',
         icon: BookOpen,
     },
 ];

@@ -11,7 +11,7 @@ import {
 import { PublicHeader } from '@/components/public-header';
 import { dashboard } from '@/routes';
 import { cancel, progress, result, store } from '@/routes/audit';
-import { index as sitesIndex } from '@/routes/sites';
+import { show, index as sitesIndex } from '@/routes/sites';
 import { humanReadableDateTime, relativeTimeUntil, str } from '@/lib/utils';
 import type { ScanProgress, ScanQueue, ScanStatus } from '@/types';
 import type {
@@ -400,3 +400,10 @@ export default function Show({
         </>
     );
 }
+
+Show.layout = (props: SiteShowProps) => ({
+    breadcrumbs: [
+        { title: 'Sites', href: sitesIndex() },
+        { title: props.domain, href: show(props.domain) },
+    ],
+});

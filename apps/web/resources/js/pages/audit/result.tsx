@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { PublicHeader } from '@/components/public-header';
+import { index, result } from '@/routes/audit';
 import type { ServerityBreakdown } from '@equalsite/types';
 import type {
     IViolation,
@@ -57,6 +58,14 @@ type ReportProps = {
         violations: IViolation[];
     };
 };
+
+function hostnameOf(url: string) {
+    try {
+        return new URL(url).hostname;
+    } catch {
+        return url;
+    }
+}
 
 type ImpactKey = Exclude<SeverityBadgeSeverity, 'pass'>;
 
@@ -280,13 +289,7 @@ function ImpactGroup({
 }
 
 export default function Report({ report }: ReportProps) {
-    const domain = (() => {
-        try {
-            return new URL(report.siteUrl).hostname;
-        } catch {
-            return report.siteUrl;
-        }
-    })();
+    const domain = hostnameOf(report.siteUrl);
 
     const pageCount = Object.keys(report.scannedUrls).length;
 
@@ -391,3 +394,13 @@ export default function Report({ report }: ReportProps) {
         </>
     );
 }
+
+Report.layout = (props: ReportProps) => ({
+    breadcrumbs: [
+        { title: 'Audits', href: index() },
+        {
+            title: hostnameOf(props.report.siteUrl),
+            href: result(props.report.auditId),
+        },
+    ],
+});

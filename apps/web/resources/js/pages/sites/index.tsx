@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { PublicHeader } from '@/components/public-header';
 import { dashboard } from '@/routes';
 import { create, progress } from '@/routes/audit';
-import { show } from '@/routes/sites';
+import { index, show } from '@/routes/sites';
 import { humanReadableDateTime, str } from '@/lib/utils';
 import type { ScanProgress, ScanQueue, ScanStatus } from '@/types';
 import type {
@@ -254,3 +254,12 @@ export default function Index({ sites }: SitesIndexProps) {
         </>
     );
 }
+
+Index.layout = {
+    breadcrumbs: [
+        {
+            title: 'Sites',
+            href: index(),
+        },
+    ],
+};

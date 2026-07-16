@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { PublicHeader } from '@/components/public-header';
-import { create } from '@/routes/audit';
+import { create, index } from '@/routes/audit';
 import {
     Button,
     ProgressBar,
@@ -212,9 +212,7 @@ export default function Lobby() {
         <>
             <Head title="Your audits" />
 
-            <PublicHeader />
-
-            <main className="mx-auto max-w-4xl px-6 py-10">
+            <main className="mx-auto container py-10">
                 <h1 className="mb-1 font-display text-xl font-medium">
                     your audits
                 </h1>
@@ -327,3 +325,12 @@ export default function Lobby() {
         </>
     );
 }
+
+Lobby.layout = {
+    breadcrumbs: [
+        {
+            title: 'Audits',
+            href: index(),
+        },
+    ],
+};
