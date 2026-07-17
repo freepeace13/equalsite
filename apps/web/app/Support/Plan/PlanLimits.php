@@ -53,9 +53,9 @@ final class PlanLimits
         return collect($allowed)->sortByDesc(fn (CrawlDepth $depth): int => $depth->value)->first();
     }
 
-    public function rescanFrequencyHours(): ?int
+    public function rescanFrequencyMinutes(): ?int
     {
-        return $this->get('rescan_frequency_hours');
+        return $this->get('rescan_frequency_minutes');
     }
 
     public function historyRetention(): ?int

@@ -144,7 +144,7 @@ test('a free account resubmitting to its own existing site is allowed by the sit
 
     Audit::findById('crawler-free-first')->forceFill([
         'status' => Status::Completed,
-        'created_at' => now()->subHours(30), // well outside the 24h rescan window
+        'created_at' => now()->subHours(30), // well outside the rescan window
     ])->save();
 
     fakeSpider('crawler-free-second');
@@ -155,7 +155,7 @@ test('a free account resubmitting to its own existing site is allowed by the sit
     expect(Audit::findById('crawler-free-second'))->not->toBeNull();
 });
 
-test('a free account resubmitting to its own existing site within the 24h window is blocked by the re-scan rule, not the site cap', function () {
+test('a free account resubmitting to its own existing site within the rescan window is blocked by the re-scan rule, not the site cap', function () {
     fakeSpider('crawler-free-recent');
     $user = User::factory()->create();
 

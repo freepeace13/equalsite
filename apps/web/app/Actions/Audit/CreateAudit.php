@@ -64,9 +64,9 @@ class CreateAudit
      */
     protected function assertRescanAllowed(User $user, string $url, PlanLimits $limits): void
     {
-        $hours = $limits->rescanFrequencyHours();
+        $minutes = $limits->rescanFrequencyMinutes();
 
-        if ($hours === null) {
+        if ($minutes === null) {
             return; // Pro: no cap
         }
 
@@ -77,8 +77,8 @@ class CreateAudit
             ->latest()
             ->first();
 
-        if ($lastAudit && $lastAudit->created_at->isAfter(now()->subHours($hours))) {
-            throw new RescanTooSoonException($lastAudit->created_at->addHours($hours));
+        if ($lastAudit && $lastAudit->created_at->isAfter(now()->subMinutes($minutes))) {
+            throw new RescanTooSoonException($lastAudit->created_at->addMinutes($minutes));
         }
     }
 

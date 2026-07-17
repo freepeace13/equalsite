@@ -111,7 +111,7 @@ test('history is not capped for pro accounts', function () {
         );
 });
 
-test('rescan.availableAt is a future timestamp for a free account within the 24h re-scan window', function () {
+test('rescan.availableAt is a future timestamp for a free account within the re-scan window', function () {
     $user = User::factory()->create();
     makeUserAudit($user, 'recent', 'acme.com', Status::Completed);
 
@@ -122,7 +122,7 @@ test('rescan.availableAt is a future timestamp for a free account within the 24h
         );
 });
 
-test('rescan.availableAt is null for a free account once the 24h window has passed', function () {
+test('rescan.availableAt is null for a free account once the rescan window has passed', function () {
     $user = User::factory()->create();
     $audit = makeUserAudit($user, 'old', 'acme.com', Status::Completed);
     $audit->forceFill(['created_at' => now()->subHours(25)])->save();
