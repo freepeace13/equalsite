@@ -1,11 +1,4 @@
 import { Head, Link } from '@inertiajs/react';
-import {
-    CartesianGrid,
-    Line,
-    LineChart,
-    XAxis,
-    YAxis,
-} from 'recharts';
 import { PublicHeader } from '@/components/public-header';
 import { dashboard } from '@/routes';
 import { show as auditShow, progress } from '@/routes/audit';
@@ -17,14 +10,11 @@ import {
     type CurrentAudit,
 } from '@/components/scanning/current-audit-card';
 import { runNewAudit } from '@/components/scanning/run-new-audit';
+import { ScoreTrendChart } from '@/components/reporting/score-trend-chart';
 import type { ScanStatus } from '@/types';
 import {
     ArrowRightIcon,
     Button,
-    type ChartConfig,
-    ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
     SectionLabel,
     StatPair,
     StatusBadge,
@@ -64,37 +54,6 @@ type SiteShowProps = {
     lastAuditUrl: string;
     rescan: Rescan;
 };
-
-function ScoreTrendChart({ data }: { data: HistoryRow[] }) {
-    const chartData = data.map((row) => ({
-        date: new Date(row.requestedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-        score: row.score ?? 0,
-    }));
-
-    const chartConfig = {
-        score: { label: 'score', color: '#4338CA' },
-    } satisfies ChartConfig;
-
-    return (
-        <div className="h-40 w-full">
-            <ChartContainer config={chartConfig} className="h-full w-full">
-                <LineChart data={chartData} margin={{ left: -16, right: 12, top: 8, bottom: 0 }}>
-                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tickLine={false} axisLine={false} fontSize={11} />
-                    <YAxis domain={[0, 100]} tickLine={false} axisLine={false} width={32} fontSize={11} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Line
-                        type="monotone"
-                        dataKey="score"
-                        stroke="var(--color-score)"
-                        strokeWidth={2}
-                        dot={{ r: 3, fill: 'var(--color-score)' }}
-                    />
-                </LineChart>
-            </ChartContainer>
-        </div>
-    );
-}
 
 function HistoryTableRow({ row }: { row: HistoryRow }) {
     const isActive = row.status === 'queued' || row.status === 'started';
