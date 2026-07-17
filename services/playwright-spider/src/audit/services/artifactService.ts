@@ -23,7 +23,7 @@ export const createArtifactService = (
 
     const cleanup = async (auditId: string) => {
         await deleteDirectoryIfExists(directoryPath(auditId));
-        await deleteFileIfExists(zippedPath(auditId));
+        deleteFileIfExists(zippedPath(auditId));
     }
 
     const zippedFile = (auditId: string) => {

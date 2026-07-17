@@ -1,5 +1,5 @@
-import { DownloadArtifactParams } from "@equalsite/types";
-import { Request, Response } from "express";
+import type { DownloadArtifactParams } from "@equalsite/types";
+import type { Request, Response } from "express";
 import * as Config from '../../config';
 import { createArtifactService } from "../../audit/services/artifactService";
 
