@@ -202,7 +202,6 @@ type AuditOptions = {
 };
 type CreateAuditRequestBody = {
     urls: string[];
-    callbackUrl: string;
     options: AuditOptions;
 };
 interface CreateAuditResponseBody {

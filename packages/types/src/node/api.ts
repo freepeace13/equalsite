@@ -14,7 +14,6 @@ export type AuditOptions = {
 
 export type CreateAuditRequestBody = {
     urls: string[];
-    callbackUrl: string;
     options: AuditOptions;
 }
 
