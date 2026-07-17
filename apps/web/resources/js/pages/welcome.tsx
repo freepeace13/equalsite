@@ -30,25 +30,25 @@ const FEATURE_CARDS: {
     description: string;
     Icon: ComponentType<IconProps>;
 }[] = [
-        {
-            title: 'real browser scans',
-            description:
-                'crawls your site like a visitor would, running axe-core on every page.',
-            Icon: SearchIcon,
-        },
-        {
-            title: "grouped by who's affected",
-            description:
-                'not raw rule IDs — keyboard, screen reader, and low-vision users.',
-            Icon: UsersIcon,
-        },
-        {
-            title: 'fix priority, not a wall of text',
-            description:
-                'quick wins vs structural work, ranked first in every list.',
-            Icon: ZapIcon,
-        },
-    ];
+    {
+        title: 'real browser scans',
+        description:
+            'crawls your site like a visitor would, running axe-core on every page.',
+        Icon: SearchIcon,
+    },
+    {
+        title: "grouped by who's affected",
+        description:
+            'not raw rule IDs — keyboard, screen reader, and low-vision users.',
+        Icon: UsersIcon,
+    },
+    {
+        title: 'fix priority, not a wall of text',
+        description:
+            'quick wins vs structural work, ranked first in every list.',
+        Icon: ZapIcon,
+    },
+];
 
 type Props = {
     canRegister: boolean;

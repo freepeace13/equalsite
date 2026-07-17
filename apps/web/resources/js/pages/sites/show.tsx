@@ -59,11 +59,21 @@ function HistoryTableRow({ row }: { row: HistoryRow }) {
     const isActive = row.status === 'queued' || row.status === 'started';
 
     return (
-        <TableRow className={isActive ? 'bg-indigo-50/40 dark:bg-indigo-900/10' : undefined}>
+        <TableRow
+            className={
+                isActive ? 'bg-indigo-50/40 dark:bg-indigo-900/10' : undefined
+            }
+        >
             <TableCell>
                 <StatusBadge {...SCAN_STATUS_BADGE[row.status]} />
             </TableCell>
-            <TableCell className={row.score === null ? 'text-slate-400 dark:text-slate-500' : 'font-medium tabular-nums'}>
+            <TableCell
+                className={
+                    row.score === null
+                        ? 'text-slate-400 dark:text-slate-500'
+                        : 'font-medium tabular-nums'
+                }
+            >
                 {row.score ?? '—'}
             </TableCell>
             <TableCell className="text-slate-500 dark:text-slate-400">
@@ -75,7 +85,10 @@ function HistoryTableRow({ row }: { row: HistoryRow }) {
             <TableCell className="text-right">
                 {row.status === 'completed' && (
                     <Link
-                        href={auditShow(row.auditId, { query: { from: 'site' } }).url}
+                        href={
+                            auditShow(row.auditId, { query: { from: 'site' } })
+                                .url
+                        }
                         className="text-xs font-medium text-indigo-700 hover:underline dark:text-indigo-400"
                     >
                         view report
@@ -104,7 +117,8 @@ export default function Show({
     rescan,
 }: SiteShowProps) {
     const rescanBlocked =
-        rescan.availableAt !== null && new Date(rescan.availableAt).getTime() > Date.now();
+        rescan.availableAt !== null &&
+        new Date(rescan.availableAt).getTime() > Date.now();
     const rescanCaption = rescanBlocked
         ? `next scan available in ${relativeTimeUntil(rescan.availableAt as string)}`
         : undefined;
@@ -113,7 +127,7 @@ export default function Show({
         <>
             <Head title={`Audit history for ${domain}`} />
 
-            <main className="mx-auto container py-10">
+            <main className="container mx-auto py-10">
                 <Link
                     href={sitesIndex().url}
                     className="mb-3 inline-block text-xs text-slate-500 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-white"
@@ -123,9 +137,12 @@ export default function Show({
 
                 <div className="mb-6 flex items-end justify-between gap-4">
                     <div>
-                        <h1 className="font-display text-xl font-medium">{domain}</h1>
+                        <h1 className="font-display text-xl font-medium">
+                            {domain}
+                        </h1>
                         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                            {history.length} {str.plural('audit', history.length)} run
+                            {history.length}{' '}
+                            {str.plural('audit', history.length)} run
                         </p>
                     </div>
                     <div className="flex flex-col items-end gap-1">
@@ -150,7 +167,9 @@ export default function Show({
 
                 {scoreTrend.length >= 2 && (
                     <div className="mb-8">
-                        <SectionLabel className="mb-2">score trend</SectionLabel>
+                        <SectionLabel className="mb-2">
+                            score trend
+                        </SectionLabel>
                         <SurfacePanel padding="sm">
                             <ScoreTrendChart data={scoreTrend} />
                         </SurfacePanel>
@@ -159,11 +178,19 @@ export default function Show({
 
                 {issuesSnapshot && (
                     <div className="mb-8">
-                        <SectionLabel className="mb-2">open issues</SectionLabel>
+                        <SectionLabel className="mb-2">
+                            open issues
+                        </SectionLabel>
                         <StatPair
                             items={[
-                                { value: issuesSnapshot.critical, label: 'critical issues' },
-                                { value: issuesSnapshot.quickWins, label: 'quick wins available' },
+                                {
+                                    value: issuesSnapshot.critical,
+                                    label: 'critical issues',
+                                },
+                                {
+                                    value: issuesSnapshot.quickWins,
+                                    label: 'quick wins available',
+                                },
                             ]}
                         />
                     </div>

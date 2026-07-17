@@ -1,4 +1,24 @@
-import { Avatar, AvatarFallback, AvatarImage, Button, DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, NavigationMenu, NavigationMenuItem, NavigationMenuList, Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Tooltip, TooltipContent, TooltipTrigger, navigationMenuTriggerStyle } from '@equalsite/ui';
+import {
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+    Button,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+    NavigationMenu,
+    NavigationMenuItem,
+    NavigationMenuList,
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+    navigationMenuTriggerStyle,
+} from '@equalsite/ui';
 import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
 import AppLogo from '@/components/app-logo';

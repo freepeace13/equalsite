@@ -32,14 +32,23 @@ function HistoryTableRow({ row }: { row: HistoryRow }) {
     return (
         <TableRow>
             <TableCell className="font-medium">
-                <Link href={siteShow(row.domain).url} className="hover:underline">
+                <Link
+                    href={siteShow(row.domain).url}
+                    className="hover:underline"
+                >
                     {row.domain}
                 </Link>
             </TableCell>
             <TableCell>
                 <StatusBadge {...SCAN_STATUS_BADGE[row.status]} />
             </TableCell>
-            <TableCell className={row.score === null ? 'text-slate-400 dark:text-slate-500' : 'font-medium tabular-nums'}>
+            <TableCell
+                className={
+                    row.score === null
+                        ? 'text-slate-400 dark:text-slate-500'
+                        : 'font-medium tabular-nums'
+                }
+            >
                 {row.score ?? '—'}
             </TableCell>
             <TableCell className="text-slate-500 dark:text-slate-400">
@@ -69,12 +78,16 @@ export default function Index({ history }: AuditIndexProps) {
         <>
             <Head title="Your audits" />
 
-            <main className="mx-auto container py-10">
+            <main className="container mx-auto py-10">
                 <div className="mb-8 flex items-end justify-between gap-4">
                     <div>
-                        <h1 className="font-display text-xl font-medium">your audits</h1>
+                        <h1 className="font-display text-xl font-medium">
+                            your audits
+                        </h1>
                         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                            {history.length} {str.plural('audit', history.length)} run across all your sites
+                            {history.length}{' '}
+                            {str.plural('audit', history.length)} run across all
+                            your sites
                         </p>
                     </div>
                     <Button size="sm" onClick={() => setAuditFormOpen(true)}>
@@ -106,9 +119,15 @@ export default function Index({ history }: AuditIndexProps) {
                                 <TableBody>
                                     {history.map((row) =>
                                         isActiveStatus(row.status) ? (
-                                            <LiveHistoryRow key={row.auditId} row={row} />
+                                            <LiveHistoryRow
+                                                key={row.auditId}
+                                                row={row}
+                                            />
                                         ) : (
-                                            <HistoryTableRow key={row.auditId} row={row} />
+                                            <HistoryTableRow
+                                                key={row.auditId}
+                                                row={row}
+                                            />
                                         ),
                                     )}
                                 </TableBody>
@@ -118,7 +137,10 @@ export default function Index({ history }: AuditIndexProps) {
                 )}
             </main>
 
-            <AuditRequestModal open={auditFormOpen} onOpenChange={setAuditFormOpen} />
+            <AuditRequestModal
+                open={auditFormOpen}
+                onOpenChange={setAuditFormOpen}
+            />
         </>
     );
 }

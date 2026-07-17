@@ -1,4 +1,17 @@
-import { AlertError, Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, InputError, InputOTP, InputOTPGroup, InputOTPSlot, Spinner } from '@equalsite/ui';
+import {
+    AlertError,
+    Button,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    InputError,
+    InputOTP,
+    InputOTPGroup,
+    InputOTPSlot,
+    Spinner,
+} from '@equalsite/ui';
 import { Form } from '@inertiajs/react';
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { Check, Copy, ScanLine } from 'lucide-react';

@@ -1,4 +1,10 @@
-import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@equalsite/ui';
+import {
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from '@equalsite/ui';
 import type { ComponentPropsWithoutRef } from 'react';
 import { toUrl } from '@/lib/utils';
 import type { NavItem } from '@/types';

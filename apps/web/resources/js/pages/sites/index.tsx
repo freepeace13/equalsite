@@ -6,10 +6,7 @@ import { dashboard } from '@/routes';
 import { index, show } from '@/routes/sites';
 import { isActiveStatus, SCAN_STATUS_BADGE } from '@/lib/audit-status';
 import { humanReadableDateTime, str } from '@/lib/utils';
-import {
-    LiveSiteRow,
-    type Site,
-} from '@/components/scanning/live-site-row';
+import { LiveSiteRow, type Site } from '@/components/scanning/live-site-row';
 import {
     ArrowRightIcon,
     Button,
@@ -37,8 +34,8 @@ function ScoreCell({ score }: { score: number | null }) {
         score >= 90
             ? 'text-emerald-600 dark:text-emerald-400'
             : score >= 60
-                ? 'text-yellow-600 dark:text-yellow-400'
-                : 'text-red-600 dark:text-red-400';
+              ? 'text-yellow-600 dark:text-yellow-400'
+              : 'text-red-600 dark:text-red-400';
 
     return <span className={`font-medium tabular-nums ${tone}`}>{score}</span>;
 }
@@ -57,7 +54,9 @@ function SiteRow({ site }: { site: Site }) {
             <TableCell>
                 <ScoreCell score={site.score} />
             </TableCell>
-            <TableCell className="text-slate-500 dark:text-slate-400">{site.auditCount}</TableCell>
+            <TableCell className="text-slate-500 dark:text-slate-400">
+                {site.auditCount}
+            </TableCell>
             <TableCell className="text-slate-500 dark:text-slate-400">
                 {humanReadableDateTime(site.lastRunAt)}
             </TableCell>
@@ -80,12 +79,15 @@ export default function Index({ sites }: SitesIndexProps) {
         <>
             <Head title="Your sites" />
 
-            <main className="mx-auto container py-10">
+            <main className="container mx-auto py-10">
                 <div className="mb-6 flex items-end justify-between gap-4">
                     <div>
-                        <h1 className="font-display text-xl font-medium">your sites</h1>
+                        <h1 className="font-display text-xl font-medium">
+                            your sites
+                        </h1>
                         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                            {sites.length} {str.plural('site', sites.length)} tracked
+                            {sites.length} {str.plural('site', sites.length)}{' '}
+                            tracked
                         </p>
                     </div>
                     {sites.length > 0 && (
@@ -104,7 +106,10 @@ export default function Index({ sites }: SitesIndexProps) {
                         title="no sites yet"
                         description="run your first audit and it'll show up here, grouped with the rest of that site's history."
                         action={
-                            <Button size="sm" onClick={() => setAuditFormOpen(true)}>
+                            <Button
+                                size="sm"
+                                onClick={() => setAuditFormOpen(true)}
+                            >
                                 run your first audit
                                 <ArrowRightIcon />
                             </Button>
@@ -126,9 +131,15 @@ export default function Index({ sites }: SitesIndexProps) {
                             <TableBody>
                                 {sites.map((site) =>
                                     isActiveStatus(site.status) ? (
-                                        <LiveSiteRow key={site.domain} site={site} />
+                                        <LiveSiteRow
+                                            key={site.domain}
+                                            site={site}
+                                        />
                                     ) : (
-                                        <SiteRow key={site.domain} site={site} />
+                                        <SiteRow
+                                            key={site.domain}
+                                            site={site}
+                                        />
                                     ),
                                 )}
                             </TableBody>
@@ -137,7 +148,10 @@ export default function Index({ sites }: SitesIndexProps) {
                 )}
             </main>
 
-            <AuditRequestModal open={auditFormOpen} onOpenChange={setAuditFormOpen} />
+            <AuditRequestModal
+                open={auditFormOpen}
+                onOpenChange={setAuditFormOpen}
+            />
         </>
     );
 }

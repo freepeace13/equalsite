@@ -1,4 +1,12 @@
-import { AlertError, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@equalsite/ui';
+import {
+    AlertError,
+    Button,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@equalsite/ui';
 import { Form } from '@inertiajs/react';
 import { Eye, EyeOff, LockKeyhole, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';

@@ -1,31 +1,40 @@
-import type { ProgressState, QueueStatus, ServerityBreakdown } from "@equalsite/types";
+import type {
+    ProgressState,
+    QueueStatus,
+    ServerityBreakdown,
+} from '@equalsite/types';
 
 export enum ImpactLevel {
     critical = 0,
     serious = 1,
     moderate = 2,
-    minor = 3
+    minor = 3,
 }
 
 export type ImpactLevelKey = keyof typeof ImpactLevel;
 
-export type ScanStatus = 'queued' | 'started' | 'failed' | 'cancelled' | 'completed';
+export type ScanStatus =
+    | 'queued'
+    | 'started'
+    | 'failed'
+    | 'cancelled'
+    | 'completed';
 
 export type UrlStatus = 'started' | 'failed' | 'completed' | 'skipped';
 
-export type ScanQueue = QueueStatus
+export type ScanQueue = QueueStatus;
 export type ScanProgress = ProgressState;
 
 export type ScanInfo = {
     auditId: string;
     siteUrl: string;
     status: ScanStatus;
-    failureReason?: string,
+    failureReason?: string;
     startedAt?: string;
     completedAt?: string;
     cancelledAt?: string;
     createdAt: string;
-}
+};
 
 export type ScannedUrl = {
     status?: UrlStatus | undefined;
@@ -39,7 +48,7 @@ export type ScannedUrl = {
     violationsCount?: number | undefined;
     passesCount?: number | undefined;
     severityBreakdown?: ServerityBreakdown | undefined;
-}
+};
 
 export interface RemediationSampleNode {
     url: string;
@@ -97,8 +106,7 @@ export type ViolationInstance = {
     html: string;
     target: string;
     affectedUrls: string[];
-}
-
+};
 
 export type Violation = {
     auditId: string;
@@ -112,7 +120,7 @@ export type Violation = {
     totalAffectedUrls: number;
     totalUniqueInstances: number;
     instances: ViolationInstance[];
-}
+};
 
 export interface IViolation {
     auditId: string;
@@ -130,6 +138,6 @@ export interface IViolation {
         fingerprint: string;
         html: string;
         target: string;
-        urls: string[]
-    }[]
+        urls: string[];
+    }[];
 }

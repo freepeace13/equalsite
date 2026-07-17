@@ -1,4 +1,11 @@
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@equalsite/ui';
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from '@equalsite/ui';
 import { Link } from '@inertiajs/react';
 import { Fragment } from 'react';
 import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';

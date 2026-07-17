@@ -1,6 +1,13 @@
 import { useForm, usePage } from '@inertiajs/react';
-import { type ChangeEventHandler, type ReactNode, type SubmitEventHandler } from 'react';
-import { AdvancedSettings, type AuditFormData } from '@/components/form/advance-settings';
+import {
+    type ChangeEventHandler,
+    type ReactNode,
+    type SubmitEventHandler,
+} from 'react';
+import {
+    AdvancedSettings,
+    type AuditFormData,
+} from '@/components/form/advance-settings';
 import { savePendingAudit } from '@/lib/pending-audit';
 import { store } from '@/routes/audit';
 import { ArrowRightIcon, Button, InputError } from '@equalsite/ui';
@@ -82,7 +89,10 @@ export function AuditRequestForm({
 
     return (
         <div>
-            <form onSubmit={handleSubmit} className="mx-auto flex max-w-lg gap-2">
+            <form
+                onSubmit={handleSubmit}
+                className="mx-auto flex max-w-lg gap-2"
+            >
                 <label htmlFor="url" className="sr-only">
                     Website URL
                 </label>
@@ -99,7 +109,11 @@ export function AuditRequestForm({
                     disabled={form.processing}
                     className="h-11 flex-1 rounded-lg border border-slate-300 bg-white px-4 text-sm placeholder:text-slate-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600 focus:outline-none dark:border-slate-700 dark:bg-slate-900"
                 />
-                <Button type="submit" disabled={form.processing} className="h-11 px-5">
+                <Button
+                    type="submit"
+                    disabled={form.processing}
+                    className="h-11 px-5"
+                >
                     {form.processing ? submittingLabel : submitLabel}
                     {!form.processing && <ArrowRightIcon />}
                 </Button>
@@ -113,7 +127,9 @@ export function AuditRequestForm({
 
             {caption}
 
-            {showAdvancedSettings && <AdvancedSettings form={form} isPro={isPro} />}
+            {showAdvancedSettings && (
+                <AdvancedSettings form={form} isPro={isPro} />
+            )}
         </div>
     );
 }

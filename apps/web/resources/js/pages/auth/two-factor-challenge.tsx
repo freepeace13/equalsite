@@ -1,4 +1,11 @@
-import { Button, Input, InputError, InputOTP, InputOTPGroup, InputOTPSlot } from '@equalsite/ui';
+import {
+    Button,
+    Input,
+    InputError,
+    InputOTP,
+    InputOTPGroup,
+    InputOTPSlot,
+} from '@equalsite/ui';
 import { Form, Head, setLayoutProps } from '@inertiajs/react';
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { useMemo, useState } from 'react';

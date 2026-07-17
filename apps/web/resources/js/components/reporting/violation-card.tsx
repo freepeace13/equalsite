@@ -18,9 +18,7 @@ export function ViolationCard({ violation }: { violation: IViolation }) {
             </div>
             <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-sm font-medium">
-                        {violation.summary}
-                    </h3>
+                    <h3 className="text-sm font-medium">{violation.summary}</h3>
                     <SeverityBadge severity={impact} className="shrink-0" />
                 </div>
                 {violation.failureSummary && (

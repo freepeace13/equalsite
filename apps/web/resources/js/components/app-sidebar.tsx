@@ -1,13 +1,27 @@
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@equalsite/ui';
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from '@equalsite/ui';
 import { Link } from '@inertiajs/react';
-import { BookOpen, ClipboardList, FolderGit2, Globe, LayoutGrid } from 'lucide-react';
+import {
+    BookOpen,
+    ClipboardList,
+    FolderGit2,
+    Globe,
+    LayoutGrid,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import audit from '@/routes/audit';
 import sites from '@/routes/sites';
-import { dashboard, } from '@/routes';
+import { dashboard } from '@/routes';
 import type { BreadcrumbItem, NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -41,7 +55,11 @@ const footerNavItems: NavItem[] = [
     },
 ];
 
-export function AppSidebar({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItem[] }) {
+export function AppSidebar({
+    breadcrumbs = [],
+}: {
+    breadcrumbs?: BreadcrumbItem[];
+}) {
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>

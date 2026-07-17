@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@equalsite/ui';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@equalsite/ui';
 import { Link } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
 import AppLogo from '@/components/app-logo';
