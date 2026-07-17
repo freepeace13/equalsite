@@ -16,6 +16,6 @@ class RescanTooSoonException extends Exception
 {
     public function __construct(public readonly CarbonInterface $availableAt)
     {
-        parent::__construct('next scan available at '.$availableAt->toIso8601String());
+        parent::__construct('next scan available at '.$availableAt->toDateTimeString());
     }
 }

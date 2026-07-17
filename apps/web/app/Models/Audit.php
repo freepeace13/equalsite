@@ -36,6 +36,11 @@ class Audit extends Model
         return static::where('crawler_id', $crawlerId)->first();
     }
 
+    public function isActive(): bool
+    {
+        return $this->status->queued() || $this->status->started();
+    }
+
     public function getCustomData(string $key, $default = null)
     {
         return Arr::get($this->custom_data ?? [], $key, $default);

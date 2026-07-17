@@ -3,6 +3,7 @@
 namespace App\Actions\Audit;
 
 use App\Contracts\Spider;
+use App\Exceptions\Audit\AuditInProgressException;
 use App\Exceptions\Audit\RescanTooSoonException;
 use App\Exceptions\Audit\SiteCapExceededException;
 use App\Models\Audit;
@@ -86,22 +87,29 @@ class CreateAudit
     }
 
     /**
+     * @throws AuditInProgressException
      * @throws RescanTooSoonException
      */
     protected function assertRescanAllowed(User $user, string $url, PlanLimits $limits): void
     {
-        $minutes = $limits->rescanFrequencyMinutes();
-
-        if ($minutes === null) {
-            return; // Pro: no cap
-        }
-
         $domain = parse_url($url, PHP_URL_HOST);
 
         $lastAudit = $user->audits()
             ->where('domain', $domain)
             ->latest()
             ->first();
+
+        // Applies to both plans — a second concurrent scan of the same
+        // domain is blocked regardless of the rescan-frequency cap below.
+        if ($lastAudit && $lastAudit->isActive()) {
+            throw new AuditInProgressException;
+        }
+
+        $minutes = $limits->rescanFrequencyMinutes();
+
+        if ($minutes === null) {
+            return; // Pro: no cap
+        }
 
         if ($lastAudit && $lastAudit->created_at->isAfter(now()->subMinutes($minutes))) {
             throw new RescanTooSoonException($lastAudit->created_at->addMinutes($minutes));

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Audit;
 
 use App\Actions\Audit\CreateAudit;
+use App\Exceptions\Audit\AuditInProgressException;
 use App\Exceptions\Audit\RescanTooSoonException;
 use App\Exceptions\Audit\SiteCapExceededException;
 use App\Exceptions\Spider\SpiderException;
@@ -20,10 +21,12 @@ class StoreController extends Controller
                 $request->string('url')->toString(),
                 $request->only(['crawlDepth', 'include', 'exclude', 'sameDomain']),
             );
+        } catch (AuditInProgressException $e) {
+            return back()->withErrors(['url' => $e->getMessage()]);
         } catch (RescanTooSoonException $e) {
             return back()
                 ->withErrors(['url' => $e->getMessage()])
-                ->with('rescanAvailableAt', $e->availableAt->toIso8601String());
+                ->with('rescanAvailableAt', $e->availableAt->toDateTimeString());
         } catch (SiteCapExceededException $e) {
             return back()->withErrors(['url' => $e->getMessage()]);
         } catch (SpiderException $e) {

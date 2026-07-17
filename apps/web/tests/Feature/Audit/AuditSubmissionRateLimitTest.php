@@ -63,12 +63,12 @@ test('pro accounts are throttled after 5 audit submissions in a minute', functio
 
 /**
  * The audit-submission limiter's ->after() callback only fires once the
- * request completes normally. AuditCreateRequest's authorize() throws an
- * AuthorizationException before that point, so a request denied by the "1
- * in-flight audit" policy check should never consume quota — regardless of
- * how many times it's retried.
+ * request completes normally. CreateAudit::assertRescanAllowed() throws
+ * AuditInProgressException before that point, so a request denied by the "1
+ * in-flight audit" rule should never consume quota — regardless of how many
+ * times it's retried.
  */
-test('requests denied by authorization do not count toward the submission rate limit', function () {
+test('requests denied by the in-flight audit rule do not count toward the submission rate limit', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -84,7 +84,8 @@ test('requests denied by authorization do not count toward the submission rate l
     // the account would already be throttled by the time we check below.
     for ($i = 0; $i < 10; $i++) {
         $this->post(route('audit.store'), ['url' => 'https://acme.com'])
-            ->assertForbidden();
+            ->assertRedirect()
+            ->assertSessionHasErrors('url');
     }
 
     completeLatestAudit($user);

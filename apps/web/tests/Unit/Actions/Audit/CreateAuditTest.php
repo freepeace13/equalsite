@@ -2,6 +2,7 @@
 
 use App\Actions\Audit\CreateAudit;
 use App\Contracts\Spider;
+use App\Exceptions\Audit\AuditInProgressException;
 use App\Exceptions\Audit\RescanTooSoonException;
 use App\Exceptions\Audit\SiteCapExceededException;
 use App\Models\User;
@@ -41,6 +42,26 @@ test('the re-scan exception carries the timestamp the next scan becomes availabl
         expect($e->availableAt->isFuture())->toBeTrue()
             ->and($e->availableAt->diffInMinutes(now()))->toBeLessThanOrEqual(58);
     }
+});
+
+test('a free account is blocked from re-scanning a domain that already has an active audit', function () {
+    $user = User::factory()->create();
+    makeUserAudit($user, 'first-scan', 'acme.com', Status::Started);
+
+    $action = new CreateAudit(Mockery::mock(Spider::class));
+
+    expect(fn () => $action->create($user, 'https://acme.com'))
+        ->toThrow(AuditInProgressException::class);
+});
+
+test('a pro account is blocked from re-scanning a domain that already has an active audit', function () {
+    $user = User::factory()->pro()->create();
+    makeUserAudit($user, 'first-scan', 'acme.com', Status::Queued);
+
+    $action = new CreateAudit(Mockery::mock(Spider::class));
+
+    expect(fn () => $action->create($user, 'https://acme.com'))
+        ->toThrow(AuditInProgressException::class);
 });
 
 test('a free account is allowed to re-scan again once the 1h window has elapsed', function () {
