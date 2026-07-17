@@ -1,6 +1,4 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useEchoPublic } from '@laravel/echo-react';
-import { useState } from 'react';
 import {
     CartesianGrid,
     Line,
@@ -12,16 +10,10 @@ import { PublicHeader } from '@/components/public-header';
 import { dashboard } from '@/routes';
 import { show as auditShow, cancel, progress, store } from '@/routes/audit';
 import { show, index as sitesIndex } from '@/routes/sites';
+import { SCAN_STATUS_BADGE, scanProgressPercent } from '@/lib/audit-status';
 import { humanReadableDateTime, relativeTimeUntil, str } from '@/lib/utils';
+import { useAuditLiveStatus } from '@/hooks/use-audit-live-status';
 import type { ScanProgress, ScanQueue, ScanStatus } from '@/types';
-import type {
-    CancelledWsEvent,
-    CompletedWsEvent,
-    FailedWsEvent,
-    ProgressWsEvent,
-    QueuedWsEvent,
-    StartedWsEvent,
-} from '@equalsite/types';
 import {
     ArrowRightIcon,
     Button,
@@ -33,7 +25,6 @@ import {
     SectionLabel,
     StatPair,
     StatusBadge,
-    type StatusBadgeStatus,
     SurfacePanel,
     Table,
     TableBody,
@@ -82,22 +73,6 @@ type SiteShowProps = {
     rescan: Rescan;
 };
 
-type WsEvents =
-    | QueuedWsEvent
-    | StartedWsEvent
-    | ProgressWsEvent
-    | CompletedWsEvent
-    | FailedWsEvent
-    | CancelledWsEvent;
-
-const STATUS_BADGE: Record<ScanStatus, { status: StatusBadgeStatus; label?: string }> = {
-    queued: { status: 'queued' },
-    started: { status: 'processing', label: 'crawling' },
-    completed: { status: 'complete' },
-    failed: { status: 'failed' },
-    cancelled: { status: 'cancelled' },
-};
-
 const CARD_SHELL: Record<ScanStatus, string> = {
     queued: 'border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/60 dark:bg-indigo-900/10',
     started: 'border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/60 dark:bg-indigo-900/10',
@@ -115,36 +90,13 @@ function runNewAudit(url: string) {
 }
 
 function CurrentAuditCard({ audit }: { audit: CurrentAudit }) {
-    const [status, setStatus] = useState<ScanStatus>(audit.status);
-    const [scanQueue, setScanQueue] = useState(audit.scanQueue);
-    const [scanProgress, setScanProgress] = useState(audit.scanProgress);
-
-    useEchoPublic<WsEvents>(
-        `audit-${audit.auditId}-scanning`,
-        [
-            '.audit.queued',
-            '.audit.started',
-            '.audit.progress',
-            '.audit.completed',
-            '.audit.failed',
-            '.audit.cancelled',
-        ],
-        (e) => {
-            if (e.type === 'audit.queued') {
-                setScanQueue({ ...(e as QueuedWsEvent).data });
-            } else if (e.type === 'audit.started') {
-                setStatus('started');
-            } else if (e.type === 'audit.progress') {
-                setScanProgress({ ...(e as ProgressWsEvent).data });
-            } else if (
-                e.type === 'audit.completed' ||
-                e.type === 'audit.failed' ||
-                e.type === 'audit.cancelled'
-            ) {
-                router.reload({ only: ['currentAudit', 'issuesSnapshot', 'scoreTrend', 'history'] });
-            }
-        },
-    );
+    const { status, scanQueue, scanProgress } = useAuditLiveStatus({
+        auditId: audit.auditId,
+        initialStatus: audit.status,
+        initialScanQueue: audit.scanQueue,
+        initialScanProgress: audit.scanProgress,
+        reloadProps: ['currentAudit', 'issuesSnapshot', 'scoreTrend', 'history'],
+    });
 
     const handleCancel = () => {
         if (!window.confirm("cancel this audit? it'll stay in your history marked as cancelled.")) {
@@ -153,9 +105,9 @@ function CurrentAuditCard({ audit }: { audit: CurrentAudit }) {
         router.delete(cancel(audit.auditId).url);
     };
 
+    const pct = scanProgressPercent(scanProgress);
     const scanned = scanProgress?.completedRequests ?? 0;
     const total = scanProgress?.totalRequests ?? 0;
-    const pct = total > 0 ? Math.round((scanned / total) * 100) : (scanProgress?.progressPercentage ?? 0);
 
     return (
         <div className={`mb-8 rounded-lg border p-5 transition-colors ${CARD_SHELL[status]}`}>
@@ -276,7 +228,7 @@ function HistoryTableRow({ row }: { row: HistoryRow }) {
     return (
         <TableRow className={isActive ? 'bg-indigo-50/40 dark:bg-indigo-900/10' : undefined}>
             <TableCell>
-                <StatusBadge {...STATUS_BADGE[row.status]} />
+                <StatusBadge {...SCAN_STATUS_BADGE[row.status]} />
             </TableCell>
             <TableCell className={row.score === null ? 'text-slate-400 dark:text-slate-500' : 'font-medium tabular-nums'}>
                 {row.score ?? '—'}
