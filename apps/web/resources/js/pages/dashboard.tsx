@@ -1,20 +1,16 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect } from 'react';
-import { Line, LineChart } from 'recharts';
 import { PublicHeader } from '@/components/public-header';
 import { create, store } from '@/routes/audit';
 import { show as siteShow, index as sitesIndex } from '@/routes/sites';
 import { humanReadableDateTime, str } from '@/lib/utils';
 import { takePendingAudit } from '@/lib/pending-audit';
 import { isActiveStatus, SCAN_STATUS_BADGE } from '@/lib/audit-status';
+import { ScoreTrendSparkline } from '@/components/reporting/score-trend-sparkline';
 import type { ScanStatus } from '@/types';
 import {
     ArrowRightIcon,
     Button,
-    type ChartConfig,
-    ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
     EmptyState,
     MetricCard,
     type MetricCardTone,
@@ -80,50 +76,6 @@ function narrative({
     }
 
     return 'no open issues across your sites right now.';
-}
-
-function ScoreTrendSparkline({ data }: { data: ScoreTrendPoint[] }) {
-    const chartData = data.map((point) => ({
-        date: new Date(point.requestedAt).toLocaleDateString(undefined, {
-            month: 'short',
-            day: 'numeric',
-        }),
-        domain: point.domain,
-        score: point.score,
-    }));
-
-    const chartConfig = {
-        score: { label: 'score', color: '#4338CA' },
-    } satisfies ChartConfig;
-
-    return (
-        <div className="mt-2 h-10 w-full">
-            <ChartContainer config={chartConfig} className="h-full w-full">
-                <LineChart
-                    data={chartData}
-                    margin={{ left: 0, right: 0, top: 2, bottom: 0 }}
-                >
-                    <ChartTooltip
-                        cursor={false}
-                        content={
-                            <ChartTooltipContent
-                                nameKey="domain"
-                                labelKey="date"
-                                hideIndicator
-                            />
-                        }
-                    />
-                    <Line
-                        type="monotone"
-                        dataKey="score"
-                        stroke="var(--color-score)"
-                        strokeWidth={2}
-                        dot={false}
-                    />
-                </LineChart>
-            </ChartContainer>
-        </div>
-    );
 }
 
 function SitePreviewCard({ site }: { site: SitePreview }) {
