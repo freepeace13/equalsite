@@ -2,18 +2,28 @@
 
 namespace App\Listeners;
 
+use App\Actions\Audit\UnzipCrawlerArtifacts;
+use App\Contracts\Spider;
 use App\Events\Audit\AuditCompleted;
 use App\Events\Audit\AuditFailed;
 use App\Events\Audit\AuditStarted;
+use App\Jobs\ProcessAuditArtifacts;
 use App\Models\Audit;
 use App\Value\Status;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Throwable;
 
 class AuditStatusSubscriber implements ShouldQueue
 {
+    public function __construct(
+        protected Spider $spider,
+        protected UnzipCrawlerArtifacts $unzip,
+    ) {}
+
     public function handleAuditStarted(AuditStarted $event): void
     {
         $this->updateAudit($event->crawlerId(), [
@@ -32,13 +42,32 @@ class AuditStatusSubscriber implements ShouldQueue
 
     public function handleAuditCompleted(AuditCompleted $event): void
     {
-        // Download artifacts using Spider::download
-        // Once you have the zipped file extract UnzipCrawlerArtifacts::unzip it
-        // Finally, dispatch the ProcessAuditArtifacts job
-        $this->updateAudit($event->crawlerId(), [
+        $crawlerId = $event->crawlerId();
+
+        try {
+            $this->processArtifacts($crawlerId);
+        } catch (Throwable $e) {
+            report($e);
+        }
+
+        $this->updateAudit($crawlerId, [
             'status' => Status::Completed,
             'completed_at' => $this->carbonTimestamp($event->timestamp()),
         ]);
+    }
+
+    protected function processArtifacts(string $crawlerId): void
+    {
+        $zipPath = tempnam(sys_get_temp_dir(), 'audit-artifact-');
+
+        try {
+            File::put($zipPath, $this->spider->download($crawlerId));
+            $this->unzip->unzip($crawlerId, $zipPath);
+        } finally {
+            File::delete($zipPath);
+        }
+
+        ProcessAuditArtifacts::dispatch($crawlerId);
     }
 
     protected function carbonTimestamp(int $timestamp)

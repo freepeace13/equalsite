@@ -17,6 +17,7 @@ class SpiderServiceProvider extends ServiceProvider
     {
         $this->app->bind(ArtifactRepositoryContract::class, ArtifactRepository::class);
         $this->app->bind(ScoreCalculator::class, HealthScoreCalculator::class);
+        $this->app->singleton(Spider::class, SpiderClient::class);
     }
 
     public function boot(): void
@@ -34,7 +35,5 @@ class SpiderServiceProvider extends ServiceProvider
                 ->throw()
                 ->asJson();
         });
-
-        $this->app->singleton(Spider::class, SpiderClient::class);
     }
 }

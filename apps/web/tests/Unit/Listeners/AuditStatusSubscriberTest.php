@@ -1,0 +1,64 @@
+<?php
+
+use App\Actions\Audit\UnzipCrawlerArtifacts;
+use App\Contracts\Spider;
+use App\Events\Audit\AuditCompleted;
+use App\Jobs\ProcessAuditArtifacts;
+use App\Listeners\AuditStatusSubscriber;
+use App\Models\User;
+use App\Value\RedisStreamData;
+use App\Value\Status;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
+use Tests\TestCase;
+
+uses(TestCase::class, RefreshDatabase::class);
+
+function completedEvent(string $crawlerId): AuditCompleted
+{
+    return new AuditCompleted(new RedisStreamData(
+        id: '1-0',
+        streamName: 'equalsite:crawler:events',
+        type: 'audit.completed',
+        payload: ['auditId' => $crawlerId],
+        version: '1',
+        timestamp: now()->getTimestampMs(),
+    ));
+}
+
+test('handleAuditCompleted downloads, extracts, and queues processing of the artifacts', function () {
+    Bus::fake();
+
+    $user = User::factory()->create();
+    $audit = makeUserAudit($user, 'crawler-123', 'acme.com', Status::Started);
+
+    $spider = Mockery::mock(Spider::class);
+    $spider->shouldReceive('download')->once()->with('crawler-123')->andReturn('zip-bytes');
+
+    $unzip = Mockery::mock(UnzipCrawlerArtifacts::class);
+    $unzip->shouldReceive('unzip')->once()->with('crawler-123', Mockery::type('string'));
+
+    (new AuditStatusSubscriber($spider, $unzip))->handleAuditCompleted(completedEvent('crawler-123'));
+
+    Bus::assertDispatched(ProcessAuditArtifacts::class, fn ($job) => $job->crawlerId === 'crawler-123');
+
+    expect($audit->fresh()->status)->toBe(Status::Completed);
+});
+
+test('handleAuditCompleted still marks the audit completed when artifact download fails', function () {
+    Bus::fake();
+
+    $user = User::factory()->create();
+    $audit = makeUserAudit($user, 'crawler-456', 'acme.com', Status::Started);
+
+    $spider = Mockery::mock(Spider::class);
+    $spider->shouldReceive('download')->once()->andThrow(new Exception('boom'));
+
+    $unzip = Mockery::mock(UnzipCrawlerArtifacts::class);
+    $unzip->shouldNotReceive('unzip');
+
+    (new AuditStatusSubscriber($spider, $unzip))->handleAuditCompleted(completedEvent('crawler-456'));
+
+    Bus::assertNotDispatched(ProcessAuditArtifacts::class);
+    expect($audit->fresh()->status)->toBe(Status::Completed);
+});
