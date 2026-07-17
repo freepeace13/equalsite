@@ -6,7 +6,6 @@ interface Attributes {
     id: string;
     urls: string[];
     status: Status;
-    urlCallback: string;
     options: AuditOptions;
     createdAt: number;
 };
@@ -16,9 +15,6 @@ class AuditEntity {
     urls: string[];
     status: Status;
     error?: string;
-    artifact?: string;
-    downloadToken?: string;
-    urlCallback: string;
     options: AuditOptions;
 
     createdAt: number;
@@ -27,7 +23,6 @@ class AuditEntity {
         this.id = attributes.id;
         this.urls = attributes.urls;
         this.status = attributes.status;
-        this.urlCallback = attributes.urlCallback;
         this.createdAt = attributes.createdAt;
         this.options = attributes.options;
     }
@@ -37,7 +32,6 @@ class AuditEntity {
             id: this.id,
             urls: this.urls,
             status: this.status,
-            urlCallback: this.urlCallback,
             createdAt: this.createdAt,
             options: this.options
         });

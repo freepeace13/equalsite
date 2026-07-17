@@ -12,13 +12,6 @@ export const createAuditValidationRules: ValidationChain[] = [
         .isURL()
         .withMessage('each url must be a valid URL'),
 
-    body('callbackUrl')
-        .isString()
-        .withMessage('callbackUrl is required and must be a string')
-        .bail()
-        .isURL({ require_tld: false, require_protocol: true })
-        .withMessage('callbackUrl must be a valid URL'),
-
     body('options')
         .isObject()
         .withMessage('options is required and must be an object'),

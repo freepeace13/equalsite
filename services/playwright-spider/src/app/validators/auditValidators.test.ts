@@ -20,7 +20,6 @@ function buildApp(app: Express) {
 
 const validAuditBody = {
     urls: ['https://example.com'],
-    callbackUrl: 'https://example.com/callback',
     options: {
         maxPages: 5,
         enqueueLinks: true,
@@ -91,35 +90,6 @@ describe("auditValidators", () => {
             expect(payload.errors).toContainEqual({
                 field: 'urls[0]',
                 message: 'each url must be a valid URL.',
-            });
-        });
-
-        it("rejects a missing callbackUrl", async () => {
-            const { callbackUrl: _callbackUrl, ...rest } = validAuditBody;
-            const response = await postAudit(rest);
-            const payload = await response.json() as ErrorPayload;
-
-            expect(response.status).toBe(400);
-            expect(payload.errors).toContainEqual({
-                field: 'callbackUrl',
-                message: 'callbackUrl is required and must be a string.',
-            });
-        });
-
-        it("accepts a callbackUrl pointing at an internal hostname without a TLD", async () => {
-            const response = await postAudit({ ...validAuditBody, callbackUrl: 'http://web/api/crawler/callback' });
-
-            expect(response.status).toBe(202);
-        });
-
-        it("rejects a callbackUrl that is not a valid URL", async () => {
-            const response = await postAudit({ ...validAuditBody, callbackUrl: 'not-a-url' });
-            const payload = await response.json() as ErrorPayload;
-
-            expect(response.status).toBe(400);
-            expect(payload.errors).toContainEqual({
-                field: 'callbackUrl',
-                message: 'callbackUrl must be a valid URL.',
             });
         });
 
