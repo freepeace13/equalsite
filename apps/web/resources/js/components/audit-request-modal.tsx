@@ -28,7 +28,13 @@ export function AuditRequestModal({
                     <DialogDescription>{description}</DialogDescription>
                 </DialogHeader>
 
-                <AuditRequestForm isAuthenticated autoFocus submitLabel="run audit" />
+                <AuditRequestForm
+                    isAuthenticated
+                    autoFocus
+                    submitLabel="run audit"
+                    stayOnPage
+                    onSuccess={() => onOpenChange(false)}
+                />
             </DialogContent>
         </Dialog>
     );

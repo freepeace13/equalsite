@@ -28,3 +28,15 @@ export const Shallow: Story = {
 export const Deep: Story = {
   args: { options: CRAWL_DEPTHS, value: '5', onValueChange: () => {} },
 };
+
+export const LockedForFreePlan: Story = {
+  args: {
+    options: CRAWL_DEPTHS.map((depth) => ({
+      ...depth,
+      disabled: depth.value !== '1',
+      lockedReason: 'deeper crawls require the Pro plan',
+    })),
+    value: '1',
+    onValueChange: () => {},
+  },
+};

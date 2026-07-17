@@ -104,7 +104,11 @@ const CARD_SHELL: Record<ScanStatus, string> = {
 };
 
 function runNewAudit(url: string) {
-    router.post(store().url, { url });
+    router.post(
+        store().url,
+        { url, stayOnPage: true },
+        { preserveState: true, preserveScroll: true },
+    );
 }
 
 function CurrentAuditCard({ audit }: { audit: CurrentAudit }) {

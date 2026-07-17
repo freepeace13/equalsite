@@ -31,6 +31,10 @@ class StoreController extends Controller
             ]);
         }
 
+        if ($request->boolean('stayOnPage')) {
+            return back();
+        }
+
         return redirect()->route('audit.progress', [
             'id' => $audit->crawler_id,
         ]);

@@ -1,4 +1,4 @@
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import { type ChangeEventHandler, type ReactNode, type SubmitEventHandler } from 'react';
 import { AdvancedSettings, type AuditFormData } from '@/components/form/advance-settings';
 import { savePendingAudit } from '@/lib/pending-audit';
@@ -16,6 +16,10 @@ type AuditRequestFormProps = {
     showAdvancedSettings?: boolean;
     /** Rendered between the field error and advanced settings, e.g. scan-limit copy. */
     caption?: ReactNode;
+    /** When true, the server redirects back to the current page instead of the audit's progress page. */
+    stayOnPage?: boolean;
+    /** Called after a successful submission — used to e.g. close a hosting modal. */
+    onSuccess?: () => void;
 };
 
 export function AuditRequestForm({
@@ -26,14 +30,21 @@ export function AuditRequestForm({
     autoFocus = false,
     showAdvancedSettings = true,
     caption,
+    stayOnPage = false,
+    onSuccess,
 }: AuditRequestFormProps) {
+    const { auth } = usePage().props;
+    const isPro = auth.user?.plan === 'pro';
+
     const form = useForm<AuditFormData>({
         url: '',
-        crawlDepth: '3',
+        crawlDepth: isPro ? '3' : '1',
         include: '',
         exclude: '',
         sameDomain: true,
     });
+
+    form.transform((data) => ({ ...data, stayOnPage }));
 
     const handleChange: ChangeEventHandler<HTMLInputElement> = (e) => {
         form.setData('url', e.target.value);
@@ -62,7 +73,11 @@ export function AuditRequestForm({
             return;
         }
 
-        form.submit(store());
+        form.submit(store(), {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => onSuccess?.(),
+        });
     };
 
     return (
@@ -98,7 +113,7 @@ export function AuditRequestForm({
 
             {caption}
 
-            {showAdvancedSettings && <AdvancedSettings form={form} />}
+            {showAdvancedSettings && <AdvancedSettings form={form} isPro={isPro} />}
         </div>
     );
 }

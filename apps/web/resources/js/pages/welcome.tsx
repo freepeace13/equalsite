@@ -57,9 +57,10 @@ type Props = {
 
 export default function Welcome({ canRegister, canResetPassword }: Props) {
     const { auth } = usePage().props;
+    const isPro = auth.user?.plan === 'pro';
     const form = useForm({
         url: '',
-        crawlDepth: '3',
+        crawlDepth: isPro ? '3' : '1',
         include: '',
         exclude: '',
         sameDomain: true,
@@ -156,7 +157,7 @@ export default function Welcome({ canRegister, canResetPassword }: Props) {
                         scans up to 25 pages · results in ~2 minutes
                     </p>
 
-                    <AdvancedSettings form={form} />
+                    <AdvancedSettings form={form} isPro={isPro} />
                 </section>
 
                 {/* Feature cards */}

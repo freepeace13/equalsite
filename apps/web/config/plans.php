@@ -25,7 +25,7 @@ return [
         'crawl_depths' => [
             CrawlDepth::Shallow->value,
         ],
-        'rescan_frequency_hours' => 24,
+        'rescan_frequency_hours' => 1,
         'history_retention' => 5,
         'queue_priority' => 10,
     ],

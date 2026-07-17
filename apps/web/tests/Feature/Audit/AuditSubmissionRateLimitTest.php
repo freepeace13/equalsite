@@ -23,7 +23,7 @@ function completeLatestAudit(User $user): void
     ])->save();
 }
 
-test('free accounts are throttled after 5 audit submissions in an hour', function () {
+test('free accounts are throttled after 5 audit submissions in a minute', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -42,16 +42,16 @@ test('free accounts are throttled after 5 audit submissions in an hour', functio
         ->assertTooManyRequests();
 });
 
-test('pro accounts are throttled after 20 audit submissions in an hour', function () {
+test('pro accounts are throttled after 5 audit submissions in a minute', function () {
     $user = User::factory()->pro()->create();
     $this->actingAs($user);
 
     test()->mock(Spider::class)
         ->shouldReceive('create')
-        ->times(20)
+        ->times(5)
         ->andReturnUsing(fn () => ['id' => (string) Str::uuid()]);
 
-    for ($i = 0; $i < 20; $i++) {
+    for ($i = 0; $i < 5; $i++) {
         $response = $this->post(route('audit.store'), ['url' => 'https://example.com']);
         expect($response->status())->not->toBe(429);
         completeLatestAudit($user);

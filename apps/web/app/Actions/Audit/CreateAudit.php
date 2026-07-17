@@ -32,7 +32,7 @@ class CreateAudit
             : CrawlDepth::Standard;
         $depth = $limits->clampCrawlDepth($requestedDepth);
 
-        $callbackUrl = config('app.url').route('api.crawler.callback', absolute: false);
+        $callbackUrl = config('services.crawler.callback_base_url').route('api.crawler.callback', absolute: false);
 
         $response = $this->spider->create(
             SpiderOptions::make(

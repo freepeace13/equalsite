@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Support\Plan\PlanLimits;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -84,8 +83,14 @@ class AppServiceProvider extends ServiceProvider
      *
      * This throttles raw submission volume on POST /audit — independent of,
      * and in addition to, the 24h same-site re-scan business rule enforced in
-     * CreateAudit::assertRescanAllowed(). It knows nothing about domains, only
-     * a rolling per-hour window keyed by user id.
+     * CreateAudit::assertRescanAllowed(). It knows nothing about domains or
+     * plan, only a rolling per-minute window keyed by user id.
+     *
+     * Flat and plan-agnostic on purpose: the "1 in-flight audit per account"
+     * policy check (AuditPolicy::create()) and per-plan queue priority
+     * already gate real infrastructure load, so this limiter's only job is
+     * to stop someone hammering the submit button/form endpoint — not to
+     * ration audit volume by tier.
      *
      * ->after() defers the hit until the response is known instead of
      * charging it up front. AuditCreateRequest's validation/authorization
@@ -103,13 +108,8 @@ class AppServiceProvider extends ServiceProvider
     protected function configureRateLimiting(): void
     {
         RateLimiter::for('audit-submission', function (Request $request) {
-            $user = $request->user();
-            $limits = PlanLimits::for($user->plan);
-
-            return ($limits->siteCap() === null // Pro
-                ? Limit::perHour(20)
-                : Limit::perHour(5))
-                ->by($user->id)
+            return Limit::perMinute(5)
+                ->by($request->user()->id)
                 ->after(fn ($response) => $response->getStatusCode() < 400 && blank(session('errors')));
         });
     }

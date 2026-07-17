@@ -26,9 +26,23 @@ export type AuditFormData = {
 
 export function AdvancedSettings({
     form,
+    isPro = false,
 }: {
     form: ReturnType<typeof useForm<AuditFormData>>;
+    /**
+     * Free-plan accounts (and signed-out visitors, who land on Free once they
+     * sign up) get crawl depth locked to shallow — mirrors
+     * PlanLimits::clampCrawlDepth, which enforces the same limit server-side
+     * regardless of what this UI allows.
+     */
+    isPro?: boolean;
 }) {
+    const crawlDepthOptions = CRAWL_DEPTHS.map((depth) => ({
+        ...depth,
+        disabled: !isPro && depth.value !== '1',
+        lockedReason: 'deeper crawls require the Pro plan',
+    }));
+
     return (
         <Collapsible className="mx-auto mt-6 max-w-md overflow-hidden rounded-lg border border-slate-200 text-left dark:border-slate-800">
             <CollapsibleTrigger>
@@ -44,7 +58,7 @@ export function AdvancedSettings({
 
             <CollapsibleContent className="border-t border-slate-200 px-4 pt-1 pb-4 dark:border-slate-800">
                 <CrawlDepth
-                    options={CRAWL_DEPTHS}
+                    options={crawlDepthOptions}
                     value={form.data.crawlDepth}
                     onValueChange={(value) => {
                         form.setData('crawlDepth', value);
