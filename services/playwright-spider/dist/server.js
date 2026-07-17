@@ -2,14 +2,14 @@ import {
   auditRepository,
   bullClient,
   bullmq,
-  config_exports,
   crawler,
   crawlerMap,
+  createArtifactService,
   createAuditService,
   deleteDirectoryIfExists,
   publishEvent,
   secretKey
-} from "./chunk-TEUD2NZP.js";
+} from "./chunk-WWYPIUJH.js";
 
 // src/app.ts
 import express from "express";
@@ -46,7 +46,6 @@ import { body, param } from "express-validator";
 var createAuditValidationRules = [
   body("urls").isArray({ min: 1 }).withMessage("urls is required and must be a non-empty array of strings"),
   body("urls.*").isString().withMessage("each url must be a string").bail().isURL().withMessage("each url must be a valid URL"),
-  body("callbackUrl").isString().withMessage("callbackUrl is required and must be a string").bail().isURL({ require_tld: false, require_protocol: true }).withMessage("callbackUrl must be a valid URL"),
   body("options").isObject().withMessage("options is required and must be an object"),
   body("options.maxPages").isInt({ min: 1 }).withMessage("options.maxPages is required and must be a positive integer"),
   body("options.enqueueLinks").isBoolean().withMessage("options.enqueueLinks is required and must be a boolean"),
@@ -80,58 +79,26 @@ var crawlerQueue = new Queue(
 );
 
 // src/audit/actions/createAudit.ts
-var createAuditAction = (auditRepository2, secretKey2) => ({
+var createAuditAction = (auditRepository2) => ({
   run: async ({
     urls,
-    urlCallback,
     options
   }) => {
-    await validateCallbackUrl(urlCallback, secretKey2);
     const audit = await auditRepository2.create({
       urls,
-      urlCallback,
       options
     });
     return audit.id;
   }
 });
-function assertCallbackIsNotAuditEndpoint(urlCallback) {
-  let parsed;
-  try {
-    parsed = new URL(urlCallback);
-  } catch {
-    throw new Error(`Invalid callback URL [${urlCallback}].`);
-  }
-  if (parsed.pathname.endsWith("/audit")) {
-    throw new Error(
-      `Callback URL [${urlCallback}] must not point to the audit API endpoint.`
-    );
-  }
-}
-async function validateCallbackUrl(urlCallback, secretKey2) {
-  assertCallbackIsNotAuditEndpoint(urlCallback);
-  const response = await fetch(urlCallback, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${secretKey2}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ probe: true })
-  });
-  if (!response.ok) {
-    throw new Error(`Callback URL [${urlCallback}] is unreachable.`);
-  }
-}
 
 // src/app/controllers/createAuditController.ts
-var createAuditAction2 = createAuditAction(auditRepository, secretKey);
+var createAuditAction2 = createAuditAction(auditRepository);
 var CreateAuditController = async (request, response) => {
   const urls = request.body.urls;
   const options = request.body.options;
-  const urlCallback = request.body.callbackUrl;
   const auditId = await createAuditAction2.run({
     urls,
-    urlCallback,
     options
   });
   await crawlerQueue.add("audit", { auditId }, { jobId: auditId });
@@ -142,7 +109,7 @@ var CreateAuditController = async (request, response) => {
 };
 
 // src/audit/actions/cancelAudit.ts
-var createCancelAuditAction = (auditRepository2, eventPublisher, artifactDirectory) => {
+var createCancelAuditAction = (auditRepository2, eventPublisher, artifactDirectory2) => {
   const auditService = createAuditService(auditRepository2, eventPublisher);
   return {
     run: async (auditId) => {
@@ -157,7 +124,7 @@ var createCancelAuditAction = (auditRepository2, eventPublisher, artifactDirecto
           await auditService.cancelAudit(audit, crawler2);
           await crawler2.teardown();
         }
-        await deleteDirectoryIfExists(artifactDirectory);
+        await deleteDirectoryIfExists(artifactDirectory2);
       } catch (err) {
         console.error(err);
       } finally {
@@ -187,12 +154,39 @@ var CancelAuditController = async (request, response) => {
   });
 };
 
+// src/app/controllers/downloadArtifactsController.ts
+var { artifactDirectory, archiveDirectory } = crawler;
+var artifactService = createArtifactService(artifactDirectory, archiveDirectory);
+var DownloadArtifactsController = async (request, response) => {
+  const { auditId } = request.params;
+  const zippedFile = await artifactService.zippedFile(auditId);
+  return response.download(zippedFile, (err) => {
+    if (err) {
+      console.error("Error during file transfer:", err);
+      if (!response.headersSent) {
+        return response.status(500).send("Could not download file.");
+      }
+    } else {
+      console.log("Download complete. Proceeding to delete file...");
+      void artifactService.cleanup(auditId);
+    }
+  });
+};
+
 // src/routes/index.ts
 var router = Router();
-router.post("/audit", validationMiddleware(createAuditValidationRules), CreateAuditController);
-router.delete("/audit/:auditId", validationMiddleware(cancelAuditValidationRules), CancelAuditController);
+router.post(
+  "/audit",
+  validationMiddleware(createAuditValidationRules),
+  CreateAuditController
+);
+router.delete(
+  "/audit/:auditId",
+  validationMiddleware(cancelAuditValidationRules),
+  CancelAuditController
+);
+router.get("/download/:auditId", DownloadArtifactsController);
 router.get("/ping", (req, res) => {
-  console.log(config_exports);
   res.json({ ok: true });
 });
 var routes_default = router;

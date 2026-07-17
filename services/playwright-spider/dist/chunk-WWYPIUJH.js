@@ -1,17 +1,4 @@
-var __defProp = Object.defineProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-
 // src/config/index.ts
-var config_exports = {};
-__export(config_exports, {
-  bullmq: () => bullmq,
-  crawler: () => crawler,
-  redis: () => redis,
-  secretKey: () => secretKey
-});
 import path from "path";
 var secretKey = String(process.env.CRAWLER_SECRET);
 var redis = {
@@ -81,14 +68,12 @@ var AuditEntity = class _AuditEntity {
   urls;
   status;
   error;
-  urlCallback;
   options;
   createdAt;
   constructor(attributes) {
     this.id = attributes.id;
     this.urls = attributes.urls;
     this.status = attributes.status;
-    this.urlCallback = attributes.urlCallback;
     this.createdAt = attributes.createdAt;
     this.options = attributes.options;
   }
@@ -97,7 +82,6 @@ var AuditEntity = class _AuditEntity {
       id: this.id,
       urls: this.urls,
       status: this.status,
-      urlCallback: this.urlCallback,
       createdAt: this.createdAt,
       options: this.options
     });
@@ -380,6 +364,10 @@ var createAuditService = (auditRepository2, eventPublisher) => ({
 // src/audit/services/crawlerMap.ts
 var crawlerMap = /* @__PURE__ */ new Map();
 
+// src/audit/services/artifactService.ts
+import fs2 from "fs";
+import path3 from "path";
+
 // src/audit/utils/fsDirectory.ts
 import fs from "fs";
 import path2 from "path";
@@ -395,10 +383,10 @@ async function deleteDirectoryIfExists(dir) {
     );
   }
 }
-function deleteFileIfExists(path3) {
-  if (fs.existsSync(path3)) {
+function deleteFileIfExists(path4) {
+  if (fs.existsSync(path4)) {
     try {
-      fs.unlinkSync(path3);
+      fs.unlinkSync(path4);
     } catch (err) {
       console.error("Error deleting file:", err);
     }
@@ -434,18 +422,53 @@ async function zipDirectory(sourceDir, outputZip) {
   });
 }
 
+// src/audit/services/artifactService.ts
+var createArtifactService = (artifactDirectory, archiveDirectory) => {
+  const directoryPath = (auditId) => {
+    return path3.join(artifactDirectory, auditId);
+  };
+  const zippedPath = (auditId) => {
+    return path3.join(archiveDirectory, `${auditId}.zip`);
+  };
+  const compress = async (auditId) => {
+    const source = directoryPath(auditId);
+    const result = await zipDirectory(source, zippedPath(auditId));
+    await deleteDirectoryIfExists(source);
+    return result.path;
+  };
+  const cleanup = async (auditId) => {
+    await deleteDirectoryIfExists(directoryPath(auditId));
+    deleteFileIfExists(zippedPath(auditId));
+  };
+  const zippedFile = (auditId) => {
+    const zipPath = zippedPath(auditId);
+    if (fs2.existsSync(zipPath)) {
+      return zipPath;
+    }
+    if (fs2.existsSync(directoryPath(auditId))) {
+      return compress(auditId);
+    }
+    throw new Error("Missing artifacts download.");
+  };
+  return {
+    zippedFile,
+    cleanup,
+    compress,
+    zippedPath,
+    directoryPath
+  };
+};
+
 export {
   secretKey,
   bullmq,
   crawler,
-  config_exports,
   bullClient,
   auditRepository,
   progressEvent,
   createAuditService,
   crawlerMap,
   deleteDirectoryIfExists,
-  deleteFileIfExists,
-  zipDirectory,
-  publishEvent
+  publishEvent,
+  createArtifactService
 };

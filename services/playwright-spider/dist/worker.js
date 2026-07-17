@@ -4,14 +4,11 @@ import {
   bullmq,
   crawler,
   crawlerMap,
+  createArtifactService,
   createAuditService,
-  deleteDirectoryIfExists,
-  deleteFileIfExists,
   progressEvent,
-  publishEvent,
-  secretKey,
-  zipDirectory
-} from "./chunk-TEUD2NZP.js";
+  publishEvent
+} from "./chunk-WWYPIUJH.js";
 
 // src/worker.ts
 import { Worker } from "bullmq";
@@ -225,54 +222,13 @@ var resourceBlockingHook = async ({ page }) => {
   });
 };
 
-// src/audit/actions/releaseArtifacts.ts
-import fs from "fs";
-import path2 from "path";
-var createReleaseArtifactsAction = (auditRepository2, artifactDirectory, archiveDirectory, secretKey2) => {
-  return {
-    run: async (auditId) => {
-      const audit = await auditRepository2.findOrFail(auditId);
-      const zipPath = await extractAndCompressArtifacts(audit, artifactDirectory, archiveDirectory);
-      try {
-        await sendHttpRequest(audit, zipPath, secretKey2);
-        console.log(`Audit ${auditId} artifacts sent!`);
-      } catch (err) {
-        console.error("Audit artifacts could'nt release: ", err);
-      }
-      return zipPath;
-    }
-  };
-};
-async function sendHttpRequest(audit, zipPath, secretKey2) {
-  const form = new FormData();
-  form.append("auditId", audit.id);
-  form.append("artifact", new Blob([fs.readFileSync(zipPath)]), `${audit.id}.zip`);
-  const response = await fetch(audit.urlCallback, {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${secretKey2}` },
-    body: form
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-}
-async function extractAndCompressArtifacts(audit, artifactDirectory, archiveDirectory) {
-  const sourceDir = path2.join(artifactDirectory, audit.id);
-  const zipPath = path2.join(archiveDirectory, `${audit.id}.zip`);
-  console.log(`Extracting artifacts (${sourceDir}) to (${zipPath})`);
-  const result = await zipDirectory(sourceDir, zipPath);
-  await deleteDirectoryIfExists(sourceDir);
-  return result.path;
-}
-
 // src/audit/actions/performCleanUp.ts
 var createPerformCleanUpAction = (auditRepository2) => ({
-  run: async (audit, zipPath) => {
+  run: async (audit) => {
     try {
       await crawlerMap.get(audit.id)?.teardown();
       crawlerMap.delete(audit.id);
       await auditRepository2.delete(audit.id);
-      deleteFileIfExists(zipPath);
       console.log("Cleanup successfully!");
     } catch (err) {
       console.log("Clean up failed: ", err);
@@ -284,12 +240,11 @@ var createPerformCleanUpAction = (auditRepository2) => ({
 var createRunAuditAction = (auditRepository2, eventPublisher, config) => {
   const {
     artifactDirectory,
-    archiveDirectory,
-    secretKey: secretKey2
+    archiveDirectory
   } = config;
   const auditService = createAuditService(auditRepository2, eventPublisher);
+  const artifactService = createArtifactService(artifactDirectory, archiveDirectory);
   const performCleanUpAction = createPerformCleanUpAction(auditRepository2);
-  const releaseArtifactsAction = createReleaseArtifactsAction(auditRepository2, artifactDirectory, archiveDirectory, secretKey2);
   return {
     run: async (auditId) => {
       const audit = await auditRepository2.findOrFail(auditId);
@@ -306,14 +261,14 @@ var createRunAuditAction = (auditRepository2, eventPublisher, config) => {
       try {
         await auditService.startAudit(audit);
         await crawler2.run(audit.urls);
+        await artifactService.compress(audit.id);
         await auditService.completeAudit(audit, crawler2);
       } catch (err) {
         console.error(err);
         await auditService.failAudit(audit, err);
         throw err;
       } finally {
-        const zipPath = await releaseArtifactsAction.run(audit.id);
-        await performCleanUpAction.run(audit, zipPath);
+        await performCleanUpAction.run(audit);
       }
     }
   };
@@ -328,8 +283,7 @@ var crawlerWorker = new Worker(
       publishEvent,
       {
         artifactDirectory: crawler.artifactDirectory,
-        archiveDirectory: crawler.archiveDirectory,
-        secretKey
+        archiveDirectory: crawler.archiveDirectory
       }
     ).run(data.auditId);
   },
