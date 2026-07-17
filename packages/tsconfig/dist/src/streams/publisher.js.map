@@ -1,1 +1,0 @@
-{"version":3,"file":"publisher.js","sourceRoot":"","sources":["../../../../../services/playwright-spider/src/streams/publisher.ts"],"names":[],"mappings":"AAeA,MAAM,SAAS,GAAG,CAAC,MAAc,EAAE,EAAE;IACjC,OAAO;QACH,KAAK,CAAC,OAAO,CACT,IAAO,EACP,OAA2B;YAE3B,MAAM,MAAM,CAAC,OAAO,CAAC;gBACjB,IAAI;gBACJ,OAAO;aACV,CAAC,CAAC;QACP,CAAC;KACJ,CAAA;AACL,CAAC,CAAA;AAED,eAAe,SAAS,CAAC"}

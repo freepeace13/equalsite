@@ -36,16 +36,18 @@ Browser (React/Inertia) → Laravel HTTP API → SpiderClient (HTTP, Bearer CRAW
     → XADD progress events to Redis Stream (equalsite:crawler:events)
 Laravel `php artisan crawler:listen` blocks on XREADGROUP, turns stream events into
 Laravel domain events, and broadcasts them over Soketi (Pusher-protocol WebSocket) to the browser.
-On completion the worker zips Crawlee datasets and POSTs them (multipart, Bearer auth) to
-Laravel's `/api/crawler/callback`, which queues `ProcessAuditArtifacts` to parse axe JSON and
-upsert `audit_violations`.
+The worker zips Crawlee datasets locally before publishing `audit.completed`. Laravel's
+`AuditStatusSubscriber::handleAuditCompleted` reacts to that event by pulling the zip from the
+crawler-api (`GET /api/v1/download/:auditId`, Bearer `CRAWLER_SECRET`), extracting it via
+`UnzipCrawlerArtifacts`, and queueing `ProcessAuditArtifacts` to parse axe JSON and upsert
+`audit_violations`. The crawler-api deletes its copy of the zip once the download completes.
 ```
 
 Key implication: **`php artisan crawler:listen` must be running** for live progress/status updates to
 reach the browser — it's not automatic like a normal queue worker. In Docker Compose it needs to be
 started manually (see Setup below); it isn't part of the `web` container's supervisord processes.
 
-Cross-service HTTP calls (`Laravel → crawler-api`, `crawler-worker → Laravel callback`) are all
+Cross-service HTTP calls (`Laravel → crawler-api`, including the artifact download) are all
 authenticated with a shared `CRAWLER_SECRET` bearer token.
 
 Why this shape (don't "simplify" it away without reading these first):

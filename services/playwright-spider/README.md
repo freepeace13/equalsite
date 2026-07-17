@@ -2,7 +2,7 @@
 
 A dedicated **Node.js crawler service** that performs headless browser audits. It exposes a small Express API for job management, processes crawl jobs via **BullMQ**, runs **Playwright** + **Crawlee** for page discovery, and executes **axe-core** WCAG checks on every crawled page.
 
-Events stream to Laravel through **Redis Streams**; completed artifact datasets are delivered via an HTTP callback.
+Events stream to Laravel through **Redis Streams**; Laravel pulls completed artifact datasets via an authenticated download endpoint.
 
 ---
 
@@ -15,7 +15,7 @@ Events stream to Laravel through **Redis Streams**; completed artifact datasets 
 | Page crawling | Crawlee `PlaywrightCrawler` with same-domain link following |
 | Accessibility scanning | `@axe-core/playwright` — WCAG 2.x / 2.2 AA tags |
 | Progress reporting | Redis Stream publisher (`XADD`) |
-| Artifact delivery | Zip Crawlee datasets → multipart POST to Laravel callback |
+| Artifact delivery | Zip Crawlee datasets → served at `GET /download/:auditId`, deleted once Laravel downloads it |
 | Audit state | Redis-backed repository (`spider-cache:audits`) |
 
 ---
@@ -61,13 +61,13 @@ Authentication: `Authorization: Bearer <CRAWLER_SECRET>`
 | `GET` | `/ping` | Health check |
 | `POST` | `/audit` | Enqueue a new audit |
 | `DELETE` | `/audit/:auditId` | Cancel a queued or running audit |
+| `GET` | `/download/:auditId` | Download the zipped artifact archive for a completed audit; deletes it once the download finishes |
 
 ### Create audit request
 
 ```json
 {
   "urls": ["https://example.com"],
-  "callbackUrl": "http://web/api/crawler/callback",
   "options": {
     "maxPages": 10,
     "enqueueStrategy": "SameDomain"
@@ -95,7 +95,6 @@ Request/response types are defined in `@equalsite/types` (`src/node/api.ts`).
 ```
 POST /audit
   │
-  ├─ Validate callback URL (probe request)
   ├─ Store AuditEntity in Redis
   └─ BullMQ: add job { auditId }  (job ID = audit ID for cancel-by-id)
 
@@ -107,9 +106,15 @@ Worker picks job
   │         ├─ AxeBuilder.withTags(['wcag2a', 'wcag2aa', 'wcag22aa'])
   │         ├─ processAxeResult → Crawlee dataset + audit.page.completed
   │         └─ audit.progress event
+  ├─ artifactService.compress → zip Crawlee dataset to storage/archives/{auditId}.zip
   ├─ auditService.completeAudit → audit.completed
-  ├─ releaseArtifacts: zip datasets → POST callback (multipart + Bearer)
-  └─ performCleanUp: teardown crawler, delete Redis record, remove zip
+  └─ performCleanUp: teardown crawler, delete Redis record
+
+Laravel (AuditStatusSubscriber, on audit.completed)
+  │
+  ├─ GET /download/:auditId (Bearer CRAWLER_SECRET) → streams the zip
+  ├─ artifactService.cleanup (crawler-api) → deletes the zip once the download completes
+  └─ UnzipCrawlerArtifacts + ProcessAuditArtifacts job → parses axe JSON into audit_violations
 ```
 
 ### Key source files
@@ -130,9 +135,10 @@ src/
     │   ├── crawlerFactory.ts          # PlaywrightCrawler config
     │   ├── handleAuditPageRequest.ts  # axe-core per page
     │   ├── processAxeResult.ts        # Violation normalization
-    │   ├── runAudit.ts                # Orchestration
-    │   └── releaseArtifacts.ts        # Zip + callback
-    └── services/auditService.ts       # Status transitions + events
+    │   └── runAudit.ts                # Orchestration
+    └── services/
+        ├── auditService.ts            # Status transitions + events
+        └── artifactService.ts         # Zip/compress/cleanup of Crawlee datasets
 ```
 
 ### Crawler configuration
@@ -160,11 +166,10 @@ Only violations are collected (passes/incomplete are excluded by default). Resul
 
 | Direction | Mechanism | Auth |
 |-----------|-----------|------|
-| Laravel → this service | HTTP `POST/DELETE /api/v1/audit` | Bearer `CRAWLER_SECRET` |
+| Laravel → this service | HTTP `POST/DELETE /api/v1/audit`, `GET /api/v1/download/:auditId` | Bearer `CRAWLER_SECRET` |
 | This service → Laravel (events) | Redis Stream `equalsite:crawler:events` | — |
-| This service → Laravel (data) | HTTP `POST /api/crawler/callback` | Bearer `CRAWLER_SECRET` |
 
-Laravel's `php artisan crawler:listen` consumes the Redis Stream and maps events to domain events + WebSocket broadcasts. The callback delivers a zip containing Crawlee dataset JSON that Laravel's `ProcessAuditArtifacts` job parses into violation records.
+Laravel's `php artisan crawler:listen` consumes the Redis Stream and maps events to domain events + WebSocket broadcasts. On `audit.completed`, Laravel's `AuditStatusSubscriber` downloads the zipped Crawlee dataset from `GET /download/:auditId` and dispatches `ProcessAuditArtifacts` to parse it into violation records.
 
 ---
 
@@ -173,7 +178,7 @@ Laravel's `php artisan crawler:listen` consumes the Redis Stream and maps events
 | Path | Contents |
 |------|----------|
 | `storage/artifacts/{auditId}/` | Crawlee dataset files during a run |
-| `storage/archives/{auditId}.zip` | Zipped artifacts for callback (deleted after delivery) |
+| `storage/archives/{auditId}.zip` | Zipped artifacts awaiting download (deleted once Laravel downloads it) |
 | Redis `spider-cache:audits` | In-flight audit entity state |
 | Redis `crawl-queue` | BullMQ job queue |
 | Redis `equalsite:crawler:events` | Event stream |
@@ -260,7 +265,7 @@ Vitest is configured for unit tests. Run from this directory or via `pnpm test` 
 
 **Redis Streams over HTTP webhooks for progress** — Progress events are high-frequency and fire-and-forget. Streams provide durable delivery with consumer groups, so Laravel can catch up after restarts without the crawler tracking delivery state.
 
-**Crawlee datasets as the artifact format** — Crawlee's built-in dataset storage produces structured JSON per page. Zipping and POSTing this to Laravel keeps the crawler stateless after cleanup — Laravel owns persistence.
+**Crawlee datasets as the artifact format** — Crawlee's built-in dataset storage produces structured JSON per page. Zipping this for Laravel to pull (rather than pushing it) keeps the crawler stateless after cleanup — Laravel owns persistence, and the crawler doesn't need to track callback delivery success/retries.
 
 **Shared types via `@equalsite/types`** — `EventEnum`, `CreateAuditRequestBody`, and stream payload types are authored once and imported here and in the React frontend, preventing contract drift between the three runtimes (Node API, Node worker UI types, React).
 
@@ -277,7 +282,7 @@ Published to `STREAM_NAME` (consumed by Laravel's `crawler:listen`):
 | `audit.started` | Worker begins crawling |
 | `audit.progress` | Page scan completes (includes % and severity breakdown) |
 | `audit.page.completed` | Individual page axe results available |
-| `audit.completed` | All pages scanned, artifacts released |
+| `audit.completed` | All pages scanned, artifact zip ready for download |
 | `audit.failed` | Unrecoverable error during crawl |
 
 Event shapes are defined in `@equalsite/types` (`src/events.ts`) and mapped in Laravel's `ConsumeCrawlerStreams` command.
