@@ -89,3 +89,19 @@ export function humanReadableDateTime(targetDate: number | string | Date | undef
         return `${monthName} ${targetDay}, ${targetYear} ${timeString}`; // Use targetDay/Year
     }
 }
+
+export function hostnameOf(url: string): string {
+    try {
+        return new URL(url).hostname;
+    } catch {
+        return url;
+    }
+}
+
+export function pathnameOf(url: string): string {
+    try {
+        return new URL(url).pathname || '/';
+    } catch {
+        return url;
+    }
+}

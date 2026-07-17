@@ -1,19 +1,16 @@
-import { Head, Link, router } from '@inertiajs/react';
-import { useEchoPublic } from '@laravel/echo-react';
+import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import { AuditRequestModal } from '@/components/audit-request-modal';
 import { index, progress, show } from '@/routes/audit';
 import { show as siteShow } from '@/routes/sites';
+import {
+    isActiveStatus,
+    SCAN_STATUS_BADGE,
+    scanProgressPercent,
+} from '@/lib/audit-status';
 import { humanReadableDateTime, str } from '@/lib/utils';
+import { useAuditLiveStatus } from '@/hooks/use-audit-live-status';
 import type { ScanProgress, ScanQueue, ScanStatus } from '@/types';
-import type {
-    CancelledWsEvent,
-    CompletedWsEvent,
-    FailedWsEvent,
-    ProgressWsEvent,
-    QueuedWsEvent,
-    StartedWsEvent,
-} from '@equalsite/types';
 import {
     ArrowRightIcon,
     Button,
@@ -21,7 +18,6 @@ import {
     ProgressBar,
     SectionLabel,
     StatusBadge,
-    type StatusBadgeStatus,
     Table,
     TableBody,
     TableCard,
@@ -46,63 +42,18 @@ type AuditIndexProps = {
     history: HistoryRow[];
 };
 
-type WsEvents =
-    | QueuedWsEvent
-    | StartedWsEvent
-    | ProgressWsEvent
-    | CompletedWsEvent
-    | FailedWsEvent
-    | CancelledWsEvent;
-
-const STATUS_BADGE: Record<ScanStatus, { status: StatusBadgeStatus; label?: string }> = {
-    queued: { status: 'queued' },
-    started: { status: 'processing', label: 'crawling' },
-    completed: { status: 'complete' },
-    failed: { status: 'failed' },
-    cancelled: { status: 'cancelled' },
-};
-
-function isActiveStatus(status: ScanStatus) {
-    return status === 'queued' || status === 'started';
-}
-
 function LiveHistoryRow({ row }: { row: HistoryRow }) {
-    const [status, setStatus] = useState<ScanStatus>(row.status);
-    const [scanQueue, setScanQueue] = useState(row.scanQueue);
-    const [scanProgress, setScanProgress] = useState(row.scanProgress);
+    const { status, scanQueue, scanProgress } = useAuditLiveStatus({
+        auditId: row.auditId,
+        initialStatus: row.status,
+        initialScanQueue: row.scanQueue,
+        initialScanProgress: row.scanProgress,
+        reloadProps: ['history'],
+    });
 
-    useEchoPublic<WsEvents>(
-        `audit-${row.auditId}-scanning`,
-        [
-            '.audit.queued',
-            '.audit.started',
-            '.audit.progress',
-            '.audit.completed',
-            '.audit.failed',
-            '.audit.cancelled',
-        ],
-        (e) => {
-            if (e.type === 'audit.queued') {
-                setScanQueue({ ...(e as QueuedWsEvent).data });
-            } else if (e.type === 'audit.started') {
-                setStatus('started');
-            } else if (e.type === 'audit.progress') {
-                setScanProgress({ ...(e as ProgressWsEvent).data });
-            } else if (
-                e.type === 'audit.completed' ||
-                e.type === 'audit.failed' ||
-                e.type === 'audit.cancelled'
-            ) {
-                // Score/issue counts aren't in the terminal WS payload — refetch
-                // this row's authoritative data instead of guessing client-side.
-                router.reload({ only: ['history'] });
-            }
-        },
-    );
-
+    const pct = scanProgressPercent(scanProgress);
     const scanned = scanProgress?.completedRequests ?? 0;
     const total = scanProgress?.totalRequests ?? 0;
-    const pct = total > 0 ? Math.round((scanned / total) * 100) : (scanProgress?.progressPercentage ?? 0);
 
     return (
         <TableRow className="bg-indigo-50/40 dark:bg-indigo-900/10">
@@ -112,7 +63,7 @@ function LiveHistoryRow({ row }: { row: HistoryRow }) {
                 </Link>
             </TableCell>
             <TableCell>
-                <StatusBadge {...STATUS_BADGE[status]} />
+                <StatusBadge {...SCAN_STATUS_BADGE[status]} />
             </TableCell>
             <TableCell colSpan={2}>
                 {status === 'started' ? (
@@ -150,7 +101,7 @@ function HistoryTableRow({ row }: { row: HistoryRow }) {
                 </Link>
             </TableCell>
             <TableCell>
-                <StatusBadge {...STATUS_BADGE[row.status]} />
+                <StatusBadge {...SCAN_STATUS_BADGE[row.status]} />
             </TableCell>
             <TableCell className={row.score === null ? 'text-slate-400 dark:text-slate-500' : 'font-medium tabular-nums'}>
                 {row.score ?? '—'}

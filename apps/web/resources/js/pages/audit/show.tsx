@@ -9,7 +9,7 @@ import type {
     ReportPages,
     ScannedUrl,
 } from '@/types';
-import { str } from '@/lib/utils';
+import { str, hostnameOf } from '@/lib/utils';
 import {
     BellIcon,
     CheckIcon,
@@ -63,14 +63,6 @@ type ReportProps = {
         violations: IViolation[];
     };
 };
-
-function hostnameOf(url: string) {
-    try {
-        return new URL(url).hostname;
-    } catch {
-        return url;
-    }
-}
 
 type ImpactKey = Exclude<SeverityBadgeSeverity, 'pass'>;
 
