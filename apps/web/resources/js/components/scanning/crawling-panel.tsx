@@ -38,8 +38,8 @@ function FeedRow({ url, entry }: { url: string; entry: ScannedUrl }) {
                             isCritical
                                 ? 'text-red-600 dark:text-red-400'
                                 : isModerate
-                                    ? 'text-yellow-600 dark:text-yellow-400'
-                                    : 'text-slate-500'
+                                  ? 'text-yellow-600 dark:text-yellow-400'
+                                  : 'text-slate-500'
                         }
                     />
                 )}

@@ -20,9 +20,12 @@ export type CurrentAudit = {
 
 const CARD_SHELL: Record<ScanStatus, string> = {
     queued: 'border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/60 dark:bg-indigo-900/10',
-    started: 'border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/60 dark:bg-indigo-900/10',
-    completed: 'border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/60 dark:bg-emerald-900/10',
-    cancelled: 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40',
+    started:
+        'border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/60 dark:bg-indigo-900/10',
+    completed:
+        'border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/60 dark:bg-emerald-900/10',
+    cancelled:
+        'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40',
     failed: 'border-red-200 dark:border-red-900/60 bg-red-50/60 dark:bg-red-900/10',
 };
 
@@ -32,11 +35,20 @@ export function CurrentAuditCard({ audit }: { audit: CurrentAudit }) {
         initialStatus: audit.status,
         initialScanQueue: audit.scanQueue,
         initialScanProgress: audit.scanProgress,
-        reloadProps: ['currentAudit', 'issuesSnapshot', 'scoreTrend', 'history'],
+        reloadProps: [
+            'currentAudit',
+            'issuesSnapshot',
+            'scoreTrend',
+            'history',
+        ],
     });
 
     const handleCancel = () => {
-        if (!window.confirm("cancel this audit? it'll stay in your history marked as cancelled.")) {
+        if (
+            !window.confirm(
+                "cancel this audit? it'll stay in your history marked as cancelled.",
+            )
+        ) {
             return;
         }
         router.delete(cancel(audit.auditId).url);
@@ -47,7 +59,9 @@ export function CurrentAuditCard({ audit }: { audit: CurrentAudit }) {
     const total = scanProgress?.totalRequests ?? 0;
 
     return (
-        <div className={`mb-8 rounded-lg border p-5 transition-colors ${CARD_SHELL[status]}`}>
+        <div
+            className={`mb-8 rounded-lg border p-5 transition-colors ${CARD_SHELL[status]}`}
+        >
             {status === 'queued' && (
                 <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
@@ -58,9 +72,15 @@ export function CurrentAuditCard({ audit }: { audit: CurrentAudit }) {
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                         <Button variant="outline" size="sm" asChild>
-                            <Link href={progress(audit.auditId).url}>view progress</Link>
+                            <Link href={progress(audit.auditId).url}>
+                                view progress
+                            </Link>
                         </Button>
-                        <Button variant="ghost-destructive" size="sm" onClick={handleCancel}>
+                        <Button
+                            variant="ghost-destructive"
+                            size="sm"
+                            onClick={handleCancel}
+                        >
                             cancel
                         </Button>
                     </div>
@@ -73,9 +93,15 @@ export function CurrentAuditCard({ audit }: { audit: CurrentAudit }) {
                         <StatusBadge status="processing" label="crawling" />
                         <div className="flex shrink-0 items-center gap-2">
                             <Button variant="outline" size="sm" asChild>
-                                <Link href={progress(audit.auditId).url}>view progress</Link>
+                                <Link href={progress(audit.auditId).url}>
+                                    view progress
+                                </Link>
                             </Button>
-                            <Button variant="ghost-destructive" size="sm" onClick={handleCancel}>
+                            <Button
+                                variant="ghost-destructive"
+                                size="sm"
+                                onClick={handleCancel}
+                            >
                                 cancel
                             </Button>
                         </div>
@@ -92,12 +118,20 @@ export function CurrentAuditCard({ audit }: { audit: CurrentAudit }) {
                     <div className="min-w-0">
                         <StatusBadge status="complete" className="mb-1" />
                         <p className="mt-1 text-sm">
-                            score {audit.score} —{' '}
-                            {audit.issuesFound} {str.plural('issue', audit.issuesFound ?? 0)} found
+                            score {audit.score} — {audit.issuesFound}{' '}
+                            {str.plural('issue', audit.issuesFound ?? 0)} found
                         </p>
                     </div>
                     <Button size="sm" asChild>
-                        <Link href={auditShow(audit.auditId, { query: { from: 'site' } }).url}>view report</Link>
+                        <Link
+                            href={
+                                auditShow(audit.auditId, {
+                                    query: { from: 'site' },
+                                }).url
+                            }
+                        >
+                            view report
+                        </Link>
                     </Button>
                 </div>
             )}
@@ -105,7 +139,11 @@ export function CurrentAuditCard({ audit }: { audit: CurrentAudit }) {
             {status === 'cancelled' && (
                 <div className="flex items-center justify-between gap-4">
                     <StatusBadge status="cancelled" />
-                    <Button variant="outline" size="sm" onClick={() => runNewAudit(audit.siteUrl)}>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => runNewAudit(audit.siteUrl)}
+                    >
                         run another
                     </Button>
                 </div>
@@ -119,7 +157,11 @@ export function CurrentAuditCard({ audit }: { audit: CurrentAudit }) {
                             {audit.failureReason ?? "couldn't reach the site"}
                         </p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => runNewAudit(audit.siteUrl)}>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => runNewAudit(audit.siteUrl)}
+                    >
                         try again
                     </Button>
                 </div>

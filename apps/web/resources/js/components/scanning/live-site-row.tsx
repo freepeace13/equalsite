@@ -44,8 +44,12 @@ export function LiveSiteRow({ site }: { site: Site }) {
                     scanProgress={scanProgress}
                 />
             </TableCell>
-            <TableCell className="text-slate-500 dark:text-slate-400">{site.auditCount}</TableCell>
-            <TableCell className="text-slate-500 dark:text-slate-400">running now</TableCell>
+            <TableCell className="text-slate-500 dark:text-slate-400">
+                {site.auditCount}
+            </TableCell>
+            <TableCell className="text-slate-500 dark:text-slate-400">
+                running now
+            </TableCell>
             <TableCell className="text-right">
                 <Link
                     href={progress(site.auditId).url}

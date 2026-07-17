@@ -30,7 +30,10 @@ export function LiveHistoryRow({ row }: { row: HistoryRow }) {
     return (
         <TableRow className="bg-indigo-50/40 dark:bg-indigo-900/10">
             <TableCell className="font-medium">
-                <Link href={siteShow(row.domain).url} className="hover:underline">
+                <Link
+                    href={siteShow(row.domain).url}
+                    className="hover:underline"
+                >
                     {row.domain}
                 </Link>
             </TableCell>
@@ -44,7 +47,9 @@ export function LiveHistoryRow({ row }: { row: HistoryRow }) {
                     scanProgress={scanProgress}
                 />
             </TableCell>
-            <TableCell className="text-slate-500 dark:text-slate-400">running now</TableCell>
+            <TableCell className="text-slate-500 dark:text-slate-400">
+                running now
+            </TableCell>
             <TableCell className="text-right">
                 <Link
                     href={progress(row.auditId).url}
