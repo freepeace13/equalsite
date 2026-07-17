@@ -6,6 +6,7 @@ import { create, store } from '@/routes/audit';
 import { show as siteShow, index as sitesIndex } from '@/routes/sites';
 import { humanReadableDateTime, str } from '@/lib/utils';
 import { takePendingAudit } from '@/lib/pending-audit';
+import { isActiveStatus, SCAN_STATUS_BADGE } from '@/lib/audit-status';
 import type { ScanStatus } from '@/types';
 import {
     ArrowRightIcon,
@@ -20,7 +21,6 @@ import {
     ScoreRing,
     SectionLabel,
     StatusBadge,
-    type StatusBadgeStatus,
 } from '@equalsite/ui';
 
 type ScoreTrendPoint = {
@@ -46,21 +46,6 @@ type DashboardProps = {
     quickWinsCount: number;
     sitesPreview: SitePreview[];
 };
-
-const STATUS_BADGE: Record<
-    ScanStatus,
-    { status: StatusBadgeStatus; label?: string }
-> = {
-    queued: { status: 'queued' },
-    started: { status: 'processing', label: 'crawling' },
-    completed: { status: 'complete' },
-    failed: { status: 'failed' },
-    cancelled: { status: 'cancelled' },
-};
-
-function isActiveStatus(status: ScanStatus) {
-    return status === 'queued' || status === 'started';
-}
 
 function scoreTone(score: number): MetricCardTone {
     if (score >= 90) {
@@ -154,7 +139,7 @@ function SitePreviewCard({ site }: { site: SitePreview }) {
                     <p className="truncate text-sm font-medium">
                         {site.domain}
                     </p>
-                    <StatusBadge {...STATUS_BADGE[site.status]} />
+                    <StatusBadge {...SCAN_STATUS_BADGE[site.status]} />
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                     running now
@@ -172,7 +157,7 @@ function SitePreviewCard({ site }: { site: SitePreview }) {
                 <ScoreRing score={site.score} fairThreshold={60} />
             ) : (
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center">
-                    <StatusBadge {...STATUS_BADGE[site.status]} />
+                    <StatusBadge {...SCAN_STATUS_BADGE[site.status]} />
                 </span>
             )}
             <div className="min-w-0">

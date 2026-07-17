@@ -9,7 +9,7 @@ import type {
     ReportPages,
     ScannedUrl,
 } from '@/types';
-import { str } from '@/lib/utils';
+import { str, hostnameOf } from '@/lib/utils';
 import {
     BellIcon,
     CheckIcon,
@@ -63,14 +63,6 @@ type ReportProps = {
         violations: IViolation[];
     };
 };
-
-function hostnameOf(url: string) {
-    try {
-        return new URL(url).hostname;
-    } catch {
-        return url;
-    }
-}
 
 type ImpactKey = Exclude<SeverityBadgeSeverity, 'pass'>;
 
@@ -270,10 +262,14 @@ export default function Show({ report }: ReportProps) {
         <>
             <Head title={`Accessibility report for ${domain}`} />
 
-            <main className="mx-auto container py-10">
+            <main className="container mx-auto py-10">
                 {/* Score + narrative */}
                 <div className="mb-6 flex items-start gap-5 border-b border-slate-200 pb-6 dark:border-slate-800">
-                    <ScoreRing score={report.healthScore} size={76} strokeWidth={7} />
+                    <ScoreRing
+                        score={report.healthScore}
+                        size={76}
+                        strokeWidth={7}
+                    />
                     <div>
                         <p className="mb-1.5 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                             <GlobeIcon width={13} height={13} />
@@ -313,7 +309,9 @@ export default function Show({ report }: ReportProps) {
                     </div>
                 </div>
 
-                <SectionLabel className="mb-2">grouped by who's affected</SectionLabel>
+                <SectionLabel className="mb-2">
+                    grouped by who's affected
+                </SectionLabel>
 
                 <div className="space-y-3">
                     {nonEmptyGroups.length > 0 ? (
@@ -347,11 +345,20 @@ Show.layout = (props: ReportProps) => ({
         props.from === 'site'
             ? [
                   { title: 'Sites', href: sitesIndex() },
-                  { title: hostnameOf(props.report.siteUrl), href: siteShow(hostnameOf(props.report.siteUrl)) },
-                  { title: props.report.auditId, href: show(props.report.auditId) },
+                  {
+                      title: hostnameOf(props.report.siteUrl),
+                      href: siteShow(hostnameOf(props.report.siteUrl)),
+                  },
+                  {
+                      title: props.report.auditId,
+                      href: show(props.report.auditId),
+                  },
               ]
             : [
                   { title: 'Audits', href: index() },
-                  { title: props.report.auditId, href: show(props.report.auditId) },
+                  {
+                      title: props.report.auditId,
+                      href: show(props.report.auditId),
+                  },
               ],
 });
