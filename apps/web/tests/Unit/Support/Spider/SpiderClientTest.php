@@ -11,7 +11,7 @@ uses(TestCase::class);
 
 function spiderOptions(): SpiderOptions
 {
-    return SpiderOptions::make('https://example.com', 'http://web/api/crawler/callback');
+    return SpiderOptions::make('https://example.com');
 }
 
 test('create returns the decoded response on success', function () {

@@ -9,8 +9,6 @@ class SpiderOptions implements Arrayable
 {
     protected array $urls = [];
 
-    protected string $callbackUrl;
-
     protected bool $enqueueLinks = true;
 
     protected EnqueueStrategy $enqueueStrategy;
@@ -23,21 +21,19 @@ class SpiderOptions implements Arrayable
 
     protected array $excludeGlobs = [];
 
-    public function __construct(array $urls, string $callbackUrl)
+    public function __construct(array $urls)
     {
         $this->urls = $urls;
-        $this->callbackUrl = $callbackUrl;
         $this->enqueueStrategy = EnqueueStrategy::SameDomain;
     }
 
     /**
      * @param  string | list<int, string>  $urls
      */
-    public static function make($urls, string $callbackUrl): static
+    public static function make($urls): static
     {
         return new static(
             urls: is_string($urls) ? [$urls] : $urls,
-            callbackUrl: $callbackUrl
         );
     }
 
@@ -45,17 +41,11 @@ class SpiderOptions implements Arrayable
     {
         return tap(new static(
             urls: $array['urls'],
-            callbackUrl: $array['callbackUrl']
         ), function ($instance) use ($array) {
             if ($options = Arr::get($array, 'options', false)) {
                 $instance->setOptions($options);
             }
         });
-    }
-
-    public function getCallbackUrl(): string
-    {
-        return $this->callbackUrl;
     }
 
     public function addUrl(string $url): self
@@ -189,7 +179,6 @@ class SpiderOptions implements Arrayable
     {
         return [
             'urls' => $this->getUrls(),
-            'callbackUrl' => $this->getCallbackUrl(),
             'options' => $this->getOptions(),
         ];
     }
