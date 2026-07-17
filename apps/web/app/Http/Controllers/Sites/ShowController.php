@@ -68,13 +68,13 @@ class ShowController extends Controller
 
     protected function rescanAvailableAt(Audit $lastAudit, PlanLimits $limits): ?string
     {
-        $hours = $limits->rescanFrequencyHours();
+        $minutes = $limits->rescanFrequencyMinutes();
 
-        if ($hours === null) {
+        if ($minutes === null) {
             return null;
         }
 
-        $threshold = $lastAudit->created_at->addHours($hours);
+        $threshold = $lastAudit->created_at->addMinutes($minutes);
 
         return $threshold->isFuture() ? $threshold->toIso8601String() : null;
     }

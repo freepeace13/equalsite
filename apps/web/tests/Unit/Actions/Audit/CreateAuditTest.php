@@ -22,7 +22,7 @@ uses(TestCase::class, RefreshDatabase::class);
  * re-scan-frequency rule itself, in isolation, since it's unreachable via the
  * real HTTP route for a free account past its first audit.
  */
-test('a free account is blocked from re-scanning the same domain inside the 24h window', function () {
+test('a free account is blocked from re-scanning the same domain inside the 1hr window', function () {
     $user = User::factory()->create();
     makeUserAudit($user, 'first-scan', 'acme.com', Status::Completed);
 
@@ -35,7 +35,7 @@ test('a free account is blocked from re-scanning the same domain inside the 24h 
 test('the re-scan exception carries the timestamp the next scan becomes available', function () {
     $user = User::factory()->create();
     $lastAudit = makeUserAudit($user, 'first-scan', 'acme.com', Status::Completed);
-    $lastAudit->forceFill(['created_at' => now()->subHours(2)])->save();
+    $lastAudit->forceFill(['created_at' => now()->subMinutes(2)])->save();
 
     $action = new CreateAudit(Mockery::mock(Spider::class));
 
@@ -44,14 +44,14 @@ test('the re-scan exception carries the timestamp the next scan becomes availabl
         test()->fail('Expected RescanTooSoonException to be thrown.');
     } catch (RescanTooSoonException $e) {
         expect($e->availableAt->isFuture())->toBeTrue()
-            ->and($e->availableAt->diffInHours(now()))->toBeLessThanOrEqual(22);
+            ->and($e->availableAt->diffInMinutes(now()))->toBeLessThanOrEqual(58);
     }
 });
 
-test('a free account is allowed to re-scan again once the 24h window has elapsed', function () {
+test('a free account is allowed to re-scan again once the 1h window has elapsed', function () {
     $user = User::factory()->create();
     $lastAudit = makeUserAudit($user, 'first-scan', 'acme.com', Status::Completed);
-    $lastAudit->forceFill(['created_at' => now()->subHours(25)])->save();
+    $lastAudit->forceFill(['created_at' => now()->subHours(2)])->save();
 
     $spider = Mockery::mock(Spider::class);
     $spider->shouldReceive('create')->once()->andReturn(['id' => 'second-scan']);
