@@ -29,5 +29,5 @@ interface Spider
      */
     public function cancel(string $id): array;
 
-    public function download(string $id);
+    public function download(string $id): string;
 }

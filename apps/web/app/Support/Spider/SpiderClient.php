@@ -9,7 +9,6 @@ use Closure;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class SpiderClient implements Spider
 {
@@ -23,14 +22,13 @@ class SpiderClient implements Spider
         return $this->send(fn () => Http::spider()->get('ping'));
     }
 
-    public function download(string $id)
+    public function download(string $id): string
     {
-        return $this->send(fn () => Http::spider()->get("download/{$id}"));
+        return $this->attempt(fn () => Http::spider()->get("download/{$id}")->body());
     }
 
     public function create(SpiderOptions $options): array
     {
-        // Log::debug('SpiderClient Request body: ', $options->toArray());
         return $this->send(fn () => Http::spider()->post('audit', $options->toArray()));
     }
 
@@ -40,8 +38,17 @@ class SpiderClient implements Spider
      */
     protected function send(Closure $request): array
     {
+        return $this->attempt(fn () => $request()->json());
+    }
+
+    /**
+     * @throws SpiderValidationException
+     * @throws SpiderUnavailableException
+     */
+    protected function attempt(Closure $callback): mixed
+    {
         try {
-            return $request()->json();
+            return $callback();
         } catch (RequestException $e) {
             throw $e->response->status() === 400
                 ? SpiderValidationException::fromResponse($e)
