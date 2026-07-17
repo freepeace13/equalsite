@@ -11,30 +11,17 @@ import type {
 } from '@/types';
 import { str, hostnameOf } from '@/lib/utils';
 import {
-    BellIcon,
+    ImpactGroup,
+    type ImpactKey,
+} from '@/components/reporting/impact-group';
+import {
     CheckIcon,
-    ClockIcon,
-    Collapsible,
-    CollapsibleChevron,
-    CollapsibleContent,
-    CollapsibleTrigger,
     EmptyState,
-    EyeIcon,
-    FileTextIcon,
     GlobeIcon,
-    type IconProps,
-    ImagePlaceholderIcon,
-    InfoCircleIcon,
-    KeyboardIcon,
     MetricCard,
-    PackageIcon,
     ScoreRing,
     SectionLabel,
-    SeverityBadge,
-    type SeverityBadgeSeverity,
-    ZapIcon,
 } from '@equalsite/ui';
-import type { ComponentType } from 'react';
 
 type ReportSummary = {
     totalIssuesFound: number;
@@ -64,172 +51,7 @@ type ReportProps = {
     };
 };
 
-type ImpactKey = Exclude<SeverityBadgeSeverity, 'pass'>;
-
 const IMPACT_ORDER: ImpactKey[] = ['critical', 'serious', 'moderate', 'minor'];
-
-const IMPACT_GROUP_LABELS: Record<ImpactKey, string> = {
-    critical: 'screen reader users',
-    serious: 'keyboard users',
-    moderate: 'low vision users',
-    minor: 'general users',
-};
-
-const IMPACT_GROUP_SUBTITLES: Record<ImpactKey, string> = {
-    critical: 'missing labels and alt text block core flows',
-    serious: 'focus management and keyboard navigation issues',
-    moderate: 'colour contrast and text sizing falls short',
-    minor: 'minor improvements for a better experience',
-};
-
-const IMPACT_GROUP_ICON: Record<ImpactKey, ComponentType<IconProps>> = {
-    critical: BellIcon,
-    serious: KeyboardIcon,
-    moderate: EyeIcon,
-    minor: InfoCircleIcon,
-};
-
-function ViolationCard({ violation }: { violation: IViolation }) {
-    const impact = violation.impact as SeverityBadgeSeverity;
-
-    return (
-        <article className="flex gap-3.5 rounded-lg border border-slate-200 p-3.5 dark:border-slate-800">
-            <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
-                <ImagePlaceholderIcon className="text-slate-400" />
-            </div>
-            <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-sm font-medium">{violation.summary}</h3>
-                    <SeverityBadge severity={impact} className="shrink-0" />
-                </div>
-                {violation.failureSummary && (
-                    <p className="mt-1 mb-2 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
-                        {violation.failureSummary}
-                    </p>
-                )}
-                <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
-                    <span className="flex items-center gap-1">
-                        <FileTextIcon />
-                        {violation.affectedPagesCount}{' '}
-                        {str.plural('page', violation.affectedPagesCount)}
-                    </span>
-                    {violation.helpUrl && (
-                        <a
-                            href={violation.helpUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400"
-                        >
-                            <ClockIcon />
-                            ~5 min fix
-                        </a>
-                    )}
-                </div>
-            </div>
-        </article>
-    );
-}
-
-function SubSectionDivider({
-    type,
-    count,
-}: {
-    type: 'quick-wins' | 'structural-work';
-    count: number;
-}) {
-    const isQuickWins = type === 'quick-wins';
-    return (
-        <div className="flex items-center gap-2 py-1">
-            {isQuickWins ? (
-                <ZapIcon
-                    width={12}
-                    height={12}
-                    strokeWidth={2.5}
-                    className="text-emerald-500"
-                />
-            ) : (
-                <PackageIcon className="text-slate-400" />
-            )}
-            <span
-                className={`text-xs font-medium ${isQuickWins ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`}
-            >
-                {[
-                    isQuickWins ? 'quick wins' : 'structural work',
-                    `${count} ${str.plural('issue', count)}`,
-                ].join(' · ')}
-            </span>
-            <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
-        </div>
-    );
-}
-
-function ImpactGroup({
-    impact,
-    violations,
-}: {
-    impact: ImpactKey;
-    violations: IViolation[];
-}) {
-    const count = violations.length;
-    const quickWins = violations.filter(
-        (v) => v.remediationScope === 'page-specific',
-    );
-    const structuralWork = violations.filter(
-        (v) => v.remediationScope !== 'page-specific',
-    );
-    const Icon = IMPACT_GROUP_ICON[impact];
-
-    return (
-        <Collapsible
-            defaultOpen={impact === 'critical'}
-            className="overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700"
-        >
-            <CollapsibleTrigger className="gap-3.5 px-4 py-3.5">
-                <Icon />
-                <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium">
-                        {IMPACT_GROUP_LABELS[impact]}
-                    </span>
-                    <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
-                        {IMPACT_GROUP_SUBTITLES[impact]}
-                    </span>
-                </span>
-                <SeverityBadge
-                    severity={impact}
-                    label={`${count} ${impact}`}
-                    hideIcon
-                    className="whitespace-nowrap"
-                />
-                <CollapsibleChevron />
-            </CollapsibleTrigger>
-
-            <CollapsibleContent className="space-y-2.5 border-t border-slate-200 p-4 dark:border-slate-800">
-                {quickWins.length > 0 && (
-                    <>
-                        <SubSectionDivider
-                            type="quick-wins"
-                            count={quickWins.length}
-                        />
-                        {quickWins.map((v) => (
-                            <ViolationCard key={v.ruleId} violation={v} />
-                        ))}
-                    </>
-                )}
-                {structuralWork.length > 0 && (
-                    <>
-                        <SubSectionDivider
-                            type="structural-work"
-                            count={structuralWork.length}
-                        />
-                        {structuralWork.map((v) => (
-                            <ViolationCard key={v.ruleId} violation={v} />
-                        ))}
-                    </>
-                )}
-            </CollapsibleContent>
-        </Collapsible>
-    );
-}
 
 export default function Show({ report }: ReportProps) {
     const domain = hostnameOf(report.siteUrl);
