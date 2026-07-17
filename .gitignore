@@ -2,6 +2,7 @@
 
 .cursor/
 .claude/
+.superpowers/
 
 node_modules/
 .pnpm-store
