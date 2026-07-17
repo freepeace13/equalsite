@@ -8,6 +8,6 @@ export interface AuditRepository {
     delete(id: string): Promise<void>;
     exists(id: string): Promise<boolean>;
     findOrFail(id: string): Promise<AuditEntity>;
-    create(attributes: Pick<AuditEntity, 'urls' | 'urlCallback' | 'options'>): Promise<AuditEntity>;
+    create(attributes: Pick<AuditEntity, 'urls' | 'options'>): Promise<AuditEntity>;
     getByStatus(status: Status): Promise<AuditEntity[]>;
 }

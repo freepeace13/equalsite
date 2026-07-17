@@ -14,7 +14,6 @@ export type AuditOptions = {
 
 export type CreateAuditRequestBody = {
     urls: string[];
-    callbackUrl: string;
     options: AuditOptions;
 }
 
@@ -29,3 +28,7 @@ export type CancelAuditRequestParams = {
 }
 
 export type CancelAuditResponseData = CancelAuditRequestParams | ResponseError;
+
+export interface DownloadArtifactParams {
+    auditId: string
+}

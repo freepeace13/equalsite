@@ -1,4 +1,4 @@
-import type { PlaywrightCrawler} from "crawlee";
+import type { PlaywrightCrawler } from "crawlee";
 import type AuditEntity from "../entities/audit";
 import type { AuditRepository } from "../repositories/auditRepository";
 import type { EventPublisher } from "../repositories/eventPublisher";
@@ -35,7 +35,7 @@ export const createAuditService = (
 
     completeAudit: async (
         audit: AuditEntity,
-        crawler: PlaywrightCrawler
+        crawler: PlaywrightCrawler,
     ) => {
         const queue = await crawler.getRequestQueue();
         const info = await queue.getInfo();
@@ -51,7 +51,7 @@ export const createAuditService = (
 
         await eventPublisher(completedEvent({
             auditId: audit.id,
-            statistics: crawler.stats.state
+            statistics: crawler.stats.state,
         }));
     },
 

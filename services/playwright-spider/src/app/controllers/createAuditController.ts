@@ -1,11 +1,10 @@
-import * as Config from '../../config';
 import type { Request, Response } from "express";
 import { auditRepository } from "../adapters/redisAuditRepository";
 import { crawlerQueue } from "../services/queue";
 import { createAuditAction as createAuditFactory } from "../../audit/actions/createAudit";
 import type { CreateAuditRequestBody, CreateAuditResponseData } from "@equalsite/types";
 
-const createAuditAction = createAuditFactory(auditRepository, Config.secretKey);
+const createAuditAction = createAuditFactory(auditRepository);
 
 export const CreateAuditController = async (
     request: Request<unknown, unknown, CreateAuditRequestBody>,
@@ -13,11 +12,9 @@ export const CreateAuditController = async (
 ) => {
     const urls = request.body.urls;
     const options = request.body.options;
-    const urlCallback = request.body.callbackUrl;
 
     const auditId = await createAuditAction.run({
         urls,
-        urlCallback,
         options
     });
 

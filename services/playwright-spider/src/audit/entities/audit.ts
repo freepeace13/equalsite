@@ -6,7 +6,6 @@ interface Attributes {
     id: string;
     urls: string[];
     status: Status;
-    urlCallback: string;
     options: AuditOptions;
     createdAt: number;
 };
@@ -16,15 +15,14 @@ class AuditEntity {
     urls: string[];
     status: Status;
     error?: string;
-    urlCallback: string;
     options: AuditOptions;
+
     createdAt: number;
 
     constructor(attributes: Attributes) {
         this.id = attributes.id;
         this.urls = attributes.urls;
         this.status = attributes.status;
-        this.urlCallback = attributes.urlCallback;
         this.createdAt = attributes.createdAt;
         this.options = attributes.options;
     }
@@ -34,7 +32,6 @@ class AuditEntity {
             id: this.id,
             urls: this.urls,
             status: this.status,
-            urlCallback: this.urlCallback,
             createdAt: this.createdAt,
             options: this.options
         });
@@ -64,7 +61,7 @@ class AuditEntity {
     markAsCancelled(): this {
         const cancelled = Status.cancelled();
 
-        if (! this.status.is('active')) {
+        if (!this.status.is('active')) {
             throw new Error(`Status change from '${this.status.value}' to '${cancelled.value}' is not allowed.`);
         }
 
@@ -76,7 +73,7 @@ class AuditEntity {
     markAsCompleted(): this {
         const completed = Status.completed();
 
-        if (! this.status.is('active')) {
+        if (!this.status.is('active')) {
             throw new Error(`Status change from '${this.status.value}' to '${completed.value}' is not allowed.`);
         }
 
@@ -88,7 +85,7 @@ class AuditEntity {
     markAsFailed(reason?: string): this {
         const failed = Status.failed();
 
-        if (! this.status.is('active')) {
+        if (!this.status.is('active')) {
             throw new Error(`Status change from '${this.status.value}' to '${failed.value}' is not allowed.`);
         }
 
@@ -101,7 +98,7 @@ class AuditEntity {
     markAsActive(): this {
         const active = Status.active();
 
-        if (! this.status.is('waiting')) {
+        if (!this.status.is('waiting')) {
             throw new Error(`Status change from '${this.status.value}' to '${active.value}' is not allowed.`);
         }
 

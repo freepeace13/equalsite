@@ -39,6 +39,5 @@ return [
         'host' => env('CRAWLER_HOST', 'crawler'),
         'port' => env('CRAWLER_PORT', 3000),
         'secret' => env('CRAWLER_SECRET'),
-        'callback_base_url' => env('CRAWLER_CALLBACK_BASE_URL', 'http://web'),
     ],
 ];

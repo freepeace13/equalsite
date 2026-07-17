@@ -45,8 +45,7 @@ app/
 │   └── ConsumeCrawlerStreams.php   # artisan crawler:listen
 ├── Events/Audit/             # Domain events (broadcast via Soketi)
 ├── Http/Controllers/
-│   ├── Audit/                # ScanningController, ReportController
-│   └── Api/CrawlerCallbackController.php
+│   └── Audit/                # ScanningController, ReportController
 ├── Jobs/
 │   └── ProcessAuditArtifacts.php
 ├── Listeners/                # Stream event → DB state + broadcast
@@ -91,7 +90,7 @@ All audit events implementing `ShouldBroadcast` are pushed to the `audit-{id}-sc
 ],
 ```
 
-`SpiderClient` uses an `Http::spider()` macro to call `POST /api/v1/audit` and `DELETE /api/v1/audit/{id}`. The callback URL is built as an internal Docker hostname (`http://web/api/crawler/callback`) and protected by `CrawlerMiddleware` (Bearer token check).
+`SpiderClient` uses an `Http::spider()` macro to call `POST /api/v1/audit`, `DELETE /api/v1/audit/{id}`, and `GET /api/v1/download/{id}`. On `audit.completed`, `AuditStatusSubscriber` downloads the finished artifact zip from the crawler-api, extracts it via `UnzipCrawlerArtifacts`, and dispatches `ProcessAuditArtifacts` to parse it into violation records — Laravel pulls the data rather than the crawler pushing it.
 
 ---
 
@@ -117,7 +116,6 @@ POST   /audit                  → ScanningController@store
 GET    /audit/{id}             → ScanningController@progress
 DELETE /audit/{id}             → ScanningController@cancel
 GET    /audit/{id}/report      → ReportController@show
-POST   /api/crawler/callback   → CrawlerCallbackController (Bearer auth)
 ```
 
 Fortify handles all `/login`, `/register`, `/two-factor-challenge`, etc.
@@ -186,7 +184,7 @@ pnpm add <package> --filter web
 | Variable | Purpose |
 |----------|---------|
 | `CRAWLER_HOST` / `CRAWLER_PORT` | Crawler API endpoint (Docker: `crawler-api:3000`) |
-| `CRAWLER_SECRET` | Bearer token for crawler API and callback |
+| `CRAWLER_SECRET` | Bearer token for all crawler-api requests (create/cancel/download) |
 | `STREAM_NAME` | Redis stream consumed by `crawler:listen` |
 | `PUSHER_*` / `VITE_PUSHER_*` | Soketi connection for Laravel Echo |
 | `QUEUE_CONNECTION` | Default: `database` (Horizon still uses Redis for metrics) |
