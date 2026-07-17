@@ -20,7 +20,7 @@ export const DownloadArtifactsController = async (
                 return response.status(500).send('Could not download file.');
             }
         } else {
-            console.log('Doownload complete. Proceeding to delete file...');
+            console.log('Download complete. Proceeding to delete file...');
             void artifactService.cleanup(auditId);
         }
     })

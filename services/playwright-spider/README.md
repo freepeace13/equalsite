@@ -158,7 +158,7 @@ const axeResults = await new AxeBuilder({ page })
     .analyze();
 ```
 
-Only violations are collected (passes/incomplete are excluded by default). Results are pushed to the Crawlee dataset as JSON and included in the artifact zip sent to Laravel.
+Only violations are collected (passes/incomplete are excluded by default). Results are pushed to the Crawlee dataset as JSON and included in the artifact zip for Laravel to download.
 
 ---
 
