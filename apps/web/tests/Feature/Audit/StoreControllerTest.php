@@ -128,13 +128,11 @@ test('a pro account can immediately re-scan the same domain without being blocke
 });
 
 /**
- * AuditPolicy::create() takes the target domain (parsed in
- * AuditCreateRequest::authorize()) precisely so re-scanning a site the
- * account already owns never counts against the free-tier site cap — only a
- * genuinely new domain beyond the cap does. Without that domain check, the
- * site-cap count would be permanently >= 1 after a free account's first
- * completed audit, denying every future re-scan of that same site at the
- * policy layer before CreateAudit::assertRescanAllowed() is ever reached.
+ * CreateAudit::assertSiteCapAllowed() excludes domains the account already
+ * owns from the site-cap count — only a genuinely new domain beyond the cap
+ * is denied. Without that check, the site-cap count would be permanently >= 1
+ * after a free account's first completed audit, blocking every future
+ * re-scan of that same site before assertRescanAllowed() is ever reached.
  */
 test('a free account resubmitting to its own existing site is allowed by the site cap and reaches the re-scan rule', function () {
     fakeSpider('crawler-free-first');
@@ -204,7 +202,7 @@ test('a spider connection failure is reported and surfaced as a form error, not 
     expect(Audit::query()->count())->toBe(0);
 });
 
-test('a free account adding a genuinely new site beyond its site cap is denied', function () {
+test('a free account adding a genuinely new site beyond its site cap is denied with a validation-style error, not a 403', function () {
     fakeSpider('crawler-free-site-one');
     $user = User::factory()->create();
 
@@ -216,8 +214,8 @@ test('a free account adding a genuinely new site beyond its site cap is denied',
     ])->save();
 
     // No Spider::create expectation for a 2nd domain — the request should
-    // never reach CreateAudit if this is denied at the policy layer.
+    // never reach the crawler if it's denied by the site cap.
     $response = $this->actingAs($user)->post(route('audit.store'), ['url' => 'https://example.org']);
 
-    $response->assertForbidden();
+    $response->assertRedirect()->assertSessionHasErrors('url');
 });

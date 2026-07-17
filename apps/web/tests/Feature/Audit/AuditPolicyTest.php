@@ -37,9 +37,7 @@ test('create is denied while a started audit is already in flight (pro)', functi
 });
 
 test('the in-flight check does not block on an audit that already finished', function () {
-    // Pro, so the site-cap branch can't also be the reason for a false result
-    // here — this isolates the in-flight check specifically.
-    $user = User::factory()->pro()->create();
+    $user = User::factory()->create();
     makeUserAudit($user, 'finished', 'acme.com', Status::Completed);
 
     expect((new AuditPolicy)->create($user))->toBeTrue();
@@ -51,18 +49,14 @@ test('a free user is allowed to create their very first audit', function () {
     expect((new AuditPolicy)->create($user))->toBeTrue();
 });
 
-test('a free user is denied once they are already at the 1-site cap', function () {
+/**
+ * The free-tier site cap is no longer enforced here — it moved to
+ * CreateAudit::assertSiteCapAllowed() (see tests/Unit/Actions/Audit/CreateAuditTest.php)
+ * so a denial can carry an upgrade-prompt message instead of a bare 403.
+ */
+test('a free user already at the 1-site cap is still allowed by the policy, since the cap is enforced elsewhere', function () {
     $user = User::factory()->create();
     makeUserAudit($user, 'first-site', 'acme.com', Status::Completed);
-
-    expect((new AuditPolicy)->create($user))->toBeFalse();
-});
-
-test('a pro user is allowed regardless of how many sites they already own', function () {
-    $user = User::factory()->pro()->create();
-    makeUserAudit($user, 'site-1', 'acme.com', Status::Completed);
-    makeUserAudit($user, 'site-2', 'beta.com', Status::Completed);
-    makeUserAudit($user, 'site-3', 'gamma.com', Status::Completed);
 
     expect((new AuditPolicy)->create($user))->toBeTrue();
 });

@@ -111,7 +111,104 @@ test('the billing page reports onGracePeriod for a pro user whose subscription i
         ->get(route('billing.edit'))
         ->assertInertia(fn (Assert $page) => $page
             ->where('subscription.onGracePeriod', true)
-            ->where('subscription.endsAt', fn ($value) => $value !== null),
+            ->where('subscription.endsAt', fn ($value) => $value !== null)
+            // Cancelled subscriptions have no future payment to show.
+            ->where('subscription.nextPayment', null),
+        );
+});
+
+test('the billing page marks which interval the subscription is currently on', function () {
+    fakePaddlePricePreview();
+    $user = User::factory()->pro()->create();
+
+    $subscription = Subscription::create([
+        'billable_id' => $user->id,
+        'billable_type' => User::class,
+        'type' => 'default',
+        'paddle_id' => 'sub_yearly_test',
+        'status' => Subscription::STATUS_ACTIVE,
+    ]);
+    $subscription->items()->create([
+        'product_id' => 'pro_test',
+        'price_id' => 'pri_yearly_test',
+        'status' => Subscription::STATUS_ACTIVE,
+        'quantity' => 1,
+    ]);
+
+    Http::fake([
+        Cashier::apiUrl().'/subscriptions/*' => Http::response([
+            'data' => ['next_transaction' => null],
+        ]),
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('billing.edit'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('subscription.interval', 'yearly'),
+        );
+});
+
+test('the billing page includes the next payment amount and due date for an active subscription', function () {
+    fakePaddlePricePreview();
+    $user = User::factory()->pro()->create();
+
+    $subscription = Subscription::create([
+        'billable_id' => $user->id,
+        'billable_type' => User::class,
+        'type' => 'default',
+        'paddle_id' => 'sub_next_payment_test',
+        'status' => Subscription::STATUS_ACTIVE,
+    ]);
+    $subscription->items()->create([
+        'product_id' => 'pro_test',
+        'price_id' => 'pri_monthly_test',
+        'status' => Subscription::STATUS_ACTIVE,
+        'quantity' => 1,
+    ]);
+
+    $nextBillingDate = now()->addDays(18)->startOfSecond();
+
+    Http::fake([
+        Cashier::apiUrl().'/subscriptions/*' => Http::response([
+            'data' => [
+                'next_transaction' => [
+                    'billing_period' => ['starts_at' => $nextBillingDate->toIso8601String()],
+                    'details' => ['totals' => ['grand_total' => '900', 'currency_code' => 'USD']],
+                ],
+            ],
+        ]),
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('billing.edit'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('subscription.interval', 'monthly')
+            ->where('subscription.nextPayment.currency', 'USD')
+            ->where('subscription.nextPayment.date', fn ($value) => $value !== null),
+        );
+});
+
+test('the billing page degrades gracefully when the Paddle API is unreachable for next-payment lookup', function () {
+    fakePaddlePricePreview();
+    $user = User::factory()->pro()->create();
+
+    Subscription::create([
+        'billable_id' => $user->id,
+        'billable_type' => User::class,
+        'type' => 'default',
+        'paddle_id' => 'sub_paddle_down_test',
+        'status' => Subscription::STATUS_ACTIVE,
+    ]);
+
+    Http::fake([
+        Cashier::apiUrl().'/subscriptions/*' => Http::response(['error' => ['detail' => 'unavailable']], 500),
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('billing.edit'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('settings/billing')
+            ->where('subscription.nextPayment', null),
         );
 });
 

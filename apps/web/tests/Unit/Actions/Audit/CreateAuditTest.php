@@ -3,6 +3,7 @@
 use App\Actions\Audit\CreateAudit;
 use App\Contracts\Spider;
 use App\Exceptions\Audit\RescanTooSoonException;
+use App\Exceptions\Audit\SiteCapExceededException;
 use App\Models\User;
 use App\Value\Status;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,15 +13,9 @@ uses(TestCase::class, RefreshDatabase::class);
 
 /**
  * These call CreateAudit directly rather than through POST /audit, bypassing
- * AuditPolicy::create() on purpose. AuditPolicy's free-tier site-cap check
- * (distinct owned domains < cap) doesn't exclude the domain being resubmitted,
- * so a free account that already owns its one site gets denied at the policy
- * layer on every further submission — including legitimate re-scans of that
- * same site — before CreateAudit::assertRescanAllowed() would ever run. See
- * tests/Feature/Audit/StoreControllerTest.php for that interaction and the
- * project report for why it's flagged as a gap. This file verifies the
- * re-scan-frequency rule itself, in isolation, since it's unreachable via the
- * real HTTP route for a free account past its first audit.
+ * AuditPolicy::create() (which only enforces the one-audit-in-flight rule).
+ * See tests/Feature/Audit/StoreControllerTest.php for the full HTTP-level
+ * interaction between the policy and these action-level rules.
  */
 test('a free account is blocked from re-scanning the same domain inside the 1hr window', function () {
     $user = User::factory()->create();
@@ -71,4 +66,45 @@ test('a pro account is never blocked by the re-scan frequency rule', function ()
     $audit = (new CreateAudit($spider))->create($user, 'https://acme.com');
 
     expect($audit->crawler_id)->toBe('second-scan');
+});
+
+test('a free account adding a genuinely new site beyond its site cap is blocked with an upgrade message', function () {
+    $user = User::factory()->create();
+    makeUserAudit($user, 'first-site', 'acme.com', Status::Completed);
+
+    $action = new CreateAudit(Mockery::mock(Spider::class));
+
+    try {
+        $action->create($user, 'https://example.org');
+        test()->fail('Expected SiteCapExceededException to be thrown.');
+    } catch (SiteCapExceededException $e) {
+        expect($e->siteCap)->toBe(1)
+            ->and($e->getMessage())->toContain('Upgrade to Pro');
+    }
+});
+
+test('a free account resubmitting its own existing site never counts against the site cap', function () {
+    $user = User::factory()->create();
+    $firstAudit = makeUserAudit($user, 'first-site', 'acme.com', Status::Completed);
+    $firstAudit->forceFill(['created_at' => now()->subHours(2)])->save(); // clear of the rescan window
+
+    $spider = Mockery::mock(Spider::class);
+    $spider->shouldReceive('create')->once()->andReturn(['id' => 'second-scan']);
+
+    $audit = (new CreateAudit($spider))->create($user, 'https://acme.com');
+
+    expect($audit->crawler_id)->toBe('second-scan');
+});
+
+test('a pro account is never blocked by the site cap regardless of how many sites it already owns', function () {
+    $user = User::factory()->pro()->create();
+    makeUserAudit($user, 'site-1', 'acme.com', Status::Completed);
+    makeUserAudit($user, 'site-2', 'beta.com', Status::Completed);
+
+    $spider = Mockery::mock(Spider::class);
+    $spider->shouldReceive('create')->once()->andReturn(['id' => 'third-site']);
+
+    $audit = (new CreateAudit($spider))->create($user, 'https://gamma.com');
+
+    expect($audit->crawler_id)->toBe('third-site');
 });

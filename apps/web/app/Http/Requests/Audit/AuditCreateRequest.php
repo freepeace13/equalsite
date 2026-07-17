@@ -14,17 +14,14 @@ class AuditCreateRequest extends FormRequest
      *
      * Gating AuditPolicy::create() here (rather than leaving it to be called
      * manually in the controller) means a denied request short-circuits with
-     * Laravel's standard 403 before CreateAudit ever runs. The target domain
-     * is passed through so the site-cap check can tell a re-scan of an
-     * already-owned site apart from adding a new one — without it, every
-     * account's first completed audit would permanently block all future
-     * audits, including legitimate re-scans of that same site.
+     * Laravel's standard 403 before CreateAudit ever runs. This only covers
+     * the one-audit-in-flight rule — the site cap and re-scan-frequency rule
+     * are checked later in CreateAudit, since those need to surface a
+     * specific message rather than a bare 403.
      */
     public function authorize(): bool
     {
-        $domain = $this->filled('url') ? parse_url($this->string('url')->toString(), PHP_URL_HOST) : null;
-
-        return $this->user()->can('create', [Audit::class, $domain]);
+        return $this->user()->can('create', Audit::class);
     }
 
     /**

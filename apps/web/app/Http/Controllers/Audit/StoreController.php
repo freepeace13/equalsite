@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Audit;
 
 use App\Actions\Audit\CreateAudit;
 use App\Exceptions\Audit\RescanTooSoonException;
+use App\Exceptions\Audit\SiteCapExceededException;
 use App\Exceptions\Spider\SpiderException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Audit\AuditCreateRequest;
@@ -23,6 +24,8 @@ class StoreController extends Controller
             return back()
                 ->withErrors(['url' => $e->getMessage()])
                 ->with('rescanAvailableAt', $e->availableAt->toIso8601String());
+        } catch (SiteCapExceededException $e) {
+            return back()->withErrors(['url' => $e->getMessage()]);
         } catch (SpiderException $e) {
             report($e);
 

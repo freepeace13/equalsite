@@ -4,6 +4,7 @@ namespace App\Actions\Audit;
 
 use App\Contracts\Spider;
 use App\Exceptions\Audit\RescanTooSoonException;
+use App\Exceptions\Audit\SiteCapExceededException;
 use App\Models\Audit;
 use App\Models\User;
 use App\Support\Plan\PlanLimits;
@@ -25,6 +26,7 @@ class CreateAudit
     {
         $limits = PlanLimits::for($user->plan);
 
+        $this->assertSiteCapAllowed($user, $url, $limits);
         $this->assertRescanAllowed($user, $url, $limits);
 
         $requestedDepth = isset($settings['crawlDepth'])
@@ -57,6 +59,30 @@ class CreateAudit
             'status' => Status::Queued,
             'crawler_id' => $response['id'],
         ]);
+    }
+
+    /**
+     * @throws SiteCapExceededException
+     */
+    protected function assertSiteCapAllowed(User $user, string $url, PlanLimits $limits): void
+    {
+        $cap = $limits->siteCap();
+
+        if ($cap === null) {
+            return; // Pro: no cap
+        }
+
+        $domain = parse_url($url, PHP_URL_HOST);
+        $existingDomains = $user->audits()->distinct('domain')->pluck('domain');
+
+        // Re-scanning an already-owned site never counts against the site cap.
+        if ($existingDomains->contains($domain)) {
+            return;
+        }
+
+        if ($existingDomains->count() >= $cap) {
+            throw new SiteCapExceededException($cap);
+        }
     }
 
     /**
