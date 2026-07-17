@@ -14,7 +14,6 @@ export const createRunAuditAction = (
     auditRepository: AuditRepository,
     eventPublisher: EventPublisher,
     config: {
-        secretKey: string;
         artifactDirectory: string;
         archiveDirectory: string;
     }
@@ -22,7 +21,6 @@ export const createRunAuditAction = (
     const {
         artifactDirectory,
         archiveDirectory,
-        secretKey
     } = config;
     const auditService = createAuditService(auditRepository, eventPublisher);
     const artifactService = createArtifactService(artifactDirectory, archiveDirectory);

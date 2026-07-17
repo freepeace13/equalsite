@@ -28,7 +28,6 @@ const crawlerWorker = new Worker<{ auditId: string }>(
             {
                 artifactDirectory: Config.crawler.artifactDirectory,
                 archiveDirectory: Config.crawler.archiveDirectory,
-                secretKey: Config.secretKey
             }
         ).run(data.auditId);
     },
