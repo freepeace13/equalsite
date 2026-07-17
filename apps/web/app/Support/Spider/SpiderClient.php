@@ -23,6 +23,11 @@ class SpiderClient implements Spider
         return $this->send(fn () => Http::spider()->get('ping'));
     }
 
+    public function download(string $id)
+    {
+        return $this->send(fn () => Http::spider()->get("download/{$id}"));
+    }
+
     public function create(SpiderOptions $options): array
     {
         // Log::debug('SpiderClient Request body: ', $options->toArray());

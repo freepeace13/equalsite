@@ -4,7 +4,7 @@ import { EventEnum } from "@equalsite/types";
 
 export const completedEvent = (payload: {
     auditId: string;
-    statistics: StatisticState
+    statistics: StatisticState,
 }): EventPublisherParams<typeof EventEnum.Completed> => ({
     type: EventEnum.Completed,
     payload: {

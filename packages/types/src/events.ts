@@ -59,19 +59,19 @@ export interface PageCompletedPayload extends BasePayload {
     severityBreakdown: ServerityBreakdown;
 }
 
-export interface ProgressPayload extends BasePayload, ProgressState {}
+export interface ProgressPayload extends BasePayload, ProgressState { }
 
 export interface FailedPayload extends BasePayload {
     error: string;
 }
 
-export interface QueuedPayload extends BasePayload, QueueStatus {}
+export interface QueuedPayload extends BasePayload, QueueStatus { }
 
-export interface CompletedPayload extends BasePayload, StatisticState {}
+export interface CompletedPayload extends BasePayload, StatisticState { }
 
-export interface CancelledPayload extends BasePayload, StatisticState {}
+export interface CancelledPayload extends BasePayload, StatisticState { }
 
-export interface StartedPayload extends BasePayload {}
+export interface StartedPayload extends BasePayload { }
 
 export interface TelemetryPayload {
     process: {

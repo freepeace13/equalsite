@@ -29,3 +29,7 @@ export type CancelAuditRequestParams = {
 }
 
 export type CancelAuditResponseData = CancelAuditRequestParams | ResponseError;
+
+export interface DownloadArtifactParams {
+    auditId: string
+}

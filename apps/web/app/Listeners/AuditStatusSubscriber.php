@@ -5,24 +5,15 @@ namespace App\Listeners;
 use App\Events\Audit\AuditCompleted;
 use App\Events\Audit\AuditFailed;
 use App\Events\Audit\AuditStarted;
-use App\Events\Audit\BaseEvent;
 use App\Models\Audit;
 use App\Value\Status;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Events\Dispatcher;
-use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class AuditStatusSubscriber implements ShouldQueue
 {
-    // public function middleware(BaseEvent $event)
-    // {
-    //     return [
-    //         (new WithoutOverlapping('audit-' . $event->crawlerId() . '-status-subscribe'))->shared()
-    //     ];
-    // }
-
     public function handleAuditStarted(AuditStarted $event): void
     {
         $this->updateAudit($event->crawlerId(), [
@@ -41,6 +32,9 @@ class AuditStatusSubscriber implements ShouldQueue
 
     public function handleAuditCompleted(AuditCompleted $event): void
     {
+        // Download artifacts using Spider::download
+        // Once you have the zipped file extract UnzipCrawlerArtifacts::unzip it
+        // Finally, dispatch the ProcessAuditArtifacts job
         $this->updateAudit($event->crawlerId(), [
             'status' => Status::Completed,
             'completed_at' => $this->carbonTimestamp($event->timestamp()),
