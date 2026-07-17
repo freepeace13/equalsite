@@ -15,6 +15,15 @@ export type {
 export { ProgressBar } from './components/molecules/progress-bar';
 export type { ProgressBarProps } from './components/molecules/progress-bar';
 
+export { CrawlDepth } from './components/molecules/crawl-depth';
+export type { CrawlDepthProps, CrawlDepthOption } from './components/molecules/crawl-depth';
+
+export { EnqueueStrategy } from './components/molecules/enqueue-strategy';
+export type { EnqueueStrategyProps } from './components/molecules/enqueue-strategy';
+
+export { PagePattern } from './components/molecules/page-pattern';
+export type { PagePatternProps } from './components/molecules/page-pattern';
+
 export { MetricCard, metricCardVariants } from './components/molecules/metric-card';
 export type { MetricCardProps, MetricCardTone } from './components/molecules/metric-card';
 

@@ -1,9 +1,10 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEchoPublic } from '@laravel/echo-react';
 import { useState } from 'react';
+import { AuditRequestModal } from '@/components/audit-request-modal';
 import { PublicHeader } from '@/components/public-header';
 import { dashboard } from '@/routes';
-import { create, progress } from '@/routes/audit';
+import { progress } from '@/routes/audit';
 import { index, show } from '@/routes/sites';
 import { humanReadableDateTime, str } from '@/lib/utils';
 import type { ScanProgress, ScanQueue, ScanStatus } from '@/types';
@@ -182,7 +183,7 @@ function SiteRow({ site }: { site: Site }) {
     );
 }
 
-function EmptyState() {
+function EmptyState({ onRunAudit }: { onRunAudit: () => void }) {
     return (
         <div className="rounded-lg border border-slate-200 p-10 text-center dark:border-slate-800">
             <p className="text-sm font-medium">no sites yet</p>
@@ -190,17 +191,17 @@ function EmptyState() {
                 run your first audit and it'll show up here, grouped with the rest of that
                 site's history.
             </p>
-            <Button size="sm" className="mt-5" asChild>
-                <Link href={create().url}>
-                    run your first audit
-                    <ArrowRightIcon />
-                </Link>
+            <Button size="sm" className="mt-5" onClick={onRunAudit}>
+                run your first audit
+                <ArrowRightIcon />
             </Button>
         </div>
     );
 }
 
 export default function Index({ sites }: SitesIndexProps) {
+    const [auditFormOpen, setAuditFormOpen] = useState(false);
+
     return (
         <>
             <Head title="Your sites" />
@@ -214,17 +215,18 @@ export default function Index({ sites }: SitesIndexProps) {
                         </p>
                     </div>
                     {sites.length > 0 && (
-                        <Link
-                            href={create().url}
+                        <button
+                            type="button"
+                            onClick={() => setAuditFormOpen(true)}
                             className="text-xs font-medium text-indigo-700 hover:underline dark:text-indigo-400"
                         >
                             run a new audit
-                        </Link>
+                        </button>
                     )}
                 </div>
 
                 {sites.length === 0 ? (
-                    <EmptyState />
+                    <EmptyState onRunAudit={() => setAuditFormOpen(true)} />
                 ) : (
                     <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
                         <Table>
@@ -251,6 +253,8 @@ export default function Index({ sites }: SitesIndexProps) {
                     </div>
                 )}
             </main>
+
+            <AuditRequestModal open={auditFormOpen} onOpenChange={setAuditFormOpen} />
         </>
     );
 }

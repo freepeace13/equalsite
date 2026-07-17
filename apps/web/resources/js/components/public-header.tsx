@@ -2,7 +2,7 @@ import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
-import { AuthModal } from '@/components/auth/auth-modal';
+import { AuthModal } from '@/components/auth-modal';
 import { UserInfo } from '@/components/user-info';
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useAppearance } from '@/hooks/use-appearance';

@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { AuthModal } from '@/components/auth/auth-modal';
+import { AuthModal } from '@/components/auth-modal';
 import { PublicHeader } from '@/components/public-header';
 import { home } from '@/routes';
 

@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import { PublicHeader } from '@/components/public-header';
 import { dashboard } from '@/routes';
-import { cancel, progress, result, store } from '@/routes/audit';
+import { show as auditShow, cancel, progress, store } from '@/routes/audit';
 import { show, index as sitesIndex } from '@/routes/sites';
 import { humanReadableDateTime, relativeTimeUntil, str } from '@/lib/utils';
 import type { ScanProgress, ScanQueue, ScanStatus } from '@/types';
@@ -201,7 +201,7 @@ function CurrentAuditCard({ audit }: { audit: CurrentAudit }) {
                         </p>
                     </div>
                     <Button size="sm" asChild>
-                        <Link href={result(audit.auditId).url}>view report</Link>
+                        <Link href={auditShow(audit.auditId, { query: { from: 'site' } }).url}>view report</Link>
                     </Button>
                 </div>
             )}
@@ -283,7 +283,7 @@ function HistoryTableRow({ row }: { row: HistoryRow }) {
             <TableCell className="text-right">
                 {row.status === 'completed' && (
                     <Link
-                        href={result(row.auditId).url}
+                        href={auditShow(row.auditId, { query: { from: 'site' } }).url}
                         className="text-xs font-medium text-indigo-700 hover:underline dark:text-indigo-400"
                     >
                         view report

@@ -1,19 +1,14 @@
-import { InputError } from '@equalsite/ui';
 import { Head, useForm, usePage } from '@inertiajs/react';
+import { AdvancedSettings } from '@/components/form/advance-settings';
 import { PublicHeader } from '@/components/public-header';
-import { AuthModal } from '@/components/auth/auth-modal';
+import { AuthModal } from '@/components/auth-modal';
 import { store } from '@/routes/audit';
-import { CrawlDepth } from '@/components/form/crawl-depth';
 import {
     ArrowRightIcon,
     Button,
-    Collapsible,
-    CollapsibleChevron,
-    CollapsibleContent,
-    CollapsibleTrigger,
     type IconProps,
+    InputError,
     SearchIcon,
-    SlidersIcon,
     UsersIcon,
     ZapIcon,
 } from '@equalsite/ui';
@@ -23,19 +18,11 @@ import {
     type SubmitEventHandler,
     useState,
 } from 'react';
-import { EnqueueStrategy } from '@/components/form/enqueue-strategy';
-import { PagePattern } from '@/components/form/page-pattern';
 import { clearPendingAudit, savePendingAudit } from '@/lib/pending-audit';
 
 const NAV_LINKS = [
     { label: 'How it works', href: '#how' },
     { label: 'Pricing', href: '#pricing' },
-];
-
-const CRAWL_DEPTHS = [
-    { label: 'shallow', value: '1' },
-    { label: 'standard', value: '3' },
-    { label: 'deep', value: '5' },
 ];
 
 const FEATURE_CARDS: {
@@ -63,80 +50,12 @@ const FEATURE_CARDS: {
         },
     ];
 
-function AdvancedSettings({
-    form,
-}: {
-    form: ReturnType<
-        typeof useForm<{
-            url: string;
-            crawlDepth: string;
-            include: string;
-            exclude: string;
-            sameDomain: boolean;
-        }>
-    >;
-}) {
-    return (
-        <Collapsible className="mx-auto mt-6 max-w-md overflow-hidden rounded-lg border border-slate-200 text-left dark:border-slate-800">
-            <CollapsibleTrigger>
-                <SlidersIcon className="text-slate-500 dark:text-slate-400" />
-                <span className="flex-1 text-sm font-medium">
-                    advanced settings
-                </span>
-                <span className="text-xs text-slate-400 dark:text-slate-500">
-                    optional
-                </span>
-                <CollapsibleChevron />
-            </CollapsibleTrigger>
-
-            <CollapsibleContent className="border-t border-slate-200 px-4 pt-1 pb-4 dark:border-slate-800">
-                <CrawlDepth
-                    options={CRAWL_DEPTHS}
-                    value={form.data.crawlDepth}
-                    onValueChange={(value) => {
-                        form.setData('crawlDepth', value);
-                    }}
-                />
-                <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
-                    standard follows links up to 3 levels from the homepage.
-                </p>
-                <PagePattern
-                    label="include only pages matching"
-                    id="include-patterns"
-                    placeholder="/blog/*, /products/*"
-                    name="include"
-                    value={form.data.include}
-                    onValueChange={(value) => form.setData('include', value)}
-                />
-
-                <PagePattern
-                    label="exclude pages matching"
-                    id="exclude-patterns"
-                    placeholder="/admin/*, /account/*"
-                    name="exclude"
-                    value={form.data.exclude}
-                    onValueChange={(value) => form.setData('exclude', value)}
-                />
-                <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
-                    leave blank to crawl your whole site, up to 25 pages.
-                </p>
-                <EnqueueStrategy
-                    value={form.data.sameDomain}
-                    onValueChange={(value) => {
-                        form.setData('sameDomain', value);
-                    }}
-                />
-            </CollapsibleContent>
-        </Collapsible>
-    );
-}
-
 type Props = {
     canRegister: boolean;
     canResetPassword: boolean;
 };
 
-export default function Home({ canRegister, canResetPassword }: Props) {
+export default function Welcome({ canRegister, canResetPassword }: Props) {
     const { auth } = usePage().props;
     const form = useForm({
         url: '',

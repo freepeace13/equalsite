@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEchoPublic } from '@laravel/echo-react';
 import { PublicHeader } from '@/components/public-header';
-import { cancel, index, progress, result } from '@/routes/audit';
+import { cancel, index, progress, show } from '@/routes/audit';
 import { omit } from '@/lib/obj';
 import type { ScanInfo, ScanProgress, ScanQueue, ScannedUrl } from '@/types';
 import type {
@@ -291,7 +291,7 @@ function ReportCta({
                 {issuesCount} issue{issuesCount !== 1 ? 's' : ''} found
             </p>
             <Button size="sm" asChild>
-                <Link href={result(auditId).url}>
+                <Link href={show(auditId).url}>
                     view report
                     <ArrowRightIcon />
                 </Link>

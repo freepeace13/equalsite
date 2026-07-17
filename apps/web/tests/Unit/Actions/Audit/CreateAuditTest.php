@@ -17,7 +17,7 @@ uses(TestCase::class, RefreshDatabase::class);
  * so a free account that already owns its one site gets denied at the policy
  * layer on every further submission — including legitimate re-scans of that
  * same site — before CreateAudit::assertRescanAllowed() would ever run. See
- * tests/Feature/Audit/RequestControllerTest.php for that interaction and the
+ * tests/Feature/Audit/StoreControllerTest.php for that interaction and the
  * project report for why it's flagged as a gap. This file verifies the
  * re-scan-frequency rule itself, in isolation, since it's unreachable via the
  * real HTTP route for a free account past its first audit.

@@ -8,7 +8,7 @@ import { NavUser } from '@/components/nav-user';
 import audit from '@/routes/audit';
 import sites from '@/routes/sites';
 import { dashboard, } from '@/routes';
-import type { NavItem } from '@/types';
+import type { BreadcrumbItem, NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
@@ -41,7 +41,7 @@ const footerNavItems: NavItem[] = [
     },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItem[] }) {
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -57,7 +57,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={mainNavItems} breadcrumbs={breadcrumbs} />
             </SidebarContent>
 
             <SidebarFooter>

@@ -7,7 +7,7 @@ use Throwable;
 
 /**
  * Base for failures talking to the crawler-api via SpiderClient. Caught at
- * the controller layer (RequestController, CancelController) and turned into
+ * the controller layer (StoreController, CancelController) and turned into
  * a redirect-back-with-errors, mirroring RescanTooSoonException.
  */
 abstract class SpiderException extends Exception

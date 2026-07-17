@@ -1,10 +1,23 @@
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@equalsite/ui';
 import { Link } from '@inertiajs/react';
 import { useCurrentUrl } from '@/hooks/use-current-url';
-import type { NavItem } from '@/types';
+import { toUrl } from '@/lib/utils';
+import type { BreadcrumbItem, NavItem } from '@/types';
 
-export function NavMain({ items = [] }: { items: NavItem[] }) {
-    const { isCurrentUrl } = useCurrentUrl();
+export function NavMain({
+    items = [],
+    breadcrumbs = [],
+}: {
+    items: NavItem[];
+    breadcrumbs?: BreadcrumbItem[];
+}) {
+    const { isCurrentOrParentUrl } = useCurrentUrl();
+
+    // A page's breadcrumb trail says which section it belongs to more
+    // reliably than its URL prefix does — e.g. `/audit/{id}` reached via a
+    // site's history is rooted at "Sites", not "Audits". Fall back to
+    // URL-prefix matching for pages that don't set breadcrumbs.
+    const rootHref = breadcrumbs[0]?.href;
 
     return (
         <SidebarGroup className="px-2 py-0">
@@ -14,7 +27,11 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                     <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
                             asChild
-                            isActive={isCurrentUrl(item.href)}
+                            isActive={
+                                rootHref
+                                    ? toUrl(rootHref) === toUrl(item.href)
+                                    : isCurrentOrParentUrl(item.href)
+                            }
                             tooltip={{ children: item.title }}
                         >
                             <Link href={item.href} prefetch>

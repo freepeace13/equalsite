@@ -9,11 +9,12 @@ use App\Services\HealthScoreCalculator;
 use App\Services\ReportPresenter;
 use App\Value\ScannedUrl;
 use App\Value\SeverityBreakdown;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class ResultController extends Controller
+class ShowController extends Controller
 {
-    public function __invoke(string $id)
+    public function __invoke(Request $request, string $id)
     {
         $audit = Audit::where('crawler_id', $id)->firstOrFail();
 
@@ -27,7 +28,8 @@ class ResultController extends Controller
 
         // $calculator = new HealthScoreCalculator;
 
-        return Inertia::render('audit/result', [
+        return Inertia::render('audit/show', [
+            'from' => $request->query('from') === 'site' ? 'site' : null,
             'report' => [
                 'auditId' => $audit->crawler_id,
                 'siteUrl' => $audit->url,

@@ -89,13 +89,11 @@ file without a corresponding component. The shadcn CLI's own output layout maps 
 
 ### What deliberately stays out of this package
 
-`reporting/*` and `scanning/**` under `apps/web/resources/js/components/` are organism-shaped (they
-compose several molecules/atoms into a full UI section) but **intentionally remain in `apps/web`**: they
-import their prop types from `apps/web`-local `@/types` (`Remediation`, `IViolation`, `ScanStatus`,
-`ScanInfo`, `ScannedUrl`, …), and some import Wayfinder-generated actions. Moving them here would make
-`packages/ui` depend backward on `apps/web`, which isn't resolvable via the workspace. If they need to be
-shared beyond `apps/web` later, the prerequisite is promoting those view-model types into
-`@equalsite/types` first — that hasn't happened yet.
+Organism-shaped compositions (several molecules/atoms combined into a full UI section) that import their
+prop types from `apps/web`-local `@/types` or Wayfinder-generated actions stay in `apps/web` rather than
+living here — moving them would make `packages/ui` depend backward on `apps/web`, which isn't resolvable
+via the workspace. If a future one needs to be shared, the prerequisite is promoting its view-model types
+into `@equalsite/types` first.
 
 Likewise, anything wired to Inertia routing, Laravel Wayfinder actions, or app-only state — `app-header`,
 `app-sidebar`, `nav-*`, `user-*`, `two-factor-*`, `delete-user`, `app-shell`/`app-content`, `app-logo*`,

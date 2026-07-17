@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { PublicHeader } from '@/components/public-header';
-import { index, result } from '@/routes/audit';
+import { index, show } from '@/routes/audit';
+import { show as siteShow, index as sitesIndex } from '@/routes/sites';
 import type { ServerityBreakdown } from '@equalsite/types';
 import type {
     IViolation,
@@ -42,6 +43,7 @@ type ReportSummary = {
 };
 
 type ReportProps = {
+    from: 'site' | null;
     report: {
         auditId: string;
         siteUrl: string;
@@ -288,7 +290,7 @@ function ImpactGroup({
     );
 }
 
-export default function Report({ report }: ReportProps) {
+export default function Show({ report }: ReportProps) {
     const domain = hostnameOf(report.siteUrl);
 
     const pageCount = Object.keys(report.scannedUrls).length;
@@ -395,12 +397,16 @@ export default function Report({ report }: ReportProps) {
     );
 }
 
-Report.layout = (props: ReportProps) => ({
-    breadcrumbs: [
-        { title: 'Audits', href: index() },
-        {
-            title: hostnameOf(props.report.siteUrl),
-            href: result(props.report.auditId),
-        },
-    ],
+Show.layout = (props: ReportProps) => ({
+    breadcrumbs:
+        props.from === 'site'
+            ? [
+                  { title: 'Sites', href: sitesIndex() },
+                  { title: hostnameOf(props.report.siteUrl), href: siteShow(hostnameOf(props.report.siteUrl)) },
+                  { title: props.report.auditId, href: show(props.report.auditId) },
+              ]
+            : [
+                  { title: 'Audits', href: index() },
+                  { title: props.report.auditId, href: show(props.report.auditId) },
+              ],
 });

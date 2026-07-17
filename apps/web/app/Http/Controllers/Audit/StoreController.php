@@ -9,7 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Audit\AuditCreateRequest;
 use Illuminate\Http\RedirectResponse;
 
-class RequestController extends Controller
+class StoreController extends Controller
 {
     public function __invoke(AuditCreateRequest $request, CreateAudit $creator): RedirectResponse
     {
