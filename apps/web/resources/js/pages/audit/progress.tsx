@@ -1,21 +1,12 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useEchoPublic } from '@laravel/echo-react';
-import { PublicHeader } from '@/components/public-header';
 import { cancel, index, progress, show } from '@/routes/audit';
-import { omit } from '@/lib/obj';
-import type { ScanInfo, ScanProgress, ScanQueue, ScannedUrl } from '@/types';
-import type {
-    CancelledWsEvent,
-    CompletedWsEvent,
-    FailedWsEvent,
-    PageCompletedWsEvent,
-    PageFailedWsEvent,
-    PageSkippedWsEvent,
-    PageStartedWsEvent,
-    ProgressWsEvent,
-    QueuedWsEvent,
-    StartedWsEvent,
-} from '@equalsite/types';
+import { SCAN_STATUS_BADGE } from '@/lib/audit-status';
+import { hostnameOf, pathnameOf } from '@/lib/utils';
+import {
+    useAuditProgressStream,
+    type AuditProgressStreamProps as ScanProgressPageProps,
+} from '@/hooks/use-audit-progress-stream';
+import type { ScannedUrl, ScanProgress, ScanQueue } from '@/types';
 import {
     AlertTriangleIcon,
     ArrowRightIcon,
@@ -29,55 +20,8 @@ import {
     SpinnerIcon,
     StatPair,
     StatusBadge,
-    type StatusBadgeStatus,
     XCircleIcon,
 } from '@equalsite/ui';
-
-type ScanProgressPageProps = {
-    scanInfo: ScanInfo;
-    scanProgress: ScanProgress;
-    scanQueue: ScanQueue;
-    scanUrls: Record<string, ScannedUrl>;
-};
-
-type WsEvents =
-    | QueuedWsEvent
-    | StartedWsEvent
-    | ProgressWsEvent
-    | CompletedWsEvent
-    | FailedWsEvent
-    | CancelledWsEvent
-    | PageStartedWsEvent
-    | PageFailedWsEvent
-    | PageSkippedWsEvent
-    | PageCompletedWsEvent;
-
-const SCAN_STATUS_BADGE: Record<
-    ScanInfo['status'],
-    { status: StatusBadgeStatus; label?: string }
-> = {
-    queued: { status: 'queued' },
-    started: { status: 'processing', label: 'crawling' },
-    completed: { status: 'complete' },
-    failed: { status: 'failed' },
-    cancelled: { status: 'cancelled' },
-};
-
-function hostnameOf(url: string) {
-    try {
-        return new URL(url).hostname;
-    } catch {
-        return url;
-    }
-}
-
-function pathnameOf(url: string) {
-    try {
-        return new URL(url).pathname || '/';
-    } catch {
-        return url;
-    }
-}
 
 function countIssues(scanUrls: Record<string, ScannedUrl>) {
     return Object.values(scanUrls).reduce(
@@ -308,163 +252,7 @@ export default function Progress({
 }: ScanProgressPageProps) {
     const domain = hostnameOf(scanInfo.siteUrl);
 
-    useEchoPublic<WsEvents>(
-        `audit-${scanInfo.auditId}-scanning`,
-        [
-            '.audit.queued',
-            '.audit.started',
-            '.audit.progress',
-            '.audit.completed',
-            '.audit.failed',
-            '.audit.cancelled',
-            '.audit.page.started',
-            '.audit.page.skipped',
-            '.audit.page.failed',
-            '.audit.page.completed',
-        ],
-        (e) => {
-            if (e.type === 'audit.queued') {
-                const data = (e as QueuedWsEvent).data;
-                router.replace<ScanProgressPageProps>({
-                    preserveScroll: true,
-                    props: (current) => ({
-                        ...current,
-                        scanQueue: omit(data, ['auditId']),
-                    }),
-                });
-            } else if (e.type === 'audit.started') {
-                const { timestamp } = e as StartedWsEvent;
-                router.replace<ScanProgressPageProps>({
-                    preserveScroll: true,
-                    props: (current) => ({
-                        ...current,
-                        scanInfo: {
-                            ...current.scanInfo,
-                            status: 'started',
-                            startedAt: timestamp,
-                        },
-                    }),
-                });
-            } else if (e.type === 'audit.progress') {
-                const { data } = e as ProgressWsEvent;
-                router.replace<ScanProgressPageProps>({
-                    preserveScroll: true,
-                    props: (current) => ({
-                        ...current,
-                        scanProgress: { ...data },
-                    }),
-                });
-            } else if (e.type === 'audit.completed') {
-                const { timestamp } = e as CompletedWsEvent;
-                router.replace<ScanProgressPageProps>({
-                    preserveScroll: true,
-                    props: (current) => ({
-                        ...current,
-                        scanInfo: {
-                            ...current.scanInfo,
-                            status: 'completed',
-                            completedAt: timestamp,
-                        },
-                    }),
-                });
-            } else if (e.type === 'audit.failed') {
-                const { error } = (e as FailedWsEvent).data;
-                router.replace<ScanProgressPageProps>({
-                    preserveScroll: true,
-                    props: (current) => ({
-                        ...current,
-                        scanInfo: {
-                            ...current.scanInfo,
-                            status: 'failed',
-                            failureReason: error,
-                        },
-                    }),
-                });
-            } else if (e.type === 'audit.cancelled') {
-                const { timestamp } = e as CancelledWsEvent;
-                router.replace<ScanProgressPageProps>({
-                    preserveScroll: true,
-                    props: (current) => ({
-                        ...current,
-                        scanInfo: {
-                            ...current.scanInfo,
-                            status: 'cancelled',
-                            cancelledAt: timestamp,
-                        },
-                    }),
-                });
-            } else if (e.type === 'audit.page.started') {
-                const { data, timestamp } = e as PageStartedWsEvent;
-                router.replace<ScanProgressPageProps>({
-                    preserveScroll: true,
-                    props: (current) => ({
-                        ...current,
-                        scanUrls: {
-                            ...current.scanUrls,
-                            [data.pageUrl]: {
-                                status: 'started',
-                                attemptsCount: data.attemptsCount,
-                                startedAt: timestamp,
-                            },
-                        },
-                    }),
-                });
-            } else if (e.type === 'audit.page.skipped') {
-                const { data, timestamp } = e as PageSkippedWsEvent;
-                router.replace<ScanProgressPageProps>({
-                    preserveScroll: true,
-                    props: (current) => ({
-                        ...current,
-                        scanUrls: {
-                            ...current.scanUrls,
-                            [data.pageUrl]: {
-                                status: 'skipped',
-                                skippingReason: data.reason,
-                                skippedAt: timestamp,
-                            },
-                        },
-                    }),
-                });
-            } else if (e.type === 'audit.page.failed') {
-                const { data, timestamp } = e as PageFailedWsEvent;
-                router.replace<ScanProgressPageProps>({
-                    preserveScroll: true,
-                    props: (current) => ({
-                        ...current,
-                        scanUrls: {
-                            ...current.scanUrls,
-                            [data.pageUrl]: {
-                                ...current.scanUrls[data.pageUrl],
-                                status: 'failed',
-                                errorMessage: data.errorMessage,
-                                attemptsCount: data.attemptsCount,
-                                failedAt: timestamp,
-                            },
-                        },
-                    }),
-                });
-            } else if (e.type === 'audit.page.completed') {
-                const { data, timestamp } = e as PageCompletedWsEvent;
-                router.replace<ScanProgressPageProps>({
-                    preserveScroll: true,
-                    props: (current) => ({
-                        ...current,
-                        scanUrls: {
-                            ...current.scanUrls,
-                            [data.pageUrl]: {
-                                ...current.scanUrls[data.pageUrl],
-                                status: 'completed',
-                                violationsCount: data.violationsCount,
-                                passesCount: data.passesCount,
-                                severityBreakdown: data.severityBreakdown,
-                                completedAt: timestamp,
-                            },
-                        },
-                    }),
-                });
-            }
-        },
-    );
+    useAuditProgressStream(scanInfo.auditId);
 
     const handleCancel = () => {
         if (
