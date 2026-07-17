@@ -130,9 +130,10 @@ docker compose exec web php artisan crawler:listen   # required for live progres
 Vite must run **on the host**, not in the container — the app embeds `http://127.0.0.1:5174/` asset
 URLs, which only resolve from the host: `pnpm --filter @equalsite/web dev`.
 
-To drive/screenshot the running app, use the `run-web` skill in `apps/web/.claude/skills/run-web/`
-rather than hand-rolling Playwright — it already knows the login flow, the `/dashboard` vs
-`/audit/create` post-login redirect quirk, and known-flaky tests.
+There is no `run-web` skill in this repo (despite older docs/session notes referencing one) — no
+automated way to drive/screenshot the running app exists yet. Don't start the Docker/Vite stack or
+attempt browser verification unprompted; rely on `typecheck`/`lintcheck`/`build`/tests, and ask the user
+to eyeball UI changes themselves, or hand-roll Playwright only if explicitly asked to.
 
 ## Conventions worth knowing before editing
 

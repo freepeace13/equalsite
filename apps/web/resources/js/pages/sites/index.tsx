@@ -19,11 +19,13 @@ import type {
 import {
     ArrowRightIcon,
     Button,
+    EmptyState,
     ProgressBar,
     StatusBadge,
     type StatusBadgeStatus,
     Table,
     TableBody,
+    TableCard,
     TableCell,
     TableHead,
     TableHeader,
@@ -183,22 +185,6 @@ function SiteRow({ site }: { site: Site }) {
     );
 }
 
-function EmptyState({ onRunAudit }: { onRunAudit: () => void }) {
-    return (
-        <div className="rounded-lg border border-slate-200 p-10 text-center dark:border-slate-800">
-            <p className="text-sm font-medium">no sites yet</p>
-            <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500 dark:text-slate-400">
-                run your first audit and it'll show up here, grouped with the rest of that
-                site's history.
-            </p>
-            <Button size="sm" className="mt-5" onClick={onRunAudit}>
-                run your first audit
-                <ArrowRightIcon />
-            </Button>
-        </div>
-    );
-}
-
 export default function Index({ sites }: SitesIndexProps) {
     const [auditFormOpen, setAuditFormOpen] = useState(false);
 
@@ -226,9 +212,18 @@ export default function Index({ sites }: SitesIndexProps) {
                 </div>
 
                 {sites.length === 0 ? (
-                    <EmptyState onRunAudit={() => setAuditFormOpen(true)} />
+                    <EmptyState
+                        title="no sites yet"
+                        description="run your first audit and it'll show up here, grouped with the rest of that site's history."
+                        action={
+                            <Button size="sm" onClick={() => setAuditFormOpen(true)}>
+                                run your first audit
+                                <ArrowRightIcon />
+                            </Button>
+                        }
+                    />
                 ) : (
-                    <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+                    <TableCard>
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-slate-50 dark:bg-slate-900">
@@ -250,7 +245,7 @@ export default function Index({ sites }: SitesIndexProps) {
                                 )}
                             </TableBody>
                         </Table>
-                    </div>
+                    </TableCard>
                 )}
             </main>
 

@@ -92,6 +92,24 @@ export type { InputErrorProps } from './components/molecules/input-error';
 export { PasswordInput } from './components/molecules/password-input';
 export type { PasswordInputProps } from './components/molecules/password-input';
 
+export { FormField } from './components/molecules/form-field';
+export type { FormFieldProps } from './components/molecules/form-field';
+
+export { SectionLabel } from './components/molecules/section-label';
+export type { SectionLabelProps } from './components/molecules/section-label';
+
+export { SurfacePanel, surfacePanelVariants } from './components/molecules/surface-panel';
+export type { SurfacePanelProps } from './components/molecules/surface-panel';
+
+export { TableCard } from './components/molecules/table-card';
+export type { TableCardProps } from './components/molecules/table-card';
+
+export { EmptyState } from './components/molecules/empty-state';
+export type { EmptyStateProps } from './components/molecules/empty-state';
+
+export { ScoreRing } from './components/molecules/score-ring';
+export type { ScoreRingProps } from './components/molecules/score-ring';
+
 export { Alert, AlertTitle, AlertDescription } from './components/atoms/alert';
 
 export { Avatar, AvatarImage, AvatarFallback } from './components/atoms/avatar';

@@ -1,4 +1,4 @@
-import { Badge, Button, Callout, Heading } from '@equalsite/ui';
+import { Badge, Button, Callout, Heading, SurfacePanel } from '@equalsite/ui';
 import { Head, router, useHttp } from '@inertiajs/react';
 import { toast } from 'sonner';
 import { humanReadableDateTime } from '@/lib/utils';
@@ -59,12 +59,12 @@ function SubscribeCard({
 
     if (price === null) {
         return (
-            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+            <SurfacePanel padding="sm">
                 <p className="text-sm font-medium">{label}</p>
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                     pricing unavailable right now — try again shortly
                 </p>
-            </div>
+            </SurfacePanel>
         );
     }
 
@@ -76,13 +76,13 @@ function SubscribeCard({
     };
 
     return (
-        <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+        <SurfacePanel padding="sm">
             <p className="text-sm font-medium">{label}</p>
             <p className="mt-1 text-2xl font-semibold tabular-nums">{price.formatted}</p>
             <Button className="mt-4 w-full" size="sm" onClick={handleSubscribe} disabled={processing}>
                 Subscribe
             </Button>
-        </div>
+        </SurfacePanel>
     );
 }
 

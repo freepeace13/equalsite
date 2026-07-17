@@ -1,4 +1,16 @@
-import { Button, Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger, Heading, InputError, Label, PasswordInput } from '@equalsite/ui';
+import {
+    Button,
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogTitle,
+    DialogTrigger,
+    FormField,
+    Heading,
+    PasswordInput,
+} from '@equalsite/ui';
 import { Form } from '@inertiajs/react';
 import { useRef } from 'react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
@@ -52,14 +64,12 @@ export default function DeleteUser() {
                         >
                             {({ resetAndClearErrors, processing, errors }) => (
                                 <>
-                                    <div className="grid gap-2">
-                                        <Label
-                                            htmlFor="password"
-                                            className="sr-only"
-                                        >
-                                            Password
-                                        </Label>
-
+                                    <FormField
+                                        label="Password"
+                                        htmlFor="password"
+                                        hideLabel
+                                        error={errors.password}
+                                    >
                                         <PasswordInput
                                             id="password"
                                             name="password"
@@ -67,9 +77,7 @@ export default function DeleteUser() {
                                             placeholder="Password"
                                             autoComplete="current-password"
                                         />
-
-                                        <InputError message={errors.password} />
-                                    </div>
+                                    </FormField>
 
                                     <DialogFooter className="gap-2">
                                         <DialogClose asChild>

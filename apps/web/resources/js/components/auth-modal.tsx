@@ -5,8 +5,8 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    FormField,
     Input,
-    InputError,
     Label,
     PasswordInput,
     Spinner,
@@ -84,9 +84,7 @@ export function AuthModal({
                     >
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="login">Log in</TabsTrigger>
-                            <TabsTrigger value="register">
-                                Sign up
-                            </TabsTrigger>
+                            <TabsTrigger value="register">Sign up</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="login" className="mt-5">
@@ -126,8 +124,11 @@ function LoginForm({
         >
             {({ processing, errors }) => (
                 <>
-                    <div className="grid gap-2">
-                        <Label htmlFor="email">Email address</Label>
+                    <FormField
+                        label="Email address"
+                        htmlFor="email"
+                        error={errors.email}
+                    >
                         <Input
                             id="email"
                             type="email"
@@ -137,21 +138,23 @@ function LoginForm({
                             autoComplete="email"
                             placeholder="email@example.com"
                         />
-                        <InputError message={errors.email} />
-                    </div>
+                    </FormField>
 
-                    <div className="grid gap-2">
-                        <div className="flex items-center">
-                            <Label htmlFor="password">Password</Label>
-                            {canResetPassword && (
+                    <FormField
+                        label="Password"
+                        htmlFor="password"
+                        error={errors.password}
+                        labelAction={
+                            canResetPassword && (
                                 <TextLink
                                     href={forgotPasswordRequest()}
-                                    className="ml-auto text-sm"
+                                    className="text-sm"
                                 >
                                     Forgot password?
                                 </TextLink>
-                            )}
-                        </div>
+                            )
+                        }
+                    >
                         <PasswordInput
                             id="password"
                             name="password"
@@ -159,8 +162,7 @@ function LoginForm({
                             autoComplete="current-password"
                             placeholder="Password"
                         />
-                        <InputError message={errors.password} />
-                    </div>
+                    </FormField>
 
                     <div className="flex items-center space-x-3">
                         <Checkbox id="remember" name="remember" />
@@ -198,8 +200,11 @@ function RegisterForm() {
         >
             {({ processing, errors }) => (
                 <>
-                    <div className="grid gap-2">
-                        <Label htmlFor="register-name">Name</Label>
+                    <FormField
+                        label="Name"
+                        htmlFor="register-name"
+                        error={errors.name}
+                    >
                         <Input
                             id="register-name"
                             type="text"
@@ -208,11 +213,13 @@ function RegisterForm() {
                             name="name"
                             placeholder="Full name"
                         />
-                        <InputError message={errors.name} />
-                    </div>
+                    </FormField>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="register-email">Email address</Label>
+                    <FormField
+                        label="Email address"
+                        htmlFor="register-email"
+                        error={errors.email}
+                    >
                         <Input
                             id="register-email"
                             type="email"
@@ -221,11 +228,13 @@ function RegisterForm() {
                             name="email"
                             placeholder="email@example.com"
                         />
-                        <InputError message={errors.email} />
-                    </div>
+                    </FormField>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="register-password">Password</Label>
+                    <FormField
+                        label="Password"
+                        htmlFor="register-password"
+                        error={errors.password}
+                    >
                         <PasswordInput
                             id="register-password"
                             required
@@ -233,8 +242,7 @@ function RegisterForm() {
                             name="password"
                             placeholder="Password"
                         />
-                        <InputError message={errors.password} />
-                    </div>
+                    </FormField>
 
                     <Button
                         type="submit"

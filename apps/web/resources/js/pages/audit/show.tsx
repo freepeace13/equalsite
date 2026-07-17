@@ -18,6 +18,7 @@ import {
     CollapsibleChevron,
     CollapsibleContent,
     CollapsibleTrigger,
+    EmptyState,
     EyeIcon,
     FileTextIcon,
     GlobeIcon,
@@ -27,6 +28,8 @@ import {
     KeyboardIcon,
     MetricCard,
     PackageIcon,
+    ScoreRing,
+    SectionLabel,
     SeverityBadge,
     type SeverityBadgeSeverity,
     ZapIcon,
@@ -93,60 +96,6 @@ const IMPACT_GROUP_ICON: Record<ImpactKey, ComponentType<IconProps>> = {
     moderate: EyeIcon,
     minor: InfoCircleIcon,
 };
-
-function ScoreGauge({ score }: { score: number }) {
-    const circumference = 201;
-    const offset = circumference * (1 - score / 100);
-    const color =
-        score >= 90
-            ? 'text-emerald-500'
-            : score >= 70
-                ? 'text-yellow-500'
-                : 'text-red-500';
-
-    return (
-        <svg
-            width="76"
-            height="76"
-            viewBox="0 0 76 76"
-            className="shrink-0"
-            aria-hidden="true"
-        >
-            <circle
-                cx="38"
-                cy="38"
-                r="32"
-                fill="none"
-                stroke="currentColor"
-                className="text-slate-200 dark:text-slate-800"
-                strokeWidth="7"
-            />
-            <circle
-                cx="38"
-                cy="38"
-                r="32"
-                fill="none"
-                stroke="currentColor"
-                className={color}
-                strokeWidth="7"
-                strokeDasharray={circumference}
-                strokeDashoffset={offset}
-                strokeLinecap="round"
-                transform="rotate(-90 38 38)"
-            />
-            <text
-                x="38"
-                y="44"
-                textAnchor="middle"
-                fontSize="21"
-                fontWeight="500"
-                className="fill-slate-900 dark:fill-white"
-            >
-                {score}
-            </text>
-        </svg>
-    );
-}
 
 function ViolationCard({ violation }: { violation: IViolation }) {
     const impact = violation.impact as SeverityBadgeSeverity;
@@ -324,7 +273,7 @@ export default function Show({ report }: ReportProps) {
             <main className="mx-auto container py-10">
                 {/* Score + narrative */}
                 <div className="mb-6 flex items-start gap-5 border-b border-slate-200 pb-6 dark:border-slate-800">
-                    <ScoreGauge score={report.healthScore} />
+                    <ScoreRing score={report.healthScore} size={76} strokeWidth={7} />
                     <div>
                         <p className="mb-1.5 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                             <GlobeIcon width={13} height={13} />
@@ -364,9 +313,7 @@ export default function Show({ report }: ReportProps) {
                     </div>
                 </div>
 
-                <p className="mb-2 text-xs text-slate-400 dark:text-slate-500">
-                    grouped by who's affected
-                </p>
+                <SectionLabel className="mb-2">grouped by who's affected</SectionLabel>
 
                 <div className="space-y-3">
                     {nonEmptyGroups.length > 0 ? (
@@ -378,18 +325,16 @@ export default function Show({ report }: ReportProps) {
                             />
                         ))
                     ) : (
-                        <div className="rounded-lg border border-slate-200 p-8 text-center dark:border-slate-800">
-                            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
-                                <CheckIcon className="text-emerald-600 dark:text-emerald-400" />
-                            </div>
-                            <p className="text-sm font-medium">
-                                no issues found
-                            </p>
-                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                great news — this site passed all WCAG 2.2 AA
-                                checks.
-                            </p>
-                        </div>
+                        <EmptyState
+                            className="p-8"
+                            icon={
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
+                                    <CheckIcon className="text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                            }
+                            title="no issues found"
+                            description="great news — this site passed all WCAG 2.2 AA checks."
+                        />
                     )}
                 </div>
             </main>

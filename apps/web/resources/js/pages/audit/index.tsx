@@ -17,11 +17,14 @@ import type {
 import {
     ArrowRightIcon,
     Button,
+    EmptyState,
     ProgressBar,
+    SectionLabel,
     StatusBadge,
     type StatusBadgeStatus,
     Table,
     TableBody,
+    TableCard,
     TableCell,
     TableHead,
     TableHeader,
@@ -172,17 +175,6 @@ function HistoryTableRow({ row }: { row: HistoryRow }) {
     );
 }
 
-function EmptyState() {
-    return (
-        <div className="rounded-lg border border-slate-200 p-10 text-center dark:border-slate-800">
-            <p className="text-sm font-medium">no audits yet</p>
-            <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500 dark:text-slate-400">
-                run one above and it'll show up here, along with the rest of your audit history.
-            </p>
-        </div>
-    );
-}
-
 export default function Index({ history }: AuditIndexProps) {
     const [auditFormOpen, setAuditFormOpen] = useState(false);
 
@@ -205,11 +197,14 @@ export default function Index({ history }: AuditIndexProps) {
                 </div>
 
                 {history.length === 0 ? (
-                    <EmptyState />
+                    <EmptyState
+                        title="no audits yet"
+                        description="run one above and it'll show up here, along with the rest of your audit history."
+                    />
                 ) : (
                     <>
-                        <p className="mb-2 text-xs text-slate-400 dark:text-slate-500">history</p>
-                        <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+                        <SectionLabel className="mb-2">history</SectionLabel>
+                        <TableCard>
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-slate-50 dark:bg-slate-900">
@@ -231,7 +226,7 @@ export default function Index({ history }: AuditIndexProps) {
                                     )}
                                 </TableBody>
                             </Table>
-                        </div>
+                        </TableCard>
                     </>
                 )}
             </main>

@@ -30,11 +30,14 @@ import {
     ChartTooltip,
     ChartTooltipContent,
     ProgressBar,
+    SectionLabel,
     StatPair,
     StatusBadge,
     type StatusBadgeStatus,
+    SurfacePanel,
     Table,
     TableBody,
+    TableCard,
     TableCell,
     TableHead,
     TableHeader,
@@ -362,16 +365,16 @@ export default function Show({
 
                 {scoreTrend.length >= 2 && (
                     <div className="mb-8">
-                        <p className="mb-2 text-xs text-slate-400 dark:text-slate-500">score trend</p>
-                        <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+                        <SectionLabel className="mb-2">score trend</SectionLabel>
+                        <SurfacePanel padding="sm">
                             <ScoreTrendChart data={scoreTrend} />
-                        </div>
+                        </SurfacePanel>
                     </div>
                 )}
 
                 {issuesSnapshot && (
                     <div className="mb-8">
-                        <p className="mb-2 text-xs text-slate-400 dark:text-slate-500">open issues</p>
+                        <SectionLabel className="mb-2">open issues</SectionLabel>
                         <StatPair
                             items={[
                                 { value: issuesSnapshot.critical, label: 'critical issues' },
@@ -381,8 +384,8 @@ export default function Show({
                     </div>
                 )}
 
-                <p className="mb-2 text-xs text-slate-400 dark:text-slate-500">history</p>
-                <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+                <SectionLabel className="mb-2">history</SectionLabel>
+                <TableCard>
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-slate-50 dark:bg-slate-900">
@@ -399,7 +402,7 @@ export default function Show({
                             ))}
                         </TableBody>
                     </Table>
-                </div>
+                </TableCard>
             </main>
         </>
     );

@@ -1,5 +1,5 @@
 // Components
-import { Button, Input, InputError, Label } from '@equalsite/ui';
+import { Button, FormField, Input } from '@equalsite/ui';
 import { Form, Head } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import TextLink from '@/components/text-link';
@@ -21,8 +21,11 @@ export default function ForgotPassword({ status }: { status?: string }) {
                 <Form {...email.form()}>
                     {({ processing, errors }) => (
                         <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                            <FormField
+                                label="Email address"
+                                htmlFor="email"
+                                error={errors.email}
+                            >
                                 <Input
                                     id="email"
                                     type="email"
@@ -31,9 +34,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
                                     autoFocus
                                     placeholder="email@example.com"
                                 />
-
-                                <InputError message={errors.email} />
-                            </div>
+                            </FormField>
 
                             <div className="my-6 flex items-center justify-start">
                                 <Button

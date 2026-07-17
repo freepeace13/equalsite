@@ -1,4 +1,10 @@
-import { Button, Input, InputError, Label, PasswordInput, Spinner } from '@equalsite/ui';
+import {
+    Button,
+    FormField,
+    Input,
+    PasswordInput,
+    Spinner,
+} from '@equalsite/ui';
 import { Form, Head } from '@inertiajs/react';
 import { update } from '@/routes/password';
 
@@ -19,52 +25,47 @@ export default function ResetPassword({ token, email }: Props) {
             >
                 {({ processing, errors }) => (
                     <div className="grid gap-6">
-                        <div className="grid gap-2">
-                            <Label htmlFor="email">Email</Label>
+                        <FormField
+                            label="Email"
+                            htmlFor="email"
+                            error={errors.email}
+                        >
                             <Input
                                 id="email"
                                 type="email"
                                 name="email"
                                 autoComplete="email"
                                 value={email}
-                                className="mt-1 block w-full"
                                 readOnly
                             />
-                            <InputError
-                                message={errors.email}
-                                className="mt-2"
-                            />
-                        </div>
+                        </FormField>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
+                        <FormField
+                            label="Password"
+                            htmlFor="password"
+                            error={errors.password}
+                        >
                             <PasswordInput
                                 id="password"
                                 name="password"
                                 autoComplete="new-password"
-                                className="mt-1 block w-full"
                                 autoFocus
                                 placeholder="Password"
                             />
-                            <InputError message={errors.password} />
-                        </div>
+                        </FormField>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="password_confirmation">
-                                Confirm password
-                            </Label>
+                        <FormField
+                            label="Confirm password"
+                            htmlFor="password_confirmation"
+                            error={errors.password_confirmation}
+                        >
                             <PasswordInput
                                 id="password_confirmation"
                                 name="password_confirmation"
                                 autoComplete="new-password"
-                                className="mt-1 block w-full"
                                 placeholder="Confirm password"
                             />
-                            <InputError
-                                message={errors.password_confirmation}
-                                className="mt-2"
-                            />
-                        </div>
+                        </FormField>
 
                         <Button
                             type="submit"
