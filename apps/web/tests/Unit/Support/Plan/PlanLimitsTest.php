@@ -78,3 +78,18 @@ test('free plan queue priority is lower priority than pro', function () {
 test('pro plan queue priority is 1', function () {
     expect(PlanLimits::for(Plan::Pro)->queuePriority())->toBe(1);
 });
+
+test('when monetization is disabled, every plan resolves with pro-tier limits', function () {
+    config(['plans.enabled' => false]);
+
+    expect(PlanLimits::for(Plan::Free)->siteCap())->toBeNull()
+        ->and(PlanLimits::for(Plan::Free)->pageCap())->toBe(100)
+        ->and(PlanLimits::for(Plan::Free)->allowedCrawlDepths())->toBe([
+            CrawlDepth::Shallow,
+            CrawlDepth::Standard,
+            CrawlDepth::Deep,
+        ])
+        ->and(PlanLimits::for(Plan::Free)->rescanFrequencyMinutes())->toBeNull()
+        ->and(PlanLimits::for(Plan::Free)->historyRetention())->toBeNull()
+        ->and(PlanLimits::for(Plan::Free)->queuePriority())->toBe(1);
+});

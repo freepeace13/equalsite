@@ -19,7 +19,14 @@ return [
     | 'queue_priority' is populated for a future BullMQ-priority pass but is not
     | read by anything yet in this pass.
     |
+    | 'enabled' gates all of the above: when false, PlanLimits::for() resolves
+    | every plan as Pro regardless of what's passed in, so every scan runs
+    | unrestricted. Toggle via MONETIZATION_ENABLED; default true (today's
+    | behavior unchanged).
+    |
     */
+
+    'enabled' => env('MONETIZATION_ENABLED', true),
 
     'free' => [
         'site_cap' => 1,
