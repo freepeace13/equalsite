@@ -129,3 +129,19 @@ test('a pro account is never blocked by the site cap regardless of how many site
 
     expect($audit->crawler_id)->toBe('third-site');
 });
+
+test('a free account bypasses the site cap and re-scan frequency when monetization is disabled', function () {
+    config(['plans.enabled' => false]);
+
+    $user = User::factory()->create();
+    $lastAudit = makeUserAudit($user, 'first-site', 'acme.com', Status::Completed);
+    $lastAudit->forceFill(['created_at' => now()->subMinutes(2)])->save(); // inside the free-plan rescan window
+
+    $spider = Mockery::mock(Spider::class);
+    $spider->shouldReceive('create')->once()->andReturn(['id' => 'second-site']);
+
+    $action = new CreateAudit($spider);
+    $audit = $action->create($user, 'https://example.org'); // a genuinely new site, would exceed the free site cap
+
+    expect($audit->crawler_id)->toBe('second-site');
+});
