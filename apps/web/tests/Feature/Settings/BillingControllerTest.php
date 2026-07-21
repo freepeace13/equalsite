@@ -294,3 +294,51 @@ test('cancel puts the subscription on its grace period and flashes a toast, with
     // handled by SyncUserPlanFromSubscription, does that later).
     expect($user->fresh()->plan->value)->toBe('pro');
 });
+
+test('billing edit redirects to the dashboard when monetization is disabled', function () {
+    config(['plans.enabled' => false]);
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('billing.edit'))
+        ->assertRedirect(route('dashboard'));
+});
+
+test('billing checkout returns a json error when monetization is disabled', function () {
+    config(['plans.enabled' => false]);
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->postJson(route('billing.checkout'), ['interval' => 'monthly'])
+        ->assertForbidden();
+});
+
+test('cancel still works when monetization is disabled', function () {
+    $user = User::factory()->pro()->create();
+
+    $subscription = Subscription::create([
+        'billable_id' => $user->id,
+        'billable_type' => User::class,
+        'type' => 'default',
+        'paddle_id' => 'sub_disabled_cancel_test',
+        'status' => Subscription::STATUS_ACTIVE,
+    ]);
+
+    Http::fake([
+        Cashier::apiUrl().'/subscriptions/*/cancel' => Http::response([
+            'data' => [
+                'status' => Subscription::STATUS_ACTIVE,
+                'scheduled_change' => ['effective_at' => now()->addDays(30)->toIso8601String()],
+            ],
+        ]),
+    ]);
+
+    config(['plans.enabled' => false]);
+
+    $this->actingAs($user)
+        ->from(route('billing.edit'))
+        ->delete(route('billing.cancel'))
+        ->assertRedirect(route('billing.edit'));
+
+    expect($subscription->refresh()->ends_at?->isFuture())->toBeTrue();
+});

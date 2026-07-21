@@ -17,7 +17,7 @@ final class PlanLimits
 
     public static function for(Plan $plan): self
     {
-        return new self($plan);
+        return new self(config('plans.enabled') ? $plan : Plan::Pro);
     }
 
     public function siteCap(): ?int

@@ -1,5 +1,5 @@
 import { Button, Heading, Separator } from '@equalsite/ui';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
@@ -9,31 +9,39 @@ import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
 
-const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Profile',
-        href: edit(),
-        icon: null,
-    },
-    {
-        title: 'Security',
-        href: editSecurity(),
-        icon: null,
-    },
-    {
-        title: 'Billing',
-        href: editBilling(),
-        icon: null,
-    },
-    {
-        title: 'Appearance',
-        href: editAppearance(),
-        icon: null,
-    },
-];
+function buildSidebarNavItems(monetizationEnabled: boolean): NavItem[] {
+    return [
+        {
+            title: 'Profile',
+            href: edit(),
+            icon: null,
+        },
+        {
+            title: 'Security',
+            href: editSecurity(),
+            icon: null,
+        },
+        ...(monetizationEnabled
+            ? [
+                  {
+                      title: 'Billing',
+                      href: editBilling(),
+                      icon: null,
+                  },
+              ]
+            : []),
+        {
+            title: 'Appearance',
+            href: editAppearance(),
+            icon: null,
+        },
+    ];
+}
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
+    const { monetizationEnabled } = usePage().props;
+    const sidebarNavItems = buildSidebarNavItems(monetizationEnabled);
 
     return (
         <div className="container mx-auto py-10">

@@ -23,10 +23,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::inertia('settings/appearance', 'settings/appearance')->name('appearance.edit');
 
-    Route::get('settings/billing', [BillingController::class, 'edit'])->name('billing.edit');
+    Route::get('settings/billing', [BillingController::class, 'edit'])
+        ->middleware('monetization.enabled')
+        ->name('billing.edit');
 
     Route::post('settings/billing/checkout', [BillingController::class, 'checkout'])
-        ->middleware('throttle:6,1')
+        ->middleware(['throttle:6,1', 'monetization.enabled'])
         ->name('billing.checkout');
 
     Route::delete('settings/billing/subscription', [BillingController::class, 'cancel'])
