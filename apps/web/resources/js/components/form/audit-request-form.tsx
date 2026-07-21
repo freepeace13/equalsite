@@ -4,6 +4,7 @@ import {
     type ReactNode,
     type SubmitEventHandler,
 } from 'react';
+import { resolveIsPro } from '@/lib/plan';
 import {
     AdvancedSettings,
     type AuditFormData,
@@ -40,8 +41,8 @@ export function AuditRequestForm({
     stayOnPage = false,
     onSuccess,
 }: AuditRequestFormProps) {
-    const { auth } = usePage().props;
-    const isPro = auth.user?.plan === 'pro';
+    const { auth, monetizationEnabled } = usePage().props;
+    const isPro = resolveIsPro(auth.user, monetizationEnabled);
 
     const form = useForm<AuditFormData>({
         url: '',

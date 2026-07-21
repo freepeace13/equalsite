@@ -1,5 +1,6 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { AdvancedSettings } from '@/components/form/advance-settings';
+import { resolveIsPro } from '@/lib/plan';
 import { PublicHeader } from '@/components/public-header';
 import { AuthModal } from '@/components/auth-modal';
 import { store } from '@/routes/audit';
@@ -56,8 +57,8 @@ type Props = {
 };
 
 export default function Welcome({ canRegister, canResetPassword }: Props) {
-    const { auth } = usePage().props;
-    const isPro = auth.user?.plan === 'pro';
+    const { auth, monetizationEnabled } = usePage().props;
+    const isPro = resolveIsPro(auth.user, monetizationEnabled);
     const form = useForm({
         url: '',
         crawlDepth: isPro ? '3' : '1',
