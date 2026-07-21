@@ -53,8 +53,8 @@ test('pro plan passes every requested depth through unclamped', function (CrawlD
     'deep requested' => CrawlDepth::Deep,
 ]);
 
-test('free plan re-scan frequency is 60 minutes', function () {
-    expect(PlanLimits::for(Plan::Free)->rescanFrequencyMinutes())->toBe(60);
+test('free plan re-scan frequency matches the configured minutes', function () {
+    expect(PlanLimits::for(Plan::Free)->rescanFrequencyMinutes())->toBe((int) config('plans.free.rescan_frequency_minutes'));
 });
 
 test('pro plan has no re-scan frequency cap', function () {
