@@ -1,3 +1,4 @@
+import { friendlyErrorMessage } from '@/lib/audit-errors';
 import { pathnameOf } from '@/lib/utils';
 import type { ScannedUrl, ScanProgress } from '@/types';
 import {
@@ -64,7 +65,9 @@ function FeedRow({ url, entry }: { url: string; entry: ScannedUrl }) {
             <div className="flex animate-in items-center gap-2.5 px-4 py-2.5 fade-in slide-in-from-bottom-1">
                 <XCircleIcon className="text-red-500" />
                 <span className="flex-1 truncate text-sm">{path}</span>
-                <span className="text-xs text-red-500">failed</span>
+                <span className="text-xs text-red-500">
+                    {friendlyErrorMessage(entry.errorCode)}
+                </span>
             </div>
         );
     }

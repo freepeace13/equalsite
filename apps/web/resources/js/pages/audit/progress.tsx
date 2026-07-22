@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { cancel, index, progress } from '@/routes/audit';
+import { friendlyErrorMessage } from '@/lib/audit-errors';
 import { SCAN_STATUS_BADGE } from '@/lib/audit-status';
 import { hostnameOf } from '@/lib/utils';
 import {
@@ -101,8 +102,7 @@ export default function Progress({
                         title="Scan failed."
                         className="mt-6"
                     >
-                        {scanInfo.failureReason ??
-                            'An unexpected error occurred.'}
+                        {friendlyErrorMessage(scanInfo.failureCode)}
                     </Callout>
                 )}
 
