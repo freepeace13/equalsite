@@ -60,6 +60,23 @@ class AuditStatusSubscriber implements ShouldQueue
             report($e);
         }
 
+        $audit = Audit::where('crawler_id', $crawlerId)->first();
+        $scannedUrls = $audit?->getCustomData('scanned_urls', []) ?? [];
+        $attempted = count($scannedUrls);
+        $succeeded = count(array_filter(
+            $scannedUrls,
+            fn (array $url) => ($url['status'] ?? null) === 'completed',
+        ));
+
+        if ($attempted > 0 && $succeeded === 0) {
+            $this->updateAudit($crawlerId, [
+                'status' => Status::Failed,
+                'failure_reason' => "All {$attempted} pages failed to scan.",
+            ]);
+
+            return;
+        }
+
         $this->updateAudit($crawlerId, [
             'status' => Status::Completed,
             'completed_at' => $this->carbonTimestamp($event->timestamp()),

@@ -105,3 +105,48 @@ test('handleAuditCompleted does not overwrite an already-cancelled audit', funct
     Bus::assertNotDispatched(ProcessAuditArtifacts::class);
     expect($audit->fresh()->status)->toBe(Status::Cancelled);
 });
+
+test('handleAuditCompleted marks the audit failed when every scanned URL failed', function () {
+    Bus::fake();
+
+    $user = User::factory()->create();
+    $audit = makeUserAudit($user, 'crawler-all-failed', 'acme.com', Status::Started, [
+        'scanned_urls' => [
+            'https://acme.com/' => ['status' => 'failed'],
+            'https://acme.com/about' => ['status' => 'failed'],
+        ],
+    ]);
+
+    $spider = Mockery::mock(Spider::class);
+    $spider->shouldReceive('download')->once()->andReturn('zip-bytes');
+
+    $unzip = Mockery::mock(UnzipCrawlerArtifacts::class);
+    $unzip->shouldReceive('unzip')->once();
+
+    (new AuditStatusSubscriber($spider, $unzip))->handleAuditCompleted(completedEvent('crawler-all-failed'));
+
+    expect($audit->fresh()->status)->toBe(Status::Failed);
+    expect($audit->fresh()->failure_reason)->toBe('All 2 pages failed to scan.');
+});
+
+test('handleAuditCompleted stays completed when at least one scanned URL succeeded', function () {
+    Bus::fake();
+
+    $user = User::factory()->create();
+    $audit = makeUserAudit($user, 'crawler-mixed', 'acme.com', Status::Started, [
+        'scanned_urls' => [
+            'https://acme.com/' => ['status' => 'completed'],
+            'https://acme.com/about' => ['status' => 'failed'],
+        ],
+    ]);
+
+    $spider = Mockery::mock(Spider::class);
+    $spider->shouldReceive('download')->once()->andReturn('zip-bytes');
+
+    $unzip = Mockery::mock(UnzipCrawlerArtifacts::class);
+    $unzip->shouldReceive('unzip')->once();
+
+    (new AuditStatusSubscriber($spider, $unzip))->handleAuditCompleted(completedEvent('crawler-mixed'));
+
+    expect($audit->fresh()->status)->toBe(Status::Completed);
+});
