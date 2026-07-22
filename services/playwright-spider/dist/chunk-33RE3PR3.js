@@ -253,6 +253,24 @@ var auditRepository = {
   }
 };
 
+// src/app/services/queue.ts
+import { Queue } from "bullmq";
+var crawlerQueue = new Queue(
+  bullmq.queue,
+  {
+    connection: bullClient,
+    defaultJobOptions: {
+      removeOnComplete: 100,
+      removeOnFail: 1e3,
+      attempts: 1,
+      backoff: {
+        type: "exponential",
+        delay: 5e3
+      }
+    }
+  }
+);
+
 // src/app/adapters/redisStreamPublisher.ts
 var VERSION = "1";
 var STREAM_NAME = String(process.env.STREAM_NAME);
@@ -277,10 +295,40 @@ var publishEvent = async function(event) {
   }));
 };
 
-// src/audit/events/completedEvent.ts
+// src/audit/events/queuedEvent.ts
 import { EventEnum } from "@equalsite/types";
+var queuedEvent = (payload) => ({
+  type: EventEnum.Queued,
+  payload
+});
+
+// src/audit/services/queuePositionService.ts
+var createQueuePositionService = (queue, eventPublisher) => ({
+  publishPositions: async () => {
+    const [activeCount, waitingJobs] = await Promise.all([
+      queue.getActiveCount(),
+      queue.getJobs(["waiting"], 0, -1, true)
+    ]);
+    const jobsWithId = waitingJobs.filter(
+      (job) => typeof job.id === "string"
+    );
+    await Promise.all(
+      jobsWithId.map(
+        (job, i) => eventPublisher(queuedEvent({
+          auditId: job.id,
+          ahead: activeCount + i,
+          position: activeCount + i + 1,
+          waiting: jobsWithId.length
+        }))
+      )
+    );
+  }
+});
+
+// src/audit/events/completedEvent.ts
+import { EventEnum as EventEnum2 } from "@equalsite/types";
 var completedEvent = (payload) => ({
-  type: EventEnum.Completed,
+  type: EventEnum2.Completed,
   payload: {
     auditId: payload.auditId,
     ...payload.statistics
@@ -288,23 +336,23 @@ var completedEvent = (payload) => ({
 });
 
 // src/audit/events/startedEvent.ts
-import { EventEnum as EventEnum2 } from "@equalsite/types";
+import { EventEnum as EventEnum3 } from "@equalsite/types";
 var startedEvent = (payload) => ({
-  type: EventEnum2.Started,
+  type: EventEnum3.Started,
   payload
 });
 
 // src/audit/events/failedEvent.ts
-import { EventEnum as EventEnum3 } from "@equalsite/types";
+import { EventEnum as EventEnum4 } from "@equalsite/types";
 var failedEvent = (payload) => ({
-  type: EventEnum3.Failed,
+  type: EventEnum4.Failed,
   payload
 });
 
 // src/audit/events/cancelledEvent.ts
-import { EventEnum as EventEnum4 } from "@equalsite/types";
+import { EventEnum as EventEnum5 } from "@equalsite/types";
 var cancelledEvent = (payload) => ({
-  type: EventEnum4.Cancelled,
+  type: EventEnum5.Cancelled,
   payload: {
     auditId: payload.auditId,
     ...payload.statistics
@@ -312,14 +360,31 @@ var cancelledEvent = (payload) => ({
 });
 
 // src/audit/events/progressEvent.ts
-import { EventEnum as EventEnum5 } from "@equalsite/types";
+import { EventEnum as EventEnum6 } from "@equalsite/types";
 var progressEvent = (payload) => ({
-  type: EventEnum5.Progress,
+  type: EventEnum6.Progress,
   payload: {
     ...payload,
     progressPercentage: Math.floor(payload.completedRequests / payload.totalRequests * 100)
   }
 });
+
+// src/audit/utils/classifyError.ts
+var PATTERNS = [
+  { code: "dns_error", test: /ERR_NAME_NOT_RESOLVED|ENOTFOUND|ERR_ADDRESS_UNREACHABLE/i },
+  { code: "tls_error", test: /ERR_CERT_|ERR_SSL_|certificate/i },
+  { code: "connection_failed", test: /ERR_CONNECTION_REFUSED|ERR_CONNECTION_RESET|ERR_CONNECTION_CLOSED|ECONNREFUSED|ECONNRESET/i },
+  { code: "timeout", test: /timeout/i },
+  { code: "http_error", test: /status code \d{3}|HTTP\/?\s?\d{3}/i }
+];
+function classifyError(error) {
+  const message = typeof error === "string" ? error : error instanceof Error ? error.message : String(error);
+  const match = PATTERNS.find(({ test }) => test.test(message));
+  return {
+    code: match?.code ?? "internal_error",
+    message
+  };
+}
 
 // src/audit/services/auditService.ts
 var createAuditService = (auditRepository2, eventPublisher) => ({
@@ -352,17 +417,15 @@ var createAuditService = (auditRepository2, eventPublisher) => ({
     }));
   },
   failAudit: async (audit, err) => {
-    const error = typeof err === "string" ? err : err.message;
-    await auditRepository2.save(audit.markAsFailed(error));
+    const classified = classifyError(err);
+    await auditRepository2.save(audit.markAsFailed(classified.message));
     await eventPublisher(failedEvent({
       auditId: audit.id,
-      error
+      error: classified.message,
+      errorCode: classified.code
     }));
   }
 });
-
-// src/audit/services/crawlerMap.ts
-var crawlerMap = /* @__PURE__ */ new Map();
 
 // src/audit/services/artifactService.ts
 import fs2 from "fs";
@@ -459,16 +522,21 @@ var createArtifactService = (artifactDirectory, archiveDirectory) => {
   };
 };
 
+// src/audit/services/crawlerMap.ts
+var crawlerMap = /* @__PURE__ */ new Map();
+
 export {
   secretKey,
   bullmq,
   crawler,
   bullClient,
   auditRepository,
-  progressEvent,
-  createAuditService,
-  crawlerMap,
-  deleteDirectoryIfExists,
+  crawlerQueue,
   publishEvent,
-  createArtifactService
+  createQueuePositionService,
+  progressEvent,
+  classifyError,
+  createAuditService,
+  createArtifactService,
+  crawlerMap
 };

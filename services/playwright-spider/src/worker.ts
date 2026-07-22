@@ -4,6 +4,10 @@ import { createRunAuditAction } from "./audit/actions/runAudit";
 import { auditRepository } from "./app/adapters/redisAuditRepository";
 import { publishEvent } from "./app/adapters/redisStreamPublisher";
 import { bullClient } from "./app/services/redis";
+import { crawlerQueue } from "./app/services/queue";
+import { createQueuePositionService } from "./audit/services/queuePositionService";
+
+const queuePositionService = createQueuePositionService(crawlerQueue, publishEvent);
 
 // import './services/crawlWorker';
 // import { startTelemetryLoop, stopTelemetryLoop } from './events/startTelemetryLoop';
@@ -39,6 +43,15 @@ const crawlerWorker = new Worker<{ auditId: string }>(
 
 crawlerWorker.on('active', (job) => {
     console.error('Crawler worker active', { jobId: job.id });
+    queuePositionService.publishPositions().catch(console.error);
+});
+
+crawlerWorker.on('completed', () => {
+    queuePositionService.publishPositions().catch(console.error);
+});
+
+crawlerWorker.on('failed', () => {
+    queuePositionService.publishPositions().catch(console.error);
 });
 
 crawlerWorker.on('error', (error) => {

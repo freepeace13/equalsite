@@ -2,13 +2,16 @@ import {
   auditRepository,
   bullClient,
   bullmq,
+  classifyError,
   crawler,
   crawlerMap,
+  crawlerQueue,
   createArtifactService,
   createAuditService,
+  createQueuePositionService,
   progressEvent,
   publishEvent
-} from "./chunk-WWYPIUJH.js";
+} from "./chunk-33RE3PR3.js";
 
 // src/worker.ts
 import { Worker } from "bullmq";
@@ -149,11 +152,13 @@ function createPlaywrightCrawler({
     {
       requestHandler: createAuditPageRequestHandler(auditId, eventPublisher, options),
       failedRequestHandler: async ({ request }, error) => {
+        const classified = classifyError(error);
         await eventPublisher(pageFailedEvent({
           auditId,
           pageUrl: request.url,
           attemptsCount: request.retryCount,
-          errorMessage: error.message
+          errorMessage: classified.message,
+          errorCode: classified.code
         }));
       },
       // onSkippedRequest: async ({ url, reason }) => {
@@ -236,6 +241,11 @@ var createPerformCleanUpAction = (auditRepository2) => ({
   }
 });
 
+// src/audit/actions/cancellationGuard.ts
+function wasCancelledExternally(freshAudit) {
+  return freshAudit === null || freshAudit.status.is("cancelled");
+}
+
 // src/audit/actions/runAudit.ts
 var createRunAuditAction = (auditRepository2, eventPublisher, config) => {
   const {
@@ -261,9 +271,15 @@ var createRunAuditAction = (auditRepository2, eventPublisher, config) => {
       try {
         await auditService.startAudit(audit);
         await crawler2.run(audit.urls);
+        if (wasCancelledExternally(await auditRepository2.find(auditId))) {
+          return;
+        }
         await artifactService.compress(audit.id);
         await auditService.completeAudit(audit, crawler2);
       } catch (err) {
+        if (wasCancelledExternally(await auditRepository2.find(auditId))) {
+          return;
+        }
         console.error(err);
         await auditService.failAudit(audit, err);
         throw err;
@@ -275,6 +291,7 @@ var createRunAuditAction = (auditRepository2, eventPublisher, config) => {
 };
 
 // src/worker.ts
+var queuePositionService = createQueuePositionService(crawlerQueue, publishEvent);
 var crawlerWorker = new Worker(
   bullmq.queue,
   async ({ data }) => {
@@ -294,6 +311,13 @@ var crawlerWorker = new Worker(
 );
 crawlerWorker.on("active", (job) => {
   console.error("Crawler worker active", { jobId: job.id });
+  queuePositionService.publishPositions().catch(console.error);
+});
+crawlerWorker.on("completed", () => {
+  queuePositionService.publishPositions().catch(console.error);
+});
+crawlerWorker.on("failed", () => {
+  queuePositionService.publishPositions().catch(console.error);
 });
 crawlerWorker.on("error", (error) => {
   console.error("Crawler worker error", error);

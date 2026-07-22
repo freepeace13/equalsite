@@ -12,9 +12,10 @@ return [
     | Centralizes every numeric/behavioral limit driven by a user's plan, keyed
     | by App\Value\Plan::value. This is a deploy-time constant, not something
     | edited at runtime — read exclusively through App\Support\Plan\PlanLimits,
-    | never via config('plans.*') directly from other classes. The one env-backed
-    | exception is free.rescan_frequency_minutes, exposed via RESCAN_FREQUENCY_MINUTES
-    | for experimenting with the window without a code change.
+    | never via config('plans.*') directly from other classes. The env-backed
+    | exceptions are free.rescan_frequency_minutes (RESCAN_FREQUENCY_MINUTES),
+    | free.page_cap (FREE_PAGE_CAP), and pro.page_cap (PRO_PAGE_CAP), for
+    | experimenting with those limits without a code change.
     |
     | 'queue_priority' is populated for a future BullMQ-priority pass but is not
     | read by anything yet in this pass.
@@ -30,7 +31,7 @@ return [
 
     'free' => [
         'site_cap' => 1,
-        'page_cap' => 50,
+        'page_cap' => env('FREE_PAGE_CAP', 50),
         'crawl_depths' => [
             CrawlDepth::Shallow->value,
         ],
@@ -41,7 +42,7 @@ return [
 
     'pro' => [
         'site_cap' => null, // null = unlimited
-        'page_cap' => 100,
+        'page_cap' => env('PRO_PAGE_CAP', 150),
         'crawl_depths' => [
             CrawlDepth::Shallow->value,
             CrawlDepth::Standard->value,

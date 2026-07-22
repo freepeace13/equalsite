@@ -17,12 +17,12 @@ test('pro plan has no site cap', function () {
     expect(PlanLimits::for(Plan::Pro)->siteCap())->toBeNull();
 });
 
-test('free plan caps pages to 50', function () {
-    expect(PlanLimits::for(Plan::Free)->pageCap())->toBe(50);
+test('free plan page cap matches the configured value', function () {
+    expect(PlanLimits::for(Plan::Free)->pageCap())->toBe((int) config('plans.free.page_cap'));
 });
 
-test('pro plan caps pages to 100', function () {
-    expect(PlanLimits::for(Plan::Pro)->pageCap())->toBe(100);
+test('pro plan page cap matches the configured value', function () {
+    expect(PlanLimits::for(Plan::Pro)->pageCap())->toBe((int) config('plans.pro.page_cap'));
 });
 
 test('free plan only allows shallow crawl depth', function () {
@@ -83,7 +83,7 @@ test('when monetization is disabled, every plan resolves with pro-tier limits', 
     config(['plans.enabled' => false]);
 
     expect(PlanLimits::for(Plan::Free)->siteCap())->toBeNull()
-        ->and(PlanLimits::for(Plan::Free)->pageCap())->toBe(100)
+        ->and(PlanLimits::for(Plan::Free)->pageCap())->toBe((int) config('plans.pro.page_cap'))
         ->and(PlanLimits::for(Plan::Free)->allowedCrawlDepths())->toBe([
             CrawlDepth::Shallow,
             CrawlDepth::Standard,

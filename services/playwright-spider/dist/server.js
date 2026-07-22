@@ -1,15 +1,14 @@
 import {
   auditRepository,
-  bullClient,
-  bullmq,
   crawler,
   crawlerMap,
+  crawlerQueue,
   createArtifactService,
   createAuditService,
-  deleteDirectoryIfExists,
+  createQueuePositionService,
   publishEvent,
   secretKey
-} from "./chunk-WWYPIUJH.js";
+} from "./chunk-33RE3PR3.js";
 
 // src/app.ts
 import express from "express";
@@ -60,24 +59,6 @@ var cancelAuditValidationRules = [
   param("auditId").isString().trim().notEmpty().withMessage("auditId is required")
 ];
 
-// src/app/services/queue.ts
-import { Queue } from "bullmq";
-var crawlerQueue = new Queue(
-  bullmq.queue,
-  {
-    connection: bullClient,
-    defaultJobOptions: {
-      removeOnComplete: 100,
-      removeOnFail: 1e3,
-      attempts: 1,
-      backoff: {
-        type: "exponential",
-        delay: 5e3
-      }
-    }
-  }
-);
-
 // src/audit/actions/createAudit.ts
 var createAuditAction = (auditRepository2) => ({
   run: async ({
@@ -94,6 +75,7 @@ var createAuditAction = (auditRepository2) => ({
 
 // src/app/controllers/createAuditController.ts
 var createAuditAction2 = createAuditAction(auditRepository);
+var queuePositionService = createQueuePositionService(crawlerQueue, publishEvent);
 var CreateAuditController = async (request, response) => {
   const urls = request.body.urls;
   const options = request.body.options;
@@ -102,6 +84,7 @@ var CreateAuditController = async (request, response) => {
     options
   });
   await crawlerQueue.add("audit", { auditId }, { jobId: auditId });
+  queuePositionService.publishPositions().catch(console.error);
   return response.status(202).json({
     id: auditId,
     options
@@ -109,22 +92,24 @@ var CreateAuditController = async (request, response) => {
 };
 
 // src/audit/actions/cancelAudit.ts
-var createCancelAuditAction = (auditRepository2, eventPublisher, artifactDirectory2) => {
+var createCancelAuditAction = (auditRepository2, eventPublisher, config) => {
   const auditService = createAuditService(auditRepository2, eventPublisher);
+  const artifactService2 = createArtifactService(config.artifactDirectory, config.archiveDirectory);
   return {
     run: async (auditId) => {
       const audit = await auditRepository2.findOrFail(auditId);
       if (!audit.status.is("active")) {
         return;
       }
-      await auditRepository2.save(audit.markAsCancelled());
       try {
         const crawler2 = crawlerMap.get(audit.id);
         if (crawler2) {
           await auditService.cancelAudit(audit, crawler2);
-          await crawler2.teardown();
+          crawler2.stop("Audit cancelled by user");
+        } else {
+          await auditRepository2.save(audit.markAsCancelled());
         }
-        await deleteDirectoryIfExists(artifactDirectory2);
+        await artifactService2.cleanup(audit.id);
       } catch (err) {
         console.error(err);
       } finally {
@@ -139,7 +124,10 @@ var createCancelAuditAction = (auditRepository2, eventPublisher, artifactDirecto
 var cancelAuditAction = createCancelAuditAction(
   auditRepository,
   publishEvent,
-  crawler.artifactDirectory
+  {
+    artifactDirectory: crawler.artifactDirectory,
+    archiveDirectory: crawler.archiveDirectory
+  }
 );
 var CancelAuditController = async (request, response) => {
   const auditId = request.params.auditId;
