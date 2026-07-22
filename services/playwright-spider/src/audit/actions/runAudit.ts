@@ -5,6 +5,7 @@ import { crawlerMap } from "../services/crawlerMap";
 import { createAuditService } from "../services/auditService";
 import { createPerformCleanUpAction } from "./performCleanUp";
 import { createArtifactService } from "../services/artifactService";
+import { wasCancelledExternally } from "./cancellationGuard";
 
 export interface IRunAuditAction {
     run: (auditId: string) => Promise<void>;
@@ -45,9 +46,18 @@ export const createRunAuditAction = (
             try {
                 await auditService.startAudit(audit)
                 await crawler.run(audit.urls);
+
+                if (wasCancelledExternally(await auditRepository.find(auditId))) {
+                    return;
+                }
+
                 await artifactService.compress(audit.id);
                 await auditService.completeAudit(audit, crawler);
             } catch (err) {
+                if (wasCancelledExternally(await auditRepository.find(auditId))) {
+                    return;
+                }
+
                 console.error(err);
                 await auditService.failAudit(audit, err);
                 throw err;

@@ -7,6 +7,7 @@ import { startedEvent } from "../events/startedEvent";
 import { failedEvent } from "../events/failedEvent";
 import { cancelledEvent } from "../events/cancelledEvent";
 import { progressEvent } from "../events/progressEvent";
+import { classifyError } from "../utils/classifyError";
 
 
 export const createAuditService = (
@@ -59,11 +60,12 @@ export const createAuditService = (
         audit: AuditEntity,
         err: unknown
     ) => {
-        const error = typeof err === 'string' ? err : (err as Error).message;
-        await auditRepository.save(audit.markAsFailed(error));
+        const classified = classifyError(err);
+        await auditRepository.save(audit.markAsFailed(classified.message));
         await eventPublisher(failedEvent({
             auditId: audit.id,
-            error
+            error: classified.message,
+            errorCode: classified.code,
         }));
     },
 })

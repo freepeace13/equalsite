@@ -34,7 +34,7 @@ class AuditPageSubscriber implements ShouldQueue
         $this->updatePage($event->crawlerId(), $payload['pageUrl'], [
             'status' => 'started',
             'attemptsCount' => $payload['attemptsCount'] ?? 0,
-            'startedAt' => $timestamp->toDateTimeString(),
+            'startedAt' => $timestamp->toIso8601String(),
         ]);
     }
 
@@ -48,7 +48,7 @@ class AuditPageSubscriber implements ShouldQueue
         $this->updatePage($event->crawlerId(), $payload['pageUrl'], [
             'status' => 'skipped',
             'skippingReason' => $payload['reason'],
-            'skippedAt' => $timestamp->toDateTimeString(),
+            'skippedAt' => $timestamp->toIso8601String(),
         ]);
     }
 
@@ -63,7 +63,8 @@ class AuditPageSubscriber implements ShouldQueue
             'status' => 'failed',
             'attemptsCount' => $payload['attemptsCount'],
             'errorMessage' => $payload['errorMessage'],
-            'failedAt' => $timestamp->toDateTimeString(),
+            'errorCode' => $payload['errorCode'] ?? null,
+            'failedAt' => $timestamp->toIso8601String(),
         ]);
     }
 
@@ -78,7 +79,7 @@ class AuditPageSubscriber implements ShouldQueue
             'status' => 'completed',
             'violationsCount' => $payload['violationsCount'],
             'severityBreakdown' => $payload['severityBreakdown'],
-            'completedAt' => $timestamp->toDateTimeString(),
+            'completedAt' => $timestamp->toIso8601String(),
         ]);
     }
 

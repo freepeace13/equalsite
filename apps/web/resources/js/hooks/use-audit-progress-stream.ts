@@ -95,7 +95,7 @@ export function useAuditProgressStream(auditId: string): void {
                     }),
                 });
             } else if (e.type === 'audit.failed') {
-                const { error } = (e as FailedWsEvent).data;
+                const { error, errorCode } = (e as FailedWsEvent).data;
                 router.replace<AuditProgressStreamProps>({
                     preserveScroll: true,
                     props: (current) => ({
@@ -104,6 +104,7 @@ export function useAuditProgressStream(auditId: string): void {
                             ...current.scanInfo,
                             status: 'failed',
                             failureReason: error,
+                            failureCode: errorCode,
                         },
                     }),
                 });
@@ -164,6 +165,7 @@ export function useAuditProgressStream(auditId: string): void {
                                 ...current.scanUrls[data.pageUrl],
                                 status: 'failed',
                                 errorMessage: data.errorMessage,
+                                errorCode: data.errorCode,
                                 attemptsCount: data.attemptsCount,
                                 failedAt: timestamp,
                             },

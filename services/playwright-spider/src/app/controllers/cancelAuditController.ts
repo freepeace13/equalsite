@@ -9,7 +9,10 @@ import type { CancelAuditRequestParams, CancelAuditResponseData } from "@equalsi
 const cancelAuditAction = createCancelAuditAction(
     auditRepository,
     publishEvent,
-    Config.crawler.artifactDirectory
+    {
+        artifactDirectory: Config.crawler.artifactDirectory,
+        archiveDirectory: Config.crawler.archiveDirectory,
+    }
 );
 
 export const CancelAuditController = async (

@@ -46,10 +46,19 @@ export interface PageSkippedPayload extends BasePayload {
     reason: string;
 }
 
+export type CrawlErrorCode =
+    | 'dns_error'
+    | 'timeout'
+    | 'connection_failed'
+    | 'tls_error'
+    | 'http_error'
+    | 'internal_error';
+
 export interface PageFailedPayload extends BasePayload {
     pageUrl: string;
     attemptsCount: number;
     errorMessage: string;
+    errorCode: CrawlErrorCode;
 }
 
 export interface PageCompletedPayload extends BasePayload {
@@ -63,6 +72,7 @@ export interface ProgressPayload extends BasePayload, ProgressState { }
 
 export interface FailedPayload extends BasePayload {
     error: string;
+    errorCode: CrawlErrorCode;
 }
 
 export interface QueuedPayload extends BasePayload, QueueStatus { }

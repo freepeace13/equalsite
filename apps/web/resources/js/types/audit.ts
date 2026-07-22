@@ -30,6 +30,7 @@ export type ScanInfo = {
     siteUrl: string;
     status: ScanStatus;
     failureReason?: string;
+    failureCode?: string;
     startedAt?: string;
     completedAt?: string;
     cancelledAt?: string;
@@ -44,6 +45,7 @@ export type ScannedUrl = {
     failedAt?: string | undefined;
     completedAt?: string | undefined;
     errorMessage?: string | undefined;
+    errorCode?: string | undefined;
     skippingReason?: string | undefined;
     violationsCount?: number | undefined;
     passesCount?: number | undefined;

@@ -1,8 +1,10 @@
 import { Head, router } from '@inertiajs/react';
 import { cancel, index, progress } from '@/routes/audit';
+import { friendlyErrorMessage } from '@/lib/audit-errors';
 import { SCAN_STATUS_BADGE } from '@/lib/audit-status';
 import { hostnameOf } from '@/lib/utils';
 import {
+    countFailedPages,
     countIssues,
     CrawlingPanel,
 } from '@/components/scanning/crawling-panel';
@@ -45,6 +47,8 @@ export default function Progress({
               ? 'waiting'
               : null;
     const issuesCount = countIssues(scanUrls);
+    const failedPagesCount = countFailedPages(scanUrls);
+    const attemptedPagesCount = Object.keys(scanUrls).length;
     const badge = SCAN_STATUS_BADGE[scanInfo.status];
 
     return (
@@ -74,6 +78,17 @@ export default function Progress({
                     />
                 )}
 
+                {scanInfo.status === 'completed' && failedPagesCount > 0 && (
+                    <Callout
+                        variant="warning"
+                        title="Some pages couldn't be scanned."
+                        className="mt-6"
+                    >
+                        {failedPagesCount} of {attemptedPagesCount} pages failed to scan.
+                        The report only covers the pages that completed successfully.
+                    </Callout>
+                )}
+
                 {scanInfo.status === 'completed' && (
                     <ReportCta
                         auditId={scanInfo.auditId}
@@ -87,8 +102,10 @@ export default function Progress({
                         title="Scan failed."
                         className="mt-6"
                     >
-                        {scanInfo.failureReason ??
-                            'An unexpected error occurred.'}
+                        {scanInfo.failureCode
+                            ? friendlyErrorMessage(scanInfo.failureCode)
+                            : (scanInfo.failureReason ??
+                              'An unexpected error occurred.')}
                     </Callout>
                 )}
 

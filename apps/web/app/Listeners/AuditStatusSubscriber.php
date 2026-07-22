@@ -7,8 +7,10 @@ use App\Contracts\Spider;
 use App\Events\Audit\AuditCompleted;
 use App\Events\Audit\AuditFailed;
 use App\Events\Audit\AuditStarted;
+use App\Events\Audit\AuditStatusCorrectedToFailed;
 use App\Jobs\ProcessAuditArtifacts;
 use App\Models\Audit;
+use App\Value\RedisStreamData;
 use App\Value\Status;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Events\Dispatcher;
@@ -34,9 +36,16 @@ class AuditStatusSubscriber implements ShouldQueue
 
     public function handleAuditFailed(AuditFailed $event): void
     {
-        $this->updateAudit($event->crawlerId(), [
+        $crawlerId = $event->crawlerId();
+
+        if ($this->isCancelled($crawlerId)) {
+            return;
+        }
+
+        $this->updateAudit($crawlerId, [
             'status' => Status::Failed,
             'failure_reason' => $event->payload()['error'] ?? '',
+            'failure_code' => $event->payload()['errorCode'] ?? null,
         ]);
     }
 
@@ -44,10 +53,47 @@ class AuditStatusSubscriber implements ShouldQueue
     {
         $crawlerId = $event->crawlerId();
 
+        if ($this->isCancelled($crawlerId)) {
+            return;
+        }
+
         try {
             $this->processArtifacts($crawlerId);
         } catch (Throwable $e) {
             report($e);
+        }
+
+        $audit = Audit::where('crawler_id', $crawlerId)->first();
+        $scannedUrls = $audit?->getCustomData('scanned_urls', []) ?? [];
+        $attempted = count($scannedUrls);
+        $succeeded = count(array_filter(
+            $scannedUrls,
+            fn (array $url) => ($url['status'] ?? null) === 'completed',
+        ));
+
+        if ($attempted > 0 && $succeeded === 0) {
+            $failureReason = "All {$attempted} pages failed to scan.";
+
+            $this->updateAudit($crawlerId, [
+                'status' => Status::Failed,
+                'failure_reason' => $failureReason,
+                'failure_code' => null,
+            ]);
+
+            event(new AuditStatusCorrectedToFailed(new RedisStreamData(
+                id: '0-0',
+                streamName: 'equalsite:crawler:events',
+                type: 'audit.failed',
+                payload: [
+                    'auditId' => $crawlerId,
+                    'error' => $failureReason,
+                    'errorCode' => null,
+                ],
+                version: '1',
+                timestamp: now()->getTimestampMs(),
+            )));
+
+            return;
         }
 
         $this->updateAudit($crawlerId, [
@@ -73,6 +119,11 @@ class AuditStatusSubscriber implements ShouldQueue
     protected function carbonTimestamp(int $timestamp)
     {
         return Carbon::createFromTimestampMs($timestamp);
+    }
+
+    protected function isCancelled(string $crawlerId): bool
+    {
+        return Audit::where('crawler_id', $crawlerId)->first()?->status === Status::Cancelled;
     }
 
     protected function updateAudit(string $crawlerId, array $attributes): void
