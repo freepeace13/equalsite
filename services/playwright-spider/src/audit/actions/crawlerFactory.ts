@@ -5,6 +5,7 @@ import { Configuration, PlaywrightCrawler } from 'crawlee';
 import type { EventPublisher } from '../repositories/eventPublisher';
 import { pageFailedEvent } from '../events/pageFailedEvent';
 import { createAuditPageRequestHandler } from './handleAuditPageRequest';
+import { classifyError } from '../utils/classifyError';
 import type { AuditOptions } from '@equalsite/types';
 
 type CrawlerFactoryParams = {
@@ -33,11 +34,13 @@ export default function createPlaywrightCrawler({
         {
             requestHandler: createAuditPageRequestHandler(auditId, eventPublisher, options),
             failedRequestHandler: async ({ request }, error) => {
+                const classified = classifyError(error);
                 await eventPublisher(pageFailedEvent({
                     auditId,
                     pageUrl: request.url,
                     attemptsCount: request.retryCount,
-                    errorMessage: error.message
+                    errorMessage: classified.message,
+                    errorCode: classified.code,
                 }));
             },
             // onSkippedRequest: async ({ url, reason }) => {
