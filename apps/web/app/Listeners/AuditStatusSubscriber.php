@@ -34,7 +34,13 @@ class AuditStatusSubscriber implements ShouldQueue
 
     public function handleAuditFailed(AuditFailed $event): void
     {
-        $this->updateAudit($event->crawlerId(), [
+        $crawlerId = $event->crawlerId();
+
+        if ($this->isCancelled($crawlerId)) {
+            return;
+        }
+
+        $this->updateAudit($crawlerId, [
             'status' => Status::Failed,
             'failure_reason' => $event->payload()['error'] ?? '',
         ]);
@@ -43,6 +49,10 @@ class AuditStatusSubscriber implements ShouldQueue
     public function handleAuditCompleted(AuditCompleted $event): void
     {
         $crawlerId = $event->crawlerId();
+
+        if ($this->isCancelled($crawlerId)) {
+            return;
+        }
 
         try {
             $this->processArtifacts($crawlerId);
@@ -73,6 +83,11 @@ class AuditStatusSubscriber implements ShouldQueue
     protected function carbonTimestamp(int $timestamp)
     {
         return Carbon::createFromTimestampMs($timestamp);
+    }
+
+    protected function isCancelled(string $crawlerId): bool
+    {
+        return Audit::where('crawler_id', $crawlerId)->first()?->status === Status::Cancelled;
     }
 
     protected function updateAudit(string $crawlerId, array $attributes): void

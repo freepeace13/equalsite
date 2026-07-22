@@ -3,6 +3,7 @@
 use App\Actions\Audit\UnzipCrawlerArtifacts;
 use App\Contracts\Spider;
 use App\Events\Audit\AuditCompleted;
+use App\Events\Audit\AuditFailed;
 use App\Jobs\ProcessAuditArtifacts;
 use App\Listeners\AuditStatusSubscriber;
 use App\Models\User;
@@ -21,6 +22,18 @@ function completedEvent(string $crawlerId): AuditCompleted
         streamName: 'equalsite:crawler:events',
         type: 'audit.completed',
         payload: ['auditId' => $crawlerId],
+        version: '1',
+        timestamp: now()->getTimestampMs(),
+    ));
+}
+
+function failedEvent(string $crawlerId, string $error = 'boom'): AuditFailed
+{
+    return new AuditFailed(new RedisStreamData(
+        id: '1-0',
+        streamName: 'equalsite:crawler:events',
+        type: 'audit.failed',
+        payload: ['auditId' => $crawlerId, 'error' => $error],
         version: '1',
         timestamp: now()->getTimestampMs(),
     ));
@@ -61,4 +74,34 @@ test('handleAuditCompleted still marks the audit completed when artifact downloa
 
     Bus::assertNotDispatched(ProcessAuditArtifacts::class);
     expect($audit->fresh()->status)->toBe(Status::Completed);
+});
+
+test('handleAuditFailed does not overwrite an already-cancelled audit', function () {
+    $user = User::factory()->create();
+    $audit = makeUserAudit($user, 'crawler-cancelled', 'acme.com', Status::Cancelled);
+
+    $spider = Mockery::mock(Spider::class);
+    $unzip = Mockery::mock(UnzipCrawlerArtifacts::class);
+
+    (new AuditStatusSubscriber($spider, $unzip))->handleAuditFailed(
+        failedEvent('crawler-cancelled', 'ENOENT: no such file or directory')
+    );
+
+    expect($audit->fresh()->status)->toBe(Status::Cancelled);
+    expect($audit->fresh()->failure_reason)->toBeNull();
+});
+
+test('handleAuditCompleted does not overwrite an already-cancelled audit', function () {
+    Bus::fake();
+
+    $user = User::factory()->create();
+    $audit = makeUserAudit($user, 'crawler-cancelled-2', 'acme.com', Status::Cancelled);
+
+    $spider = Mockery::mock(Spider::class);
+    $unzip = Mockery::mock(UnzipCrawlerArtifacts::class);
+
+    (new AuditStatusSubscriber($spider, $unzip))->handleAuditCompleted(completedEvent('crawler-cancelled-2'));
+
+    Bus::assertNotDispatched(ProcessAuditArtifacts::class);
+    expect($audit->fresh()->status)->toBe(Status::Cancelled);
 });
