@@ -102,7 +102,10 @@ export default function Progress({
                         title="Scan failed."
                         className="mt-6"
                     >
-                        {friendlyErrorMessage(scanInfo.failureCode)}
+                        {scanInfo.failureCode
+                            ? friendlyErrorMessage(scanInfo.failureCode)
+                            : (scanInfo.failureReason ??
+                              'An unexpected error occurred.')}
                     </Callout>
                 )}
 

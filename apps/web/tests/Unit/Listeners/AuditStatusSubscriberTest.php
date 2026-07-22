@@ -4,6 +4,7 @@ use App\Actions\Audit\UnzipCrawlerArtifacts;
 use App\Contracts\Spider;
 use App\Events\Audit\AuditCompleted;
 use App\Events\Audit\AuditFailed;
+use App\Events\Audit\AuditStatusCorrectedToFailed;
 use App\Jobs\ProcessAuditArtifacts;
 use App\Listeners\AuditStatusSubscriber;
 use App\Models\User;
@@ -11,6 +12,7 @@ use App\Value\RedisStreamData;
 use App\Value\Status;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
@@ -149,6 +151,54 @@ test('handleAuditCompleted stays completed when at least one scanned URL succeed
     (new AuditStatusSubscriber($spider, $unzip))->handleAuditCompleted(completedEvent('crawler-mixed'));
 
     expect($audit->fresh()->status)->toBe(Status::Completed);
+});
+
+test('handleAuditCompleted broadcasts a live status correction when every scanned URL failed', function () {
+    Event::fake([AuditStatusCorrectedToFailed::class]);
+    Bus::fake();
+
+    $user = User::factory()->create();
+    $audit = makeUserAudit($user, 'crawler-broadcast-correction', 'acme.com', Status::Started, [
+        'scanned_urls' => [
+            'https://acme.com/' => ['status' => 'failed'],
+        ],
+    ]);
+
+    $spider = Mockery::mock(Spider::class);
+    $spider->shouldReceive('download')->once()->andReturn('zip-bytes');
+
+    $unzip = Mockery::mock(UnzipCrawlerArtifacts::class);
+    $unzip->shouldReceive('unzip')->once();
+
+    (new AuditStatusSubscriber($spider, $unzip))->handleAuditCompleted(completedEvent('crawler-broadcast-correction'));
+
+    Event::assertDispatched(AuditStatusCorrectedToFailed::class, function ($event) {
+        return $event->payload()['auditId'] === 'crawler-broadcast-correction'
+            && $event->payload()['error'] === 'All 1 pages failed to scan.';
+    });
+});
+
+test('handleAuditCompleted does not broadcast a status correction when at least one URL succeeded', function () {
+    Event::fake([AuditStatusCorrectedToFailed::class]);
+    Bus::fake();
+
+    $user = User::factory()->create();
+    $audit = makeUserAudit($user, 'crawler-no-correction', 'acme.com', Status::Started, [
+        'scanned_urls' => [
+            'https://acme.com/' => ['status' => 'completed'],
+            'https://acme.com/about' => ['status' => 'failed'],
+        ],
+    ]);
+
+    $spider = Mockery::mock(Spider::class);
+    $spider->shouldReceive('download')->once()->andReturn('zip-bytes');
+
+    $unzip = Mockery::mock(UnzipCrawlerArtifacts::class);
+    $unzip->shouldReceive('unzip')->once();
+
+    (new AuditStatusSubscriber($spider, $unzip))->handleAuditCompleted(completedEvent('crawler-no-correction'));
+
+    Event::assertNotDispatched(AuditStatusCorrectedToFailed::class);
 });
 
 test('handleAuditFailed stores the classified error code alongside the raw reason', function () {

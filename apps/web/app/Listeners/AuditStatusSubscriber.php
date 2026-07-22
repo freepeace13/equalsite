@@ -7,8 +7,10 @@ use App\Contracts\Spider;
 use App\Events\Audit\AuditCompleted;
 use App\Events\Audit\AuditFailed;
 use App\Events\Audit\AuditStarted;
+use App\Events\Audit\AuditStatusCorrectedToFailed;
 use App\Jobs\ProcessAuditArtifacts;
 use App\Models\Audit;
+use App\Value\RedisStreamData;
 use App\Value\Status;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Events\Dispatcher;
@@ -70,10 +72,26 @@ class AuditStatusSubscriber implements ShouldQueue
         ));
 
         if ($attempted > 0 && $succeeded === 0) {
+            $failureReason = "All {$attempted} pages failed to scan.";
+
             $this->updateAudit($crawlerId, [
                 'status' => Status::Failed,
-                'failure_reason' => "All {$attempted} pages failed to scan.",
+                'failure_reason' => $failureReason,
+                'failure_code' => null,
             ]);
+
+            event(new AuditStatusCorrectedToFailed(new RedisStreamData(
+                id: '0-0',
+                streamName: 'equalsite:crawler:events',
+                type: 'audit.failed',
+                payload: [
+                    'auditId' => $crawlerId,
+                    'error' => $failureReason,
+                    'errorCode' => null,
+                ],
+                version: '1',
+                timestamp: now()->getTimestampMs(),
+            )));
 
             return;
         }
