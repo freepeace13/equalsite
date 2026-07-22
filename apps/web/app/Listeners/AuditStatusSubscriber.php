@@ -43,6 +43,7 @@ class AuditStatusSubscriber implements ShouldQueue
         $this->updateAudit($crawlerId, [
             'status' => Status::Failed,
             'failure_reason' => $event->payload()['error'] ?? '',
+            'failure_code' => $event->payload()['errorCode'] ?? null,
         ]);
     }
 

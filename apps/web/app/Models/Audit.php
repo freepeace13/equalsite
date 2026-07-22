@@ -17,6 +17,7 @@ class Audit extends Model
         'domain',
         'status', // queued, started, cancelled, failed, completed
         'failure_reason',
+        'failure_code',
         'crawler_id',
         'cancelled_at',
         'started_at',

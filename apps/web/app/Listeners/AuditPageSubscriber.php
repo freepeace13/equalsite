@@ -63,6 +63,7 @@ class AuditPageSubscriber implements ShouldQueue
             'status' => 'failed',
             'attemptsCount' => $payload['attemptsCount'],
             'errorMessage' => $payload['errorMessage'],
+            'errorCode' => $payload['errorCode'] ?? null,
             'failedAt' => $timestamp->toDateTimeString(),
         ]);
     }

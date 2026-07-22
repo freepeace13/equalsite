@@ -150,3 +150,28 @@ test('handleAuditCompleted stays completed when at least one scanned URL succeed
 
     expect($audit->fresh()->status)->toBe(Status::Completed);
 });
+
+test('handleAuditFailed stores the classified error code alongside the raw reason', function () {
+    $user = User::factory()->create();
+    $audit = makeUserAudit($user, 'crawler-with-code', 'acme.com', Status::Started);
+
+    $spider = Mockery::mock(Spider::class);
+    $unzip = Mockery::mock(UnzipCrawlerArtifacts::class);
+
+    $event = new AuditFailed(new RedisStreamData(
+        id: '1-0',
+        streamName: 'equalsite:crawler:events',
+        type: 'audit.failed',
+        payload: [
+            'auditId' => 'crawler-with-code',
+            'error' => 'net::ERR_NAME_NOT_RESOLVED',
+            'errorCode' => 'dns_error',
+        ],
+        version: '1',
+        timestamp: now()->getTimestampMs(),
+    ));
+
+    (new AuditStatusSubscriber($spider, $unzip))->handleAuditFailed($event);
+
+    expect($audit->fresh()->failure_code)->toBe('dns_error');
+});
