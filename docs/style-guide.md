@@ -1,6 +1,6 @@
-# Equalsite — brand & UI/UX style guide (v3)
+# Equalsite — brand & UI/UX style guide
 
-This is the single source of truth for how Equalsite looks, sounds, and behaves at the interface level. It's written for design and frontend work — pair it with `architecture` for system behavior, data flow, and implementation notes. Reference mockups: `index.html` (landing/audit request), `progress.html` (live progress), `result.html` (audit result), `dashboard.html`, `user-audits.html`, and `site.html` (Dashboard, User Audits, Site page — see `03_Design_&_Assets/` for the built mockups).
+This is the single source of truth for how Equalsite looks, sounds, and behaves at the interface level. It's written for design and frontend work — pair it with `architecture` for system behavior, data flow, and implementation notes. There are no separate reference mockups — the shipped pages under `apps/web/resources/js/pages/` (landing, progress, audit result, dashboard, sites list, site page) and the components in `packages/ui` are themselves the reference.
 
 ---
 
@@ -8,7 +8,7 @@ This is the single source of truth for how Equalsite looks, sounds, and behaves 
 
 **Positioning line:** "see your site the way everyone does."
 
-Equalsite is a WCAG 2.2 AA web accessibility diagnostic. **Auth is now required for every audit** — drop "no sign up needed" language from the landing page. The free/calm positioning itself is unchanged: the brand should read as competent and calm, not alarmist — it's telling people uncomfortable things about their site, so the tone carries the discomfort, not the visuals. Think diagnostic tool, not compliance scare campaign.
+Equalsite is a WCAG 2.2 AA web accessibility diagnostic. **Auth is required for every audit** — no "no sign up needed" language anywhere on the landing page. The brand should read as competent and calm, not alarmist — it's telling people uncomfortable things about their site, so the tone carries the discomfort, not the visuals. Think diagnostic tool, not compliance scare campaign.
 
 **Voice principles:**
 
@@ -111,7 +111,7 @@ Every semantic color maps 1:1 onto a default Tailwind value — no custom palett
 - **Status card (state-driven)** — icon \+ status label \+ primary action, background tint shifts with state (indigo active, emerald complete, neutral cancelled, red failed).  
 - **Modal** — centered, `max-w-sm`, `rounded-xl`, backdrop click dismisses without submitting. Applies to the login/register modal (tabbed Login/Register) the same as any other modal.  
 - **Trend chart** — simple line chart for the Dashboard's aggregate score trend and the Site page's per-domain score trend. Indigo line, severity colors only for annotating specific point events — no new palette entries.  
-- **Inline live-status row (new)** — used in User Audits when a site has an in-progress audit. Combines three existing primitives at row scale rather than introducing a new one: a slim progress bar (`h-1.5 rounded-full`, indigo fill) paired with a running page count (e.g. "12 of 22 pages") in place of the score cell, the same `processing`/`queued` badge used on `progress.html`, and an action link that reads "view progress" instead of "view site" while active. A subtle indigo-tinted row background (`bg-indigo-50/40 dark:bg-indigo-900/10`) distinguishes it from static rows without needing a separate banner component — see `architecture` section 3.2.1 for why this was chosen over a banner.
+- **Inline live-status row** — used in the Sites list when a site has an in-progress audit. Combines three existing primitives at row scale rather than introducing a new one: a slim progress bar (`h-1.5 rounded-full`, indigo fill) paired with a running page count (e.g. "12 of 22 pages") in place of the score cell, the same `processing`/`queued` badge used on the progress page, and an action link that reads "view progress" instead of "view site" while active. A subtle indigo-tinted row background (`bg-indigo-50/40 dark:bg-indigo-900/10`) distinguishes it from static rows without needing a separate banner component — see `architecture` section 3.2.1 for why this was chosen over a banner.
 
 ## 9\. Accessibility commitments (the product's own bar)
 
@@ -119,10 +119,10 @@ Every semantic color maps 1:1 onto a default Tailwind value — no custom palett
 - Every interactive control has a visible focus ring (`focus:ring-2 focus:ring-indigo-600`), never removed for aesthetics.  
 - Disclosure/accordion patterns use real `aria-expanded`/`aria-controls`.  
 - Status/severity is never conveyed by color alone (§3).  
-- Dark mode is a shipped feature, not a v2 (§3).
+- Dark mode is a shipped feature, not an afterthought (§3).
 
 ## 10\. Related docs
 
-- `architecture` — page flow, state machines, data model, the Dashboard/User Audits/Site page definitions and the inline live-status decision (section 3.2.1).  
+- `architecture` — page flow, state machines, data model, the Dashboard/Sites-list/Site page definitions and the inline live-status decision (section 3.2.1).  
 - `monetization` — free/Pro plan limits that surface in UI (site cap, page cap, crawl depth, re-scan frequency, history retention).
 

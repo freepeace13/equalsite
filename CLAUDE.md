@@ -154,14 +154,13 @@ to eyeball UI changes themselves, or hand-roll Playwright only if explicitly ask
 - `docs/style-guide.md` — brand identity, color/type tokens, component
   patterns, and UX design principles. Read before any UI work.
 - `docs/architecture.md` — user journey, state machines, data model, and
-  engineering notes. Read before any backend/frontend logic work. As of v3
-  this documents a target design — mandatory auth via Fortify, no more guest
-  audits, a Dashboard/User Audits/Site page replacing the old lobby, and
-  plan-gated limits — that is **ahead of the current codebase**: `audits.user_id`
-  is still nullable and guest audits still work today. Don't assume a v3
-  detail is live without checking the actual schema/routes first.
-- `docs/monetization.md` — free/Pro plan model (queue priority + access-scope
-  limits) that architecture.md's v3 sections reference throughout. Read
+  engineering notes. Read before any backend/frontend logic work. Describes
+  the current design: mandatory auth via Fortify, no guest audits
+  (`audits.user_id` is required, not nullable), and the Dashboard/Sites-list/
+  Site page trio. Includes the Paddle checkout/billing flow (§2.2).
+- `docs/monetization.md` — free/Pro plan model (access-scope limits enforced
+  today; BullMQ queue priority is defined in config but not yet wired up),
+  the `MONETIZATION_ENABLED` kill switch, and the Paddle billing model. Read
   before building plan-gating or billing-adjacent logic.
 - `packages/ui/README.md` — development guidelines for the shared component
   library: atoms vs. molecules, shadcn/cva conventions, which colors must stay
