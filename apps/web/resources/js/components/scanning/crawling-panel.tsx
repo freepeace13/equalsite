@@ -1,3 +1,4 @@
+import usePagination from '@/hooks/use-pagination';
 import { friendlyErrorMessage } from '@/lib/audit-errors';
 import { pathnameOf } from '@/lib/utils';
 import type { ScannedUrl, ScanProgress } from '@/types';
@@ -108,9 +109,24 @@ export function CrawlingPanel({
             : (scanProgress.progressPercentage ?? 0);
     const issuesCount = countIssues(scanUrls);
 
-    const orderedUrls = Object.entries(scanUrls).filter(
-        ([, e]) => e.status && e.status !== 'started',
-    );
+    const orderedUrls = Object.entries(scanUrls)
+        .filter(([, e]) => e.status && e.status !== 'started')
+        .sort(([, a], [, b]) => {
+            const latestActivityAt = (entry: ScannedUrl) =>
+                entry.failedAt ?? entry.completedAt ?? entry.skippedAt ?? entry.startedAt ?? '';
+
+            return latestActivityAt(b).localeCompare(latestActivityAt(a));
+        });
+
+    const {
+        currentItems: pagedUrls,
+        currentPage,
+        totalPages,
+        nextPage,
+        prevPage,
+        firstPage,
+        lastPage,
+    } = usePagination(orderedUrls, 15);
 
     return (
         <>
@@ -149,11 +165,34 @@ export function CrawlingPanel({
                         starting crawl…
                     </div>
                 ) : (
-                    orderedUrls.map(([url, entry]) => (
+                    pagedUrls.map(([url, entry]) => (
                         <FeedRow key={url} url={url} entry={entry} />
                     ))
                 )}
             </div>
+            {totalPages > 1 && (
+                <div className="mt-2 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
+                    <button
+                        type="button"
+                        onClick={prevPage}
+                        disabled={firstPage}
+                        className="disabled:opacity-40"
+                    >
+                        Previous
+                    </button>
+                    <span>
+                        Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                        type="button"
+                        onClick={nextPage}
+                        disabled={lastPage}
+                        className="disabled:opacity-40"
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
         </>
     );
 }
