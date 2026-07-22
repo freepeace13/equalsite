@@ -1,0 +1,25 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AuditQueued",
+    "description": "Published when an audit is enqueued for crawling.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["type", "version", "timestamp", "payload"],
+    "properties": {
+        "type": { "title": "AuditQueuedType", "enum": ["audit.queued"] },
+        "version": { "type": "string" },
+        "timestamp": { "type": "integer" },
+        "payload": {
+            "title": "AuditQueuedPayload",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["auditId", "position", "ahead", "waiting"],
+            "properties": {
+                "auditId": { "type": "string" },
+                "position": { "type": "integer" },
+                "ahead": { "type": "integer" },
+                "waiting": { "type": "integer" }
+            }
+        }
+    }
+}

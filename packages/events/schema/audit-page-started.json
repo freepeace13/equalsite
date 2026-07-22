@@ -1,0 +1,24 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AuditPageStarted",
+    "description": "Published when the crawler begins processing a single page.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["type", "version", "timestamp", "payload"],
+    "properties": {
+        "type": { "title": "AuditPageStartedType", "enum": ["audit.page.started"] },
+        "version": { "type": "string" },
+        "timestamp": { "type": "integer" },
+        "payload": {
+            "title": "AuditPageStartedPayload",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["auditId", "pageUrl", "attemptsCount"],
+            "properties": {
+                "auditId": { "type": "string" },
+                "pageUrl": { "type": "string" },
+                "attemptsCount": { "type": "integer" }
+            }
+        }
+    }
+}

@@ -10,6 +10,7 @@ node_modules/
 
 apps/web/vendor
 apps/web/node_modules
+packages/events/vendor
 
 .env
 

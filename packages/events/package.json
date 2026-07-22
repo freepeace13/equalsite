@@ -1,0 +1,20 @@
+{
+    "name": "@equalsite/events",
+    "private": true,
+    "version": "1.0.0",
+    "main": "./node/index.ts",
+    "types": "./node/index.ts",
+    "exports": {
+        ".": {
+            "types": "./node/index.ts",
+            "source": "./node/index.ts",
+            "default": "./node/index.ts"
+        }
+    },
+    "scripts": {
+        "generate": "node scripts/generate.mjs"
+    },
+    "devDependencies": {
+        "quicktype": "^26.0.0"
+    }
+}

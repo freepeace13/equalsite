@@ -1,0 +1,14 @@
+{
+    "name": "equalsite/events",
+    "description": "Generated PHP DTOs for Equalsite crawler events (source of truth: packages/events/schema)",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "EqualSite\\Events\\": "php/"
+        }
+    },
+    "scripts": {
+        "generate": "cd ../../ && pnpm --filter @equalsite/events run generate"
+    }
+}

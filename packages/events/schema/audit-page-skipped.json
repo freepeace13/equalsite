@@ -1,0 +1,24 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AuditPageSkipped",
+    "description": "Published when the crawler skips a page without attempting it.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["type", "version", "timestamp", "payload"],
+    "properties": {
+        "type": { "title": "AuditPageSkippedType", "enum": ["audit.page.skipped"] },
+        "version": { "type": "string" },
+        "timestamp": { "type": "integer" },
+        "payload": {
+            "title": "AuditPageSkippedPayload",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["auditId", "pageUrl", "reason"],
+            "properties": {
+                "auditId": { "type": "string" },
+                "pageUrl": { "type": "string" },
+                "reason": { "type": "string" }
+            }
+        }
+    }
+}

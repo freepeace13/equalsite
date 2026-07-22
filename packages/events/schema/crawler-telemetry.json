@@ -1,0 +1,75 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "CrawlerTelemetry",
+    "description": "Published periodically with process/system/queue health metrics for a crawler worker.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["type", "version", "timestamp", "payload"],
+    "properties": {
+        "type": { "title": "CrawlerTelemetryType", "enum": ["crawler.telemetry"] },
+        "version": { "type": "string" },
+        "timestamp": { "type": "integer" },
+        "payload": {
+            "title": "CrawlerTelemetryPayload",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["process", "system", "queue", "crawlers"],
+            "properties": {
+                "process": {
+                    "title": "CrawlerTelemetryProcess",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["pid", "uptime", "memory"],
+                    "properties": {
+                        "pid": { "type": "integer" },
+                        "uptime": { "type": "number" },
+                        "memory": {
+                            "title": "CrawlerTelemetryMemory",
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": ["rss", "heapUsed", "heapTotal"],
+                            "properties": {
+                                "rss": { "type": "integer" },
+                                "heapUsed": { "type": "integer" },
+                                "heapTotal": { "type": "integer" }
+                            }
+                        }
+                    }
+                },
+                "system": {
+                    "title": "CrawlerTelemetrySystem",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["loadAverage", "freeMemory", "totalMemory"],
+                    "properties": {
+                        "loadAverage": {
+                            "type": "array",
+                            "items": { "type": "number" }
+                        },
+                        "freeMemory": { "type": "integer" },
+                        "totalMemory": { "type": "integer" }
+                    }
+                },
+                "queue": {
+                    "title": "CrawlerTelemetryQueue",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["waiting", "active"],
+                    "properties": {
+                        "waiting": { "type": "integer" },
+                        "active": { "type": "integer" }
+                    }
+                },
+                "crawlers": {
+                    "title": "CrawlerTelemetryCrawlers",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["active"],
+                    "properties": {
+                        "active": { "type": "integer" }
+                    }
+                }
+            }
+        }
+    }
+}

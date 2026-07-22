@@ -1,0 +1,37 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AuditPageCompleted",
+    "description": "Published when axe-core finishes scanning a single page.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["type", "version", "timestamp", "payload"],
+    "properties": {
+        "type": { "title": "AuditPageCompletedType", "enum": ["audit.page.completed"] },
+        "version": { "type": "string" },
+        "timestamp": { "type": "integer" },
+        "payload": {
+            "title": "AuditPageCompletedPayload",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["auditId", "pageUrl", "violationsCount", "severityBreakdown"],
+            "properties": {
+                "auditId": { "type": "string" },
+                "pageUrl": { "type": "string" },
+                "violationsCount": { "type": "integer" },
+                "passesCount": { "type": "integer" },
+                "severityBreakdown": {
+                    "title": "AuditPageCompletedSeverityBreakdown",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["critical", "serious", "moderate", "minor"],
+                    "properties": {
+                        "critical": { "type": "integer" },
+                        "serious": { "type": "integer" },
+                        "moderate": { "type": "integer" },
+                        "minor": { "type": "integer" }
+                    }
+                }
+            }
+        }
+    }
+}

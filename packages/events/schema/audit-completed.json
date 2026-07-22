@@ -1,0 +1,59 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AuditCompleted",
+    "description": "Published when an audit crawl finishes successfully, carrying final Crawlee statistics.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["type", "version", "timestamp", "payload"],
+    "properties": {
+        "type": { "title": "AuditCompletedType", "enum": ["audit.completed"] },
+        "version": { "type": "string" },
+        "timestamp": { "type": "integer" },
+        "payload": {
+            "title": "AuditCompletedPayload",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "auditId",
+                "requestsFinished",
+                "requestsFailed",
+                "requestsRetries",
+                "requestsFailedPerMinute",
+                "requestsFinishedPerMinute",
+                "requestMinDurationMillis",
+                "requestMaxDurationMillis",
+                "requestTotalFailedDurationMillis",
+                "requestTotalFinishedDurationMillis",
+                "crawlerStartedAt",
+                "crawlerFinishedAt",
+                "crawlerRuntimeMillis",
+                "statsPersistedAt",
+                "errors",
+                "retryErrors",
+                "requestsWithStatusCode"
+            ],
+            "properties": {
+                "auditId": { "type": "string" },
+                "requestsFinished": { "type": "integer" },
+                "requestsFailed": { "type": "integer" },
+                "requestsRetries": { "type": "integer" },
+                "requestsFailedPerMinute": { "type": "number" },
+                "requestsFinishedPerMinute": { "type": "number" },
+                "requestMinDurationMillis": { "type": "number" },
+                "requestMaxDurationMillis": { "type": "number" },
+                "requestTotalFailedDurationMillis": { "type": "number" },
+                "requestTotalFinishedDurationMillis": { "type": "number" },
+                "crawlerStartedAt": { "type": ["string", "null"] },
+                "crawlerFinishedAt": { "type": ["string", "null"] },
+                "crawlerRuntimeMillis": { "type": "number" },
+                "statsPersistedAt": { "type": ["string", "null"] },
+                "errors": { "type": "object", "additionalProperties": true },
+                "retryErrors": { "type": "object", "additionalProperties": true },
+                "requestsWithStatusCode": {
+                    "type": "object",
+                    "additionalProperties": { "type": "integer" }
+                }
+            }
+        }
+    }
+}

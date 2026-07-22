@@ -1,0 +1,26 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AuditProgress",
+    "description": "Published periodically while an audit crawl is in progress.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["type", "version", "timestamp", "payload"],
+    "properties": {
+        "type": { "title": "AuditProgressType", "enum": ["audit.progress"] },
+        "version": { "type": "string" },
+        "timestamp": { "type": "integer" },
+        "payload": {
+            "title": "AuditProgressPayload",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["auditId", "completedRequests", "pendingRequests", "totalRequests", "progressPercentage"],
+            "properties": {
+                "auditId": { "type": "string" },
+                "completedRequests": { "type": "integer" },
+                "pendingRequests": { "type": "integer" },
+                "totalRequests": { "type": "integer" },
+                "progressPercentage": { "type": "number" }
+            }
+        }
+    }
+}
