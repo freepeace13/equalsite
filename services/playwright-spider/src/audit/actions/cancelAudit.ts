@@ -26,13 +26,13 @@ export const createCancelAuditAction = (
                 return;
             }
 
-            await auditRepository.save(audit.markAsCancelled());
-
             try {
                 const crawler = crawlerMap.get(audit.id);
                 if (crawler) {
                     await auditService.cancelAudit(audit, crawler);
-                    await crawler.teardown();
+                    crawler.stop('Audit cancelled by user');
+                } else {
+                    await auditRepository.save(audit.markAsCancelled());
                 }
                 await artifactService.cleanup(audit.id);
             } catch (err) {

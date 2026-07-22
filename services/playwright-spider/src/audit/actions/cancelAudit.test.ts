@@ -67,4 +67,30 @@ describe("cancelAudit", () => {
         expect(fs.existsSync(path.join(artifactDirectory, cancelledAuditId))).toBe(false);
         expect(fs.existsSync(path.join(artifactDirectory, otherAuditId))).toBe(true);
     });
+
+    it("gracefully stops the in-flight crawler instead of tearing it down immediately", async () => {
+        const auditId = "audit-with-crawler";
+        fs.mkdirSync(path.join(artifactDirectory, auditId), { recursive: true });
+
+        const audit = makeAudit(auditId);
+        const auditRepository = makeAuditRepository(audit);
+        const eventPublisher = vi.fn().mockResolvedValue(undefined);
+
+        const stop = vi.fn();
+        const teardown = vi.fn();
+        const fakeCrawler = {
+            stats: { state: {} },
+            stop,
+            teardown,
+        } as any;
+        crawlerMap.set(auditId, fakeCrawler);
+
+        await createCancelAuditAction(auditRepository, eventPublisher, {
+            artifactDirectory,
+            archiveDirectory,
+        }).run(auditId);
+
+        expect(stop).toHaveBeenCalledWith('Audit cancelled by user');
+        expect(teardown).not.toHaveBeenCalled();
+    });
 });
