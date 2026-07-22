@@ -18,6 +18,10 @@ export function countIssues(scanUrls: Record<string, ScannedUrl>) {
     );
 }
 
+export function countFailedPages(scanUrls: Record<string, ScannedUrl>) {
+    return Object.values(scanUrls).filter((u) => u.status === 'failed').length;
+}
+
 function FeedRow({ url, entry }: { url: string; entry: ScannedUrl }) {
     const path = pathnameOf(url);
 
