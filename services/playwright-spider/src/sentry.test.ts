@@ -1,3 +1,4 @@
+import type { Express } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const initMock = vi.fn();
@@ -52,7 +53,7 @@ describe("sentry", () => {
 
     it("attaches the Sentry Express error handler to the given app", async () => {
         const { attachSentryErrorHandler } = await import("./sentry");
-        const fakeApp = {} as import("express").Express;
+        const fakeApp = {} as Express;
 
         attachSentryErrorHandler(fakeApp);
 
