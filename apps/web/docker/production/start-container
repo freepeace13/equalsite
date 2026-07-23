@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -e
+
+gosu www php artisan config:cache
+gosu www php artisan route:cache
+gosu www php artisan view:cache
+gosu www php artisan storage:link || true
+
+if [ $# -gt 0 ]; then
+    exec gosu www "$@"
+else
+    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+fi

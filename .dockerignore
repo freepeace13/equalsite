@@ -1,7 +1,7 @@
-node_modules
+**/node_modules
 .pnpm-store
 .git
-vendor
+**/vendor
 storage/logs
 storage/framework/cache
 storage/framework/sessions
