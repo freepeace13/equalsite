@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/playwright:v1.60.0-jammy
+FROM mcr.microsoft.com/playwright:v1.60.0-jammy AS base
 
 WORKDIR /app
 
@@ -21,3 +21,9 @@ RUN pnpm install --filter @equalsite/playwright-spider
 COPY . .
 
 WORKDIR /app/services/playwright-spider
+
+FROM base AS production
+
+RUN pnpm build
+
+CMD ["node", "dist/server.js"]

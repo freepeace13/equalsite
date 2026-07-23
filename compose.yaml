@@ -32,6 +32,7 @@ services:
         build:
             context: .
             dockerfile: ./services/playwright-spider/Dockerfile
+            target: base
         command: pnpm dev
         image: equalsite-crawler
         ports:
@@ -56,6 +57,7 @@ services:
         build:
             context: .
             dockerfile: ./services/playwright-spider/Dockerfile
+            target: base
         command: pnpm dev:worker
         image: equalsite-crawler
         volumes:
