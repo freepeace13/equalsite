@@ -1,0 +1,88 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  tests:
+    uses: ./.github/workflows/tests.yml
+
+  lint:
+    uses: ./.github/workflows/lint.yml
+
+  build-and-push:
+    needs: [tests, lint]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/docker/production/Dockerfile
+          push: true
+          build-args: |
+            VITE_APP_NAME=equalsite
+            VITE_PUSHER_APP_KEY=${{ secrets.VITE_PUSHER_APP_KEY }}
+            VITE_PUSHER_HOST=${{ secrets.VITE_PUSHER_HOST }}
+            VITE_PUSHER_PORT=443
+            VITE_PUSHER_SCHEME=https
+          tags: |
+            ghcr.io/freepeace13/equalsite-web:latest
+            ghcr.io/freepeace13/equalsite-web:${{ github.sha }}
+
+      - name: Build and push crawler image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/playwright-spider/Dockerfile
+          target: production
+          push: true
+          tags: |
+            ghcr.io/freepeace13/equalsite-crawler:latest
+            ghcr.io/freepeace13/equalsite-crawler:${{ github.sha }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -euo pipefail
+            cd ~/equalsite
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u freepeace13 --password-stdin
+            docker compose -f compose.prod.yaml pull
+            docker compose -f compose.prod.yaml exec -T web php artisan down
+            docker compose -f compose.prod.yaml up -d
+            docker compose -f compose.prod.yaml exec -T web php artisan migrate --force
+            docker compose -f compose.prod.yaml exec -T web php artisan up
+            sleep 5
+            set -a
+            source .env
+            set +a
+            curl -fsS "https://${APP_DOMAIN}/up"
+            docker compose -f compose.prod.yaml exec -T crawler-api curl -fsS \
+              -H "Authorization: Bearer ${CRAWLER_SECRET}" http://localhost:3000/api/v1/ping
