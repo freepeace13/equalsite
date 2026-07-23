@@ -6,6 +6,8 @@ COPY apps/web/composer.json apps/web/composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --optimize-autoloader --ignore-platform-reqs
 COPY apps/web ./
 RUN composer dump-autoload --optimize --no-dev
+# Wayfinder flags must match vite.config.ts's wayfinder() plugin options (formVariants: true → --with-form).
+# If those options change, update this line accordingly to avoid silent mismatches in generated bindings.
 RUN php artisan wayfinder:generate --with-form
 
 
