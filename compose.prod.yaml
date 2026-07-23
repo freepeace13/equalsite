@@ -66,6 +66,8 @@ services:
             CRAWLER_PORT: '${CRAWLER_PORT:-3000}'
             REDIS_HOST: '${REDIS_HOST:-redis}'
             REDIS_PORT: '${REDIS_PORT:-6379}'
+            SENTRY_DSN: '${SENTRY_DSN}'
+            SENTRY_ENVIRONMENT: '${SENTRY_ENVIRONMENT:-production}'
         volumes:
             - 'crawler-storage:/app/services/playwright-spider/storage'
         depends_on:
@@ -99,6 +101,8 @@ services:
             CRAWLER_PORT: '${CRAWLER_PORT:-3000}'
             REDIS_HOST: '${REDIS_HOST:-redis}'
             REDIS_PORT: '${REDIS_PORT:-6379}'
+            SENTRY_DSN: '${SENTRY_DSN}'
+            SENTRY_ENVIRONMENT: '${SENTRY_ENVIRONMENT:-production}'
         volumes:
             - 'crawler-storage:/app/services/playwright-spider/storage'
         depends_on:
