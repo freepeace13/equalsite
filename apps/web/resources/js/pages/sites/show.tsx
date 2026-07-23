@@ -64,6 +64,9 @@ function HistoryTableRow({ row }: { row: HistoryRow }) {
                 isActive ? 'bg-indigo-50/40 dark:bg-indigo-900/10' : undefined
             }
         >
+            <TableCell className="font-mono text-xs text-slate-500 dark:text-slate-400">
+                {row.auditId}
+            </TableCell>
             <TableCell>
                 <StatusBadge {...SCAN_STATUS_BADGE[row.status]} />
             </TableCell>
@@ -201,6 +204,7 @@ export default function Show({
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-slate-50 dark:bg-slate-900">
+                                <TableHead>ID</TableHead>
                                 <TableHead>status</TableHead>
                                 <TableHead>score</TableHead>
                                 <TableHead>issues found</TableHead>
