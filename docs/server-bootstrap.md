@@ -29,6 +29,12 @@ SSH into the box as the Vultr-provided user, then:
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
     sudo usermod -aG docker $USER
 
+Note: this stack's `.env` relies on nested variable interpolation
+(`APP_URL=https://${APP_DOMAIN}`), which requires Docker Compose **v2.24.0
+or newer**. The steps above install the latest version from Docker's own
+apt repo, which satisfies this — but if you provision Docker a different
+way, confirm with `docker compose version` before proceeding.
+
 Log out and back in for the group change to take effect, then verify:
 
     docker run --rm hello-world

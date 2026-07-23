@@ -66,6 +66,8 @@ services:
             CRAWLER_PORT: '${CRAWLER_PORT:-3000}'
             REDIS_HOST: '${REDIS_HOST:-redis}'
             REDIS_PORT: '${REDIS_PORT:-6379}'
+        volumes:
+            - 'crawler-storage:/app/services/playwright-spider/storage'
         depends_on:
             - redis
         networks:
@@ -97,6 +99,8 @@ services:
             CRAWLER_PORT: '${CRAWLER_PORT:-3000}'
             REDIS_HOST: '${REDIS_HOST:-redis}'
             REDIS_PORT: '${REDIS_PORT:-6379}'
+        volumes:
+            - 'crawler-storage:/app/services/playwright-spider/storage'
         depends_on:
             - redis
         networks:
@@ -187,4 +191,6 @@ volumes:
     caddy-data:
         driver: local
     caddy-config:
+        driver: local
+    crawler-storage:
         driver: local
