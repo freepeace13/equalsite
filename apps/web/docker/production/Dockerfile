@@ -2,6 +2,13 @@
 
 FROM composer:2 AS composer-deps
 WORKDIR /app
+# No .env exists at build time, and config/app.php defaults APP_ENV to
+# 'production' when unset — without this, the artisan commands below would
+# boot the app in "production" mode and trip AppServiceProvider's Paddle
+# webhook secret check. This ENV is stage-local (COPY --from doesn't carry
+# it into the runtime stage), so the real container still gets
+# APP_ENV=production from .env at runtime.
+ENV APP_ENV=local
 COPY apps/web/composer.json apps/web/composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --optimize-autoloader --ignore-platform-reqs
 COPY apps/web ./
