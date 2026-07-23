@@ -10,8 +10,8 @@ Before touching the server, point two DNS records at its IP (Cloudflare,
 DNS-only/grey-cloud to start — switch the app record to proxied/orange-cloud
 once TLS is confirmed working, per `docs/deployment.md` §5):
 
-- `app.example.com` → A record → server IP
-- `ws.example.com` → A record → server IP
+- `equalsite.techysavvy.me` → A record → server IP
+- `ws.techysavvy.me` → A record → server IP
 
 ## 2. Install Docker Engine
 
@@ -50,7 +50,7 @@ Log out and back in for the group change to take effect, then verify:
 
 ## 4. Clone the repo and configure secrets
 
-    git clone <repo-url> equalsite
+    git clone git@github.com:freepeace13/equalsite.git equalsite
     cd equalsite
     cp .env.production.example .env
 
@@ -90,13 +90,13 @@ logs web` first — the most likely cause at this stage is a missing/blank
 
 ## 7. Verify end-to-end
 
-- `curl -I https://app.example.com/up` → expect `HTTP/2 200` (confirms
+- `curl -I https://equalsite.techysavvy.me/up` → expect `HTTP/2 200` (confirms
   Caddy issued a TLS cert and is proxying to `web`)
-- Open `https://app.example.com` in a browser, register an account,
+- Open `https://equalsite.techysavvy.me` in a browser, register an account,
   confirm the verification email arrives (Resend)
 - Submit a URL for an audit, confirm progress updates appear live in the
   browser (confirms `crawler-api` → Redis Stream → `crawler-listen` →
-  Soketi → `wss://ws.example.com` is wired end to end)
+  Soketi → `wss://ws.techysavvy.me` is wired end to end)
 - `docker compose -f compose.prod.yaml logs horizon --tail 50` → confirm
   no repeated connection errors, and that the audit's queued jobs
   (`ProcessAuditArtifacts` etc.) show as processed
@@ -104,5 +104,5 @@ logs web` first — the most likely cause at this stage is a missing/blank
 If live progress doesn't reach the browser but the audit still completes,
 check the WebSocket connection specifically per `docs/deployment.md` §5 —
 Cloudflare's free tier does support WS, but proxied (orange-cloud) mode is
-the first thing to rule out if `ws.example.com` misbehaves; fall back to
+the first thing to rule out if `ws.techysavvy.me` misbehaves; fall back to
 DNS-only (grey-cloud) for that hostname if so.
