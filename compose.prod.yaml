@@ -9,7 +9,7 @@ services:
                 VITE_PUSHER_HOST: '${SOKETI_DOMAIN}'
                 VITE_PUSHER_PORT: 443
                 VITE_PUSHER_SCHEME: https
-        image: equalsite-web:production
+        image: ghcr.io/freepeace13/equalsite-web:latest
         restart: always
         env_file: .env
         networks:
@@ -56,7 +56,7 @@ services:
             context: .
             dockerfile: ./services/playwright-spider/Dockerfile
             target: production
-        image: equalsite-crawler:production
+        image: ghcr.io/freepeace13/equalsite-crawler:latest
         command: node dist/server.js
         restart: always
         environment:
@@ -91,7 +91,7 @@ services:
             context: .
             dockerfile: ./services/playwright-spider/Dockerfile
             target: production
-        image: equalsite-crawler:production
+        image: ghcr.io/freepeace13/equalsite-crawler:latest
         command: node dist/worker.js
         restart: always
         environment:
