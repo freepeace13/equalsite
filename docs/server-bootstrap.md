@@ -106,3 +106,10 @@ check the WebSocket connection specifically per `docs/deployment.md` §5 —
 Cloudflare's free tier does support WS, but proxied (orange-cloud) mode is
 the first thing to rule out if `ws.techysavvy.me` misbehaves; fall back to
 DNS-only (grey-cloud) for that hostname if so.
+
+## 8. One-time follow-up for the CI/CD deploy workflow
+
+If this VPS was bootstrapped before the CI/CD deploy workflow (`.github/workflows/deploy.yml`) existed, its live `.env` still has the old `APP_MAINTENANCE_DRIVER=file` default. Edit `.env` on the box and change it to `cache` — the deploy script's `artisan down`/`up` bracketing (see `docs/deployment.md` §8) relies on the maintenance flag surviving the `web` container being recreated by `docker compose up -d`, which a `file`-driver flag (stored in the old container's filesystem) does not do. `.env.production.example` in the repo is only a template; it does not update the real `.env` on an already-provisioned server.
+
+    sed -i 's/^APP_MAINTENANCE_DRIVER=file$/APP_MAINTENANCE_DRIVER=cache/' .env
+    docker compose -f compose.prod.yaml restart web
