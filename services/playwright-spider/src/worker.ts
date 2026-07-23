@@ -6,6 +6,11 @@ import { publishEvent } from "./app/adapters/redisStreamPublisher";
 import { bullClient } from "./app/services/redis";
 import { crawlerQueue } from "./app/services/queue";
 import { createQueuePositionService } from "./audit/services/queuePositionService";
+import { captureWorkerFailure, initSentry, onUncaughtException, onUnhandledRejection } from "./sentry";
+
+initSentry();
+process.on('uncaughtException', onUncaughtException);
+process.on('unhandledRejection', onUnhandledRejection);
 
 const queuePositionService = createQueuePositionService(crawlerQueue, publishEvent);
 
@@ -50,7 +55,8 @@ crawlerWorker.on('completed', () => {
     queuePositionService.publishPositions().catch(console.error);
 });
 
-crawlerWorker.on('failed', () => {
+crawlerWorker.on('failed', (_job, error) => {
+    captureWorkerFailure(error);
     queuePositionService.publishPositions().catch(console.error);
 });
 
