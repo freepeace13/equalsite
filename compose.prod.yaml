@@ -27,7 +27,7 @@ services:
             retries: 3
 
     horizon:
-        image: equalsite-web:production
+        image: ghcr.io/freepeace13/equalsite-web:latest
         command: php artisan horizon
         restart: always
         env_file: .env
@@ -40,7 +40,7 @@ services:
         cpus: 1.0
 
     crawler-listen:
-        image: equalsite-web:production
+        image: ghcr.io/freepeace13/equalsite-web:latest
         command: php artisan spider:listen
         restart: always
         env_file: .env
