@@ -9,6 +9,10 @@ permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 jobs:
   tests:
     uses: ./.github/workflows/tests.yml

@@ -113,3 +113,16 @@ If this VPS was bootstrapped before the CI/CD deploy workflow (`.github/workflow
 
     sed -i 's/^APP_MAINTENANCE_DRIVER=file$/APP_MAINTENANCE_DRIVER=cache/' .env
     docker compose -f compose.prod.yaml restart web
+
+## 9. Recovering from a failed deploy migration
+
+The deploy workflow's remote script runs with `set -euo pipefail`, so if `php
+artisan migrate --force` fails partway through a deploy, the script aborts
+immediately after — before the `php artisan up` step runs. The site is left
+in maintenance mode until you intervene by hand. To recover: SSH into the
+VPS, check what the migration failure was (`docker compose -f
+compose.prod.yaml logs web --tail 100`), fix forward (e.g. push a
+corrected migration and re-deploy) or resolve the schema issue directly,
+then bring the site back:
+
+    docker compose -f compose.prod.yaml exec -T web php artisan up
