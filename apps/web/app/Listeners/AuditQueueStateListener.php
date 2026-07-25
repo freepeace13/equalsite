@@ -2,24 +2,18 @@
 
 namespace App\Listeners;
 
+use App\AggregateRoots\AuditAggregateRoot;
 use App\Events\Audit\AuditQueued;
-use App\Models\Audit;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
 class AuditQueueStateListener implements ShouldQueue
 {
-    public function __invoke(AuditQueued $event)
+    public function __invoke(AuditQueued $event): void
     {
-        $audit = Audit::where('crawler_id', $event->crawlerId())->first();
+        $payload = $event->payload();
 
-        if ($audit) {
-            $payload = $event->payload();
-
-            $audit->setCustomData('queue_state', [
-                'position' => $payload['position'],
-                'ahead' => $payload['ahead'],
-                'waiting' => $payload['waiting'],
-            ]);
-        }
+        AuditAggregateRoot::retrieve($event->crawlerId())
+            ->updateQueueState($payload['position'], $payload['ahead'], $payload['waiting'])
+            ->persist();
     }
 }
