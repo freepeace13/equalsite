@@ -2,9 +2,9 @@
 
 namespace App\Actions\Audit;
 
+use App\AggregateRoots\AuditAggregateRoot;
 use App\Contracts\Spider;
 use App\Models\Audit;
-use App\Value\Status;
 
 class CancelAudit
 {
@@ -20,9 +20,8 @@ class CancelAudit
 
         $this->spider->cancel($audit->crawler_id);
 
-        $audit->update([
-            'status' => Status::Cancelled,
-            'cancelled_at' => now(),
-        ]);
+        AuditAggregateRoot::retrieve($audit->crawler_id)
+            ->cancel(now()->toIso8601String())
+            ->persist();
     }
 }
