@@ -2,6 +2,7 @@
 
 namespace App\Actions\Audit;
 
+use App\AggregateRoots\AuditAggregateRoot;
 use App\Contracts\Spider;
 use App\Exceptions\Audit\AuditInProgressException;
 use App\Exceptions\Audit\RescanTooSoonException;
@@ -12,7 +13,6 @@ use App\Support\Plan\PlanLimits;
 use App\Support\Spider\EnqueueStrategy;
 use App\Support\Spider\SpiderOptions;
 use App\Value\CrawlDepth;
-use App\Value\Status;
 
 class CreateAudit
 {
@@ -48,13 +48,11 @@ class CreateAudit
             ])
         );
 
-        return Audit::create([
-            'user_id' => $user->id,
-            'domain' => parse_url($url, PHP_URL_HOST),
-            'url' => $url,
-            'status' => Status::Queued,
-            'crawler_id' => $response['id'],
-        ]);
+        AuditAggregateRoot::retrieve($response['id'])
+            ->create($user->id, $url, parse_url($url, PHP_URL_HOST))
+            ->persist();
+
+        return Audit::findById($response['id']);
     }
 
     /**
