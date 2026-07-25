@@ -2,106 +2,73 @@
 
 namespace App\Listeners;
 
+use App\AggregateRoots\AuditAggregateRoot;
 use App\Events\Audit\AuditPageCompleted;
 use App\Events\Audit\AuditPageFailed;
 use App\Events\Audit\AuditPageSkipped;
 use App\Events\Audit\AuditPageStarted;
-use App\Events\Audit\BaseEvent;
-use App\Models\Audit;
-use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Events\Dispatcher;
-use Illuminate\Queue\Middleware\WithoutOverlapping;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Carbon;
 
 class AuditPageSubscriber implements ShouldQueue
 {
-    // public function middleware(BaseEvent $event)
-    // {
-    //     return [
-    //         (new WithoutOverlapping('audit-' . $event->crawlerId()))->shared()
-    //     ];
-    // }
-
     public function handlePageStarted(AuditPageStarted $event): void
     {
         $payload = $event->payload();
-        $timestamp = $this->carbonTimestamp($event->timestamp());
 
-        Log::channel('audit')->debug('Page Started', $event->payload());
-
-        $this->updatePage($event->crawlerId(), $payload['pageUrl'], [
-            'status' => 'started',
-            'attemptsCount' => $payload['attemptsCount'] ?? 0,
-            'startedAt' => $timestamp->toIso8601String(),
-        ]);
+        AuditAggregateRoot::retrieve($event->crawlerId())
+            ->pageStarted(
+                $payload['pageUrl'],
+                $payload['attemptsCount'] ?? 0,
+                $this->carbonTimestamp($event->timestamp())->toIso8601String(),
+            )
+            ->persist();
     }
 
     public function handlePageSkipped(AuditPageSkipped $event): void
     {
         $payload = $event->payload();
-        $timestamp = $this->carbonTimestamp($event->timestamp());
 
-        Log::channel('audit')->debug('Page skipped', $event->payload());
-
-        $this->updatePage($event->crawlerId(), $payload['pageUrl'], [
-            'status' => 'skipped',
-            'skippingReason' => $payload['reason'],
-            'skippedAt' => $timestamp->toIso8601String(),
-        ]);
+        AuditAggregateRoot::retrieve($event->crawlerId())
+            ->pageSkipped(
+                $payload['pageUrl'],
+                $payload['reason'],
+                $this->carbonTimestamp($event->timestamp())->toIso8601String(),
+            )
+            ->persist();
     }
 
     public function handlePageFailed(AuditPageFailed $event): void
     {
         $payload = $event->payload();
-        $timestamp = $this->carbonTimestamp($event->timestamp());
 
-        Log::channel('audit')->debug('Page failed', $event->payload());
-
-        $this->updatePage($event->crawlerId(), $payload['pageUrl'], [
-            'status' => 'failed',
-            'attemptsCount' => $payload['attemptsCount'],
-            'errorMessage' => $payload['errorMessage'],
-            'errorCode' => $payload['errorCode'] ?? null,
-            'failedAt' => $timestamp->toIso8601String(),
-        ]);
+        AuditAggregateRoot::retrieve($event->crawlerId())
+            ->pageFailed(
+                $payload['pageUrl'],
+                $payload['attemptsCount'],
+                $payload['errorMessage'],
+                $payload['errorCode'] ?? null,
+                $this->carbonTimestamp($event->timestamp())->toIso8601String(),
+            )
+            ->persist();
     }
 
     public function handlePageCompleted(AuditPageCompleted $event): void
     {
         $payload = $event->payload();
-        $timestamp = $this->carbonTimestamp($event->timestamp());
 
-        Log::channel('audit')->debug('Page completed', $event->payload());
-
-        $this->updatePage($event->crawlerId(), $payload['pageUrl'], [
-            'status' => 'completed',
-            'violationsCount' => $payload['violationsCount'],
-            'severityBreakdown' => $payload['severityBreakdown'],
-            'completedAt' => $timestamp->toIso8601String(),
-        ]);
+        AuditAggregateRoot::retrieve($event->crawlerId())
+            ->pageCompleted(
+                $payload['pageUrl'],
+                $payload['violationsCount'],
+                $payload['severityBreakdown'],
+                $this->carbonTimestamp($event->timestamp())->toIso8601String(),
+            )
+            ->persist();
     }
 
-    protected function updatePage(string $crawlerId, string $url, array $attributes = []): void
-    {
-        DB::transaction(function () use ($crawlerId, $url, $attributes) {
-            $audit = Audit::where('crawler_id', $crawlerId)
-                ->lockForUpdate()
-                ->first();
-
-            if ($audit) {
-                $audit->tapCustomData('scanned_urls', function (array $prev) use ($url, $attributes) {
-                    $prevAttr = $prev[$url] ?? [];
-                    $prev[$url] = [...$prevAttr, ...$attributes];
-
-                    return $prev;
-                }, []);
-            }
-        });
-    }
-
-    protected function carbonTimestamp(int $timestamp)
+    protected function carbonTimestamp(int $timestamp): Carbon
     {
         return Carbon::createFromTimestampMs($timestamp);
     }
