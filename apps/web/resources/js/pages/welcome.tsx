@@ -220,6 +220,27 @@ export default function Welcome({ canRegister, canResetPassword }: Props) {
                 >
                     Contact
                 </a>
+                {' · '}
+                <a
+                    href="/terms"
+                    className="underline hover:text-slate-600 dark:hover:text-slate-400"
+                >
+                    Terms
+                </a>
+                {' · '}
+                <a
+                    href="/privacy"
+                    className="underline hover:text-slate-600 dark:hover:text-slate-400"
+                >
+                    Privacy
+                </a>
+                {' · '}
+                <a
+                    href="/refund-policy"
+                    className="underline hover:text-slate-600 dark:hover:text-slate-400"
+                >
+                    Refund Policy
+                </a>
             </footer>
         </>
     );
