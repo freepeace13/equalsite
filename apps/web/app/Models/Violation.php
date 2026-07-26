@@ -32,19 +32,4 @@ class Violation extends Model
     {
         return $this->belongsTo(Audit::class);
     }
-
-    public function addNode(array $node): void
-    {
-        $nodes = $this->nodes ?? [];
-        $fingerprint = md5($node['target'].$node['html']);
-
-        $nodes[] = [
-            'url' => $node['url'],
-            'target' => $node['target'],
-            'html' => $node['html'],
-            'fingerprint' => $fingerprint,
-        ];
-
-        $this->update(['nodes' => $nodes]);
-    }
 }
