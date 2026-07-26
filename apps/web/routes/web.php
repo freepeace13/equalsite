@@ -11,6 +11,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Legal\ContactController;
 use App\Http\Controllers\Legal\FaqController;
 use App\Http\Controllers\Legal\PrivacyController;
+use App\Http\Controllers\Legal\RefundPolicyController;
 use App\Http\Controllers\Legal\TermsController;
 use App\Http\Controllers\Sites\IndexController;
 use App\Http\Controllers\Sites\ShowController;
@@ -27,6 +28,7 @@ Route::post('/contact', [ContactController::class, 'store'])
 Route::get('/faq', FaqController::class)->name('legal.faq');
 Route::get('/terms', TermsController::class)->name('legal.terms');
 Route::get('/privacy', PrivacyController::class)->name('legal.privacy');
+Route::get('/refund-policy', RefundPolicyController::class)->name('legal.refund');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
