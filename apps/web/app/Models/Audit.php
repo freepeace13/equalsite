@@ -99,6 +99,11 @@ class Audit extends Model
         return $this->hasMany(Violation::class);
     }
 
+    public function pages(): HasMany
+    {
+        return $this->hasMany(AuditPage::class);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
