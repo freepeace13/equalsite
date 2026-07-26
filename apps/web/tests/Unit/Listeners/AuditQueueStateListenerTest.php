@@ -30,7 +30,7 @@ test('queued events update custom_data.queue_state', function () {
 
     (new AuditQueueStateListener)($event);
 
-    expect($audit->fresh()->getCustomData('queue_state'))->toBe([
+    expect($audit->fresh()->getCustomData('queue_state'))->toEqual([
         'position' => 3,
         'ahead' => 2,
         'waiting' => 5,

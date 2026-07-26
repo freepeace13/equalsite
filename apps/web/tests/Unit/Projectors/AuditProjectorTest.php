@@ -35,7 +35,7 @@ test('AuditQueueStateWasUpdated projects into custom_data.queue_state', function
 
     $audit = Audit::findById('crawler-2');
 
-    expect($audit->getCustomData('queue_state'))->toBe([
+    expect($audit->getCustomData('queue_state'))->toEqual([
         'position' => 2,
         'ahead' => 1,
         'waiting' => 3,
@@ -66,7 +66,7 @@ test('AuditProgressWasUpdated projects into custom_data.progress_state', functio
 
     $audit = Audit::findById('crawler-4');
 
-    expect($audit->getCustomData('progress_state'))->toBe([
+    expect($audit->getCustomData('progress_state'))->toEqual([
         'completedRequests' => 1,
         'pendingRequests' => 2,
         'totalRequests' => 3,

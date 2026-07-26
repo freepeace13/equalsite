@@ -2,6 +2,7 @@ import {
   auditRepository,
   bullClient,
   bullmq,
+  captureWorkerFailure,
   classifyError,
   crawler,
   crawlerMap,
@@ -9,9 +10,12 @@ import {
   createArtifactService,
   createAuditService,
   createQueuePositionService,
+  initSentry,
+  onUncaughtException,
+  onUnhandledRejection,
   progressEvent,
   publishEvent
-} from "./chunk-33RE3PR3.js";
+} from "./chunk-6K4R3JGH.js";
 
 // src/worker.ts
 import { Worker } from "bullmq";
@@ -291,6 +295,9 @@ var createRunAuditAction = (auditRepository2, eventPublisher, config) => {
 };
 
 // src/worker.ts
+initSentry();
+process.on("uncaughtException", onUncaughtException);
+process.on("unhandledRejection", onUnhandledRejection);
 var queuePositionService = createQueuePositionService(crawlerQueue, publishEvent);
 var crawlerWorker = new Worker(
   bullmq.queue,
@@ -316,7 +323,8 @@ crawlerWorker.on("active", (job) => {
 crawlerWorker.on("completed", () => {
   queuePositionService.publishPositions().catch(console.error);
 });
-crawlerWorker.on("failed", () => {
+crawlerWorker.on("failed", (_job, error) => {
+  captureWorkerFailure(error);
   queuePositionService.publishPositions().catch(console.error);
 });
 crawlerWorker.on("error", (error) => {

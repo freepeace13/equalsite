@@ -1,6 +1,6 @@
 import usePagination from '@/hooks/use-pagination';
 import { friendlyErrorMessage } from '@/lib/audit-errors';
-import { pathnameOf } from '@/lib/utils';
+import { pathWithQueryOf } from '@/lib/utils';
 import type { AuditPage, ScanProgress } from '@/types';
 import {
     AlertTriangleIcon,
@@ -11,6 +11,7 @@ import {
     SpinnerIcon,
     XCircleIcon,
 } from '@equalsite/ui';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { CancelButton } from './cancel-button';
 
 export function countIssues(scanUrls: AuditPage[]) {
@@ -21,73 +22,124 @@ export function countFailedPages(scanUrls: AuditPage[]) {
     return scanUrls.filter((u) => u.status === 'failed').length;
 }
 
-function FeedRow({ entry }: { entry: AuditPage }) {
-    const path = pathnameOf(entry.url);
+// Icon/label crossfade for a row whose status just changed in place —
+// deliberately separate from the row-level enter animation below, which
+// only ever plays once, the first time a URL appears in the feed.
+const STATUS_TRANSITION_CLASSES = 'animate-in fade-in zoom-in-90 duration-300';
+const STATUS_FLASH_DURATION_MS = 900;
 
-    if (entry.status === 'completed') {
-        const count = entry.violationsCount ?? 0;
-        const critical = entry.criticalCount ?? 0;
-        const serious = entry.seriousCount ?? 0;
-        const isCritical = critical > 0;
-        const isModerate = !isCritical && serious > 0;
+const FeedRow = memo(function FeedRow({
+    entry,
+    isNew,
+}: {
+    entry: AuditPage;
+    isNew: boolean;
+}) {
+    const path = pathWithQueryOf(entry.url);
 
-        return (
-            <div className="flex animate-in items-center gap-2.5 px-4 py-2.5 fade-in slide-in-from-bottom-1">
-                {count === 0 ? (
-                    <CheckCircleIcon className="text-emerald-600 dark:text-emerald-400" />
-                ) : (
-                    <AlertTriangleIcon
-                        className={
-                            isCritical
-                                ? 'text-red-600 dark:text-red-400'
-                                : isModerate
-                                  ? 'text-yellow-600 dark:text-yellow-400'
-                                  : 'text-slate-500'
-                        }
-                    />
-                )}
-                <span className="flex-1 truncate text-sm">{path}</span>
-                <span
-                    className={`text-xs ${count === 0 ? 'text-emerald-600 dark:text-emerald-400' : isCritical ? 'text-red-600 dark:text-red-400' : isModerate ? 'text-yellow-600 dark:text-yellow-400' : 'text-slate-500'}`}
-                >
-                    {count === 0
-                        ? 'no issues'
-                        : `${count} issue${count !== 1 ? 's' : ''}`}
-                </span>
-            </div>
+    const prevStatusRef = useRef(entry.status);
+    const [justUpdated, setJustUpdated] = useState(false);
+
+    useEffect(() => {
+        if (prevStatusRef.current === entry.status) {
+            return;
+        }
+        prevStatusRef.current = entry.status;
+        setJustUpdated(true);
+        const timeout = setTimeout(
+            () => setJustUpdated(false),
+            STATUS_FLASH_DURATION_MS,
         );
-    }
+        return () => clearTimeout(timeout);
+    }, [entry.status]);
 
-    if (entry.status === 'failed') {
-        return (
-            <div className="flex animate-in items-center gap-2.5 px-4 py-2.5 fade-in slide-in-from-bottom-1">
-                <XCircleIcon className="text-red-500" />
-                <span className="flex-1 truncate text-sm">{path}</span>
-                <span className="text-xs text-red-500">
-                    {friendlyErrorMessage(entry.errorCode)}
-                </span>
-            </div>
-        );
-    }
+    const rowClasses = `flex items-center gap-2.5 px-4 py-2.5 transition-colors duration-700 ${
+        isNew
+            ? 'animate-in fade-in slide-in-from-bottom-1'
+            : justUpdated
+              ? 'bg-slate-50 dark:bg-slate-800/60'
+              : ''
+    }`;
+    switch (entry.status) {
+        case 'completed': {
+            const count = entry.violationsCount ?? 0;
+            const critical = entry.criticalCount ?? 0;
+            const serious = entry.seriousCount ?? 0;
+            const isCritical = critical > 0;
+            const isModerate = !isCritical && serious > 0;
 
-    if (entry.status === 'skipped') {
-        return (
-            <div className="flex animate-in items-center gap-2.5 px-4 py-2.5 fade-in slide-in-from-bottom-1">
-                <MinusCircleIcon className="text-slate-400" />
-                <span className="flex-1 truncate text-sm">{path}</span>
-                <span className="text-xs text-slate-400">skipped</span>
-            </div>
-        );
-    }
+            return (
+                <div className={rowClasses}>
+                    <span
+                        key={entry.status}
+                        className={`inline-flex ${STATUS_TRANSITION_CLASSES}`}
+                    >
+                        {count === 0 ? (
+                            <CheckCircleIcon className="text-emerald-600 dark:text-emerald-400" />
+                        ) : (
+                            <AlertTriangleIcon
+                                className={
+                                    isCritical
+                                        ? 'text-red-600 dark:text-red-400'
+                                        : isModerate
+                                          ? 'text-yellow-600 dark:text-yellow-400'
+                                          : 'text-slate-500'
+                                }
+                            />
+                        )}
+                    </span>
+                    <span className="flex-1 truncate text-sm">{path}</span>
+                    <span
+                        className={`text-xs ${count === 0 ? 'text-emerald-600 dark:text-emerald-400' : isCritical ? 'text-red-600 dark:text-red-400' : isModerate ? 'text-yellow-600 dark:text-yellow-400' : 'text-slate-500'}`}
+                    >
+                        {count === 0
+                            ? 'no issues'
+                            : `${count} issue${count !== 1 ? 's' : ''}`}
+                    </span>
+                </div>
+            );
+        }
 
-    return (
-        <div className="flex animate-in items-center gap-2.5 px-4 py-2.5 fade-in slide-in-from-bottom-1">
-            <SpinnerIcon className="text-slate-400" />
-            <span className="flex-1 truncate text-sm">{path}</span>
-            <span className="text-xs text-slate-400">scanning…</span>
-        </div>
-    );
-}
+        case 'failed':
+            return (
+                <div className={rowClasses}>
+                    <span
+                        key={entry.status}
+                        className={`inline-flex ${STATUS_TRANSITION_CLASSES}`}
+                    >
+                        <XCircleIcon className="text-red-500" />
+                    </span>
+                    <span className="flex-1 truncate text-sm">{path}</span>
+                    <span className="text-xs text-red-500">
+                        {friendlyErrorMessage(entry.errorCode)}
+                    </span>
+                </div>
+            );
+
+        case 'skipped':
+            return (
+                <div className={rowClasses}>
+                    <span
+                        key={entry.status}
+                        className={`inline-flex ${STATUS_TRANSITION_CLASSES}`}
+                    >
+                        <MinusCircleIcon className="text-slate-400" />
+                    </span>
+                    <span className="flex-1 truncate text-sm">{path}</span>
+                    <span className="text-xs text-slate-400">skipped</span>
+                </div>
+            );
+
+        case 'started':
+            return (
+                <div className={rowClasses}>
+                    <SpinnerIcon className="text-slate-400" />
+                    <span className="flex-1 truncate text-sm">{path}</span>
+                    <span className="text-xs text-slate-400">scanning…</span>
+                </div>
+            );
+    }
+});
 
 export function CrawlingPanel({
     scanProgress,
@@ -106,9 +158,13 @@ export function CrawlingPanel({
             : (scanProgress.progressPercentage ?? 0);
     const issuesCount = countIssues(scanUrls);
 
-    const orderedUrls = scanUrls
-        .filter((e) => e.status !== 'started')
-        .sort((a, b) => b.lastActivityAt.localeCompare(a.lastActivityAt));
+    const orderedUrls = useMemo(
+        () =>
+            [...scanUrls].sort((a, b) =>
+                b.createdAt.localeCompare(a.createdAt),
+            ),
+        [scanUrls],
+    );
 
     const {
         currentItems: pagedUrls,
@@ -119,6 +175,12 @@ export function CrawlingPanel({
         firstPage,
         lastPage,
     } = usePagination(orderedUrls, 15);
+
+    const seenUrlsRef = useRef<Set<string>>(new Set());
+
+    useEffect(() => {
+        pagedUrls.forEach((entry) => seenUrlsRef.current.add(entry.url));
+    }, [pagedUrls]);
 
     return (
         <>
@@ -158,7 +220,11 @@ export function CrawlingPanel({
                     </div>
                 ) : (
                     pagedUrls.map((entry) => (
-                        <FeedRow key={entry.url} entry={entry} />
+                        <FeedRow
+                            key={entry.url}
+                            entry={entry}
+                            isNew={!seenUrlsRef.current.has(entry.url)}
+                        />
                     ))
                 )}
             </div>

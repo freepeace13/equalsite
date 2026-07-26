@@ -5,6 +5,7 @@ use App\Models\User;
 use App\Value\Status;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
@@ -37,6 +38,9 @@ test('AuditPage::toProp maps snake_case columns to the camelCase prop shape', fu
     $user = User::factory()->create();
     $audit = makeUserAudit($user, 'crawler-page-prop', 'acme.com', Status::Started);
 
+    $now = Carbon::parse('2026-07-26T00:00:00+00:00');
+    Carbon::setTestNow($now);
+
     $page = AuditPage::create([
         'audit_id' => $audit->id,
         'url' => 'https://acme.com/about',
@@ -53,6 +57,7 @@ test('AuditPage::toProp maps snake_case columns to the camelCase prop shape', fu
         'url' => 'https://acme.com/about',
         'status' => 'failed',
         'attemptsCount' => 3,
+        'createdAt' => $now->toIso8601String(),
         'startedAt' => '2026-07-26T00:00:00+00:00',
         'completedAt' => null,
         'failedAt' => '2026-07-26T00:02:00+00:00',
@@ -67,6 +72,8 @@ test('AuditPage::toProp maps snake_case columns to the camelCase prop shape', fu
         'errorMessage' => 'Navigation timeout of 45000 ms exceeded',
         'skippingReason' => null,
     ]);
+
+    Carbon::setTestNow();
 });
 
 test('audit_pages enforces one row per audit_id + url', function () {

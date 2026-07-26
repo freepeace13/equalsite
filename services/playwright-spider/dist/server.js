@@ -1,4 +1,5 @@
 import {
+  attachSentryErrorHandler,
   auditRepository,
   crawler,
   crawlerMap,
@@ -6,9 +7,10 @@ import {
   createArtifactService,
   createAuditService,
   createQueuePositionService,
+  initSentry,
   publishEvent,
   secretKey
-} from "./chunk-33RE3PR3.js";
+} from "./chunk-6K4R3JGH.js";
 
 // src/app.ts
 import express from "express";
@@ -199,10 +201,12 @@ function authenticateInternalRequest() {
 }
 
 // src/app.ts
+initSentry();
 var app = express();
 app.use(express.json());
 app.use(authenticateInternalRequest());
 app.use("/api/v1", routes_default);
+attachSentryErrorHandler(app);
 var app_default = app;
 
 // src/server.ts

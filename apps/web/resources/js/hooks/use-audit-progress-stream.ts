@@ -42,7 +42,14 @@ function upsertPage(
     const index = pages.findIndex((page) => page.url === url);
 
     if (index === -1) {
-        return [...pages, { url, ...patch } as AuditPage];
+        return [
+            ...pages,
+            {
+                url,
+                createdAt: patch.lastActivityAt,
+                ...patch,
+            } as AuditPage,
+        ];
     }
 
     const next = [...pages];

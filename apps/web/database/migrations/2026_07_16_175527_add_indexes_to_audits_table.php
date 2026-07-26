@@ -27,6 +27,16 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // MySQL silently repurposes one of the two composite indexes below
+        // to satisfy the audits.user_id foreign key (added in
+        // make_user_id_required_on_audits_table) once no dedicated
+        // single-column index remains. Restore that dedicated index first,
+        // or dropping the last composite index fails with "Cannot drop
+        // index ...: needed in a foreign key constraint" (MySQL error 1553).
+        Schema::table('audits', function (Blueprint $table) {
+            $table->index('user_id');
+        });
+
         Schema::table('audits', function (Blueprint $table) {
             $table->dropIndex(['user_id', 'status']);
             $table->dropIndex(['user_id', 'domain', 'created_at']);

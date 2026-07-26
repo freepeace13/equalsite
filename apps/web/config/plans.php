@@ -42,7 +42,7 @@ return [
 
     'pro' => [
         'site_cap' => null, // null = unlimited
-        'page_cap' => env('PRO_PAGE_CAP', 150),
+        'page_cap' => env('PRO_PAGE_CAP', 100),
         'crawl_depths' => [
             CrawlDepth::Shallow->value,
             CrawlDepth::Standard->value,

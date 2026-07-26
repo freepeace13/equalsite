@@ -325,6 +325,29 @@ var createQueuePositionService = (queue, eventPublisher) => ({
   }
 });
 
+// src/sentry.ts
+import * as Sentry from "@sentry/node";
+function initSentry() {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.SENTRY_ENVIRONMENT || "production"
+  });
+}
+function attachSentryErrorHandler(app) {
+  Sentry.setupExpressErrorHandler(app);
+}
+function captureWorkerFailure(error) {
+  Sentry.captureException(error);
+}
+function onUncaughtException(error) {
+  Sentry.captureException(error);
+  console.error("Uncaught exception", error);
+}
+function onUnhandledRejection(reason) {
+  Sentry.captureException(reason);
+  console.error("Unhandled rejection", reason);
+}
+
 // src/audit/events/completedEvent.ts
 import { EventEnum as EventEnum2 } from "@equalsite/types";
 var completedEvent = (payload) => ({
@@ -538,5 +561,10 @@ export {
   classifyError,
   createAuditService,
   createArtifactService,
-  crawlerMap
+  crawlerMap,
+  initSentry,
+  attachSentryErrorHandler,
+  captureWorkerFailure,
+  onUncaughtException,
+  onUnhandledRejection
 };

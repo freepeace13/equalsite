@@ -37,6 +37,7 @@ export type AuditPage = {
     url: string;
     status: UrlStatus;
     attemptsCount: number | null;
+    createdAt: string;
     startedAt: string | null;
     completedAt: string | null;
     failedAt: string | null;

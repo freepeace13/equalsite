@@ -21,8 +21,7 @@ class ProgressController extends Controller
             'scanInfo' => ScanInfo::fromAudit($audit),
             'scanQueue' => ScanQueue::fromAudit($audit),
             'scanUrls' => $audit->pages()
-                ->where('status', '!=', 'started')
-                ->orderByDesc('last_activity_at')
+                ->orderByDesc('created_at')
                 ->get()
                 ->map(fn (AuditPage $page) => $page->toProp())
                 ->all(),

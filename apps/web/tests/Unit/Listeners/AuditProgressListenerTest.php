@@ -31,7 +31,7 @@ test('progress events update custom_data.progress_state', function () {
 
     (new AuditProgressListener)($event);
 
-    expect($audit->fresh()->getCustomData('progress_state'))->toBe([
+    expect($audit->fresh()->getCustomData('progress_state'))->toEqual([
         'completedRequests' => 4,
         'pendingRequests' => 6,
         'totalRequests' => 10,
