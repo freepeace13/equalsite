@@ -206,6 +206,20 @@ export default function Welcome({ canRegister, canResetPassword }: Props) {
                 >
                     source on GitHub
                 </a>
+                {' · '}
+                <a
+                    href="/faq"
+                    className="underline hover:text-slate-600 dark:hover:text-slate-400"
+                >
+                    FAQ
+                </a>
+                {' · '}
+                <a
+                    href="/contact"
+                    className="underline hover:text-slate-600 dark:hover:text-slate-400"
+                >
+                    Contact
+                </a>
             </footer>
         </>
     );
