@@ -25,4 +25,13 @@ class ArtifactRepository implements ArtifactRepositoryContract
     {
         return Storage::path("{$this->directory}/{$id}/");
     }
+
+    public function delete(string $id): void
+    {
+        $path = $this->getPath($id);
+
+        if (File::isDirectory($path)) {
+            File::deleteDirectory($path);
+        }
+    }
 }
