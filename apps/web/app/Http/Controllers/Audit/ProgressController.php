@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Audit;
 
 use App\Http\Controllers\Controller;
 use App\Models\Audit;
+use App\Models\AuditPage;
 use App\Value\ScanInfo;
-use App\Value\ScannedUrl;
 use App\Value\ScanProgress;
 use App\Value\ScanQueue;
 use Illuminate\Http\Request;
@@ -20,7 +20,12 @@ class ProgressController extends Controller
         return Inertia::render('audit/progress', [
             'scanInfo' => ScanInfo::fromAudit($audit),
             'scanQueue' => ScanQueue::fromAudit($audit),
-            'scanUrls' => ScannedUrl::mapFromAudit($audit),
+            'scanUrls' => $audit->pages()
+                ->where('status', '!=', 'started')
+                ->orderByDesc('last_activity_at')
+                ->get()
+                ->map(fn (AuditPage $page) => $page->toProp())
+                ->all(),
             'scanProgress' => ScanProgress::fromAudit($audit),
         ]);
     }

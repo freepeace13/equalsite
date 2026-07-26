@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Audit;
 
 use App\Http\Controllers\Controller;
 use App\Models\Audit;
+use App\Models\AuditPage;
 use App\Models\Violation;
 use App\Services\HealthScoreCalculator;
 use App\Services\ReportPresenter;
-use App\Value\ScannedUrl;
 use App\Value\SeverityBreakdown;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,7 +22,7 @@ class ShowController extends Controller
             abort(404);
         }
 
-        $audit->loadMissing(['violations']);
+        $audit->loadMissing(['violations', 'pages']);
 
         $presenter = new ReportPresenter($audit);
 
@@ -36,7 +36,7 @@ class ShowController extends Controller
                 'healthScore' => $presenter->healthScore(),
                 // 'healthScore' => $calculator->calculateScore($audit),
                 'severityBreakdown' => SeverityBreakdown::fromAudit($audit),
-                'scannedUrls' => ScannedUrl::mapFromAudit($audit),
+                'scannedUrls' => $audit->pages->map(fn (AuditPage $page) => $page->toProp())->all(),
                 'summary' => $presenter->summary($presenter->scannedUrls()),
                 'highlights' => $presenter->highlights($presenter->scannedUrls()),
                 'pages' => $presenter->pages($presenter->scannedUrls()),
