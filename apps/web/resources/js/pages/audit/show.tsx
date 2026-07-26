@@ -4,10 +4,10 @@ import { index, show } from '@/routes/audit';
 import { show as siteShow, index as sitesIndex } from '@/routes/sites';
 import type { ServerityBreakdown } from '@equalsite/types';
 import type {
+    AuditPage,
     IViolation,
     RemediationGroup,
     ReportPages,
-    ScannedUrl,
 } from '@/types';
 import { str, hostnameOf } from '@/lib/utils';
 import {
@@ -39,7 +39,7 @@ type ReportProps = {
         siteUrl: string;
         healthScore: number;
         severityBreakdown: ServerityBreakdown;
-        scannedUrls: Record<string, ScannedUrl>;
+        scannedUrls: AuditPage[];
         summary: ReportSummary;
         highlights: unknown;
         pages: ReportPages;
@@ -56,7 +56,7 @@ const IMPACT_ORDER: ImpactKey[] = ['critical', 'serious', 'moderate', 'minor'];
 export default function Show({ report }: ReportProps) {
     const domain = hostnameOf(report.siteUrl);
 
-    const pageCount = Object.keys(report.scannedUrls).length;
+    const pageCount = report.scannedUrls.length;
 
     const groupedViolations = IMPACT_ORDER.reduce<
         Record<ImpactKey, IViolation[]>

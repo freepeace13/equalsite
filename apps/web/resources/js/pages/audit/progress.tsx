@@ -48,7 +48,7 @@ export default function Progress({
               : null;
     const issuesCount = countIssues(scanUrls);
     const failedPagesCount = countFailedPages(scanUrls);
-    const attemptedPagesCount = Object.keys(scanUrls).length;
+    const attemptedPagesCount = scanUrls.length;
     const badge = SCAN_STATUS_BADGE[scanInfo.status];
 
     return (
@@ -84,8 +84,9 @@ export default function Progress({
                         title="Some pages couldn't be scanned."
                         className="mt-6"
                     >
-                        {failedPagesCount} of {attemptedPagesCount} pages failed to scan.
-                        The report only covers the pages that completed successfully.
+                        {failedPagesCount} of {attemptedPagesCount} pages failed
+                        to scan. The report only covers the pages that completed
+                        successfully.
                     </Callout>
                 )}
 

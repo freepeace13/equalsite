@@ -1,7 +1,7 @@
 import usePagination from '@/hooks/use-pagination';
 import { friendlyErrorMessage } from '@/lib/audit-errors';
 import { pathnameOf } from '@/lib/utils';
-import type { ScannedUrl, ScanProgress } from '@/types';
+import type { AuditPage, ScanProgress } from '@/types';
 import {
     AlertTriangleIcon,
     CheckCircleIcon,
@@ -13,24 +13,21 @@ import {
 } from '@equalsite/ui';
 import { CancelButton } from './cancel-button';
 
-export function countIssues(scanUrls: Record<string, ScannedUrl>) {
-    return Object.values(scanUrls).reduce(
-        (sum, u) => sum + (u.violationsCount ?? 0),
-        0,
-    );
+export function countIssues(scanUrls: AuditPage[]) {
+    return scanUrls.reduce((sum, u) => sum + (u.violationsCount ?? 0), 0);
 }
 
-export function countFailedPages(scanUrls: Record<string, ScannedUrl>) {
-    return Object.values(scanUrls).filter((u) => u.status === 'failed').length;
+export function countFailedPages(scanUrls: AuditPage[]) {
+    return scanUrls.filter((u) => u.status === 'failed').length;
 }
 
-function FeedRow({ url, entry }: { url: string; entry: ScannedUrl }) {
-    const path = pathnameOf(url);
+function FeedRow({ entry }: { entry: AuditPage }) {
+    const path = pathnameOf(entry.url);
 
     if (entry.status === 'completed') {
         const count = entry.violationsCount ?? 0;
-        const critical = entry.severityBreakdown?.critical ?? 0;
-        const serious = entry.severityBreakdown?.serious ?? 0;
+        const critical = entry.criticalCount ?? 0;
+        const serious = entry.seriousCount ?? 0;
         const isCritical = critical > 0;
         const isModerate = !isCritical && serious > 0;
 
@@ -98,7 +95,7 @@ export function CrawlingPanel({
     onCancel,
 }: {
     scanProgress: ScanProgress;
-    scanUrls: Record<string, ScannedUrl>;
+    scanUrls: AuditPage[];
     onCancel: () => void;
 }) {
     const scanned = scanProgress.completedRequests ?? 0;
@@ -109,14 +106,9 @@ export function CrawlingPanel({
             : (scanProgress.progressPercentage ?? 0);
     const issuesCount = countIssues(scanUrls);
 
-    const orderedUrls = Object.entries(scanUrls)
-        .filter(([, e]) => e.status && e.status !== 'started')
-        .sort(([, a], [, b]) => {
-            const latestActivityAt = (entry: ScannedUrl) =>
-                entry.failedAt ?? entry.completedAt ?? entry.skippedAt ?? entry.startedAt ?? '';
-
-            return latestActivityAt(b).localeCompare(latestActivityAt(a));
-        });
+    const orderedUrls = scanUrls
+        .filter((e) => e.status !== 'started')
+        .sort((a, b) => b.lastActivityAt.localeCompare(a.lastActivityAt));
 
     const {
         currentItems: pagedUrls,
@@ -165,8 +157,8 @@ export function CrawlingPanel({
                         starting crawl…
                     </div>
                 ) : (
-                    pagedUrls.map(([url, entry]) => (
-                        <FeedRow key={url} url={url} entry={entry} />
+                    pagedUrls.map((entry) => (
+                        <FeedRow key={entry.url} entry={entry} />
                     ))
                 )}
             </div>
