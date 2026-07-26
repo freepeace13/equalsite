@@ -34,10 +34,10 @@ test('handlePageFailed stores the classified error code alongside the raw messag
 
     (new AuditPageSubscriber)->handlePageFailed($event);
 
-    $scannedUrls = $audit->fresh()->getCustomData('scanned_urls');
+    $page = $audit->fresh()->pages->firstWhere('url', 'https://acme.com/about');
 
-    expect($scannedUrls['https://acme.com/about']['errorCode'])->toBe('timeout');
-    expect($scannedUrls['https://acme.com/about']['status'])->toBe('failed');
+    expect($page->error_code)->toBe('timeout')
+        ->and($page->status)->toBe('failed');
 });
 
 test('handlePageStarted stores timestamp in ISO 8601 format', function () {
@@ -59,10 +59,9 @@ test('handlePageStarted stores timestamp in ISO 8601 format', function () {
 
     (new AuditPageSubscriber)->handlePageStarted($event);
 
-    $scannedUrls = $audit->fresh()->getCustomData('scanned_urls');
-    $timestamp = $scannedUrls['https://acme.com/homepage']['startedAt'];
+    $page = $audit->fresh()->pages->firstWhere('url', 'https://acme.com/homepage');
 
-    expect($timestamp)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/');
+    expect($page->started_at->toIso8601String())->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/');
 });
 
 test('handlePageSkipped stores timestamp in ISO 8601 format', function () {
@@ -84,10 +83,9 @@ test('handlePageSkipped stores timestamp in ISO 8601 format', function () {
 
     (new AuditPageSubscriber)->handlePageSkipped($event);
 
-    $scannedUrls = $audit->fresh()->getCustomData('scanned_urls');
-    $timestamp = $scannedUrls['https://acme.com/robots']['skippedAt'];
+    $page = $audit->fresh()->pages->firstWhere('url', 'https://acme.com/robots');
 
-    expect($timestamp)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/');
+    expect($page->skipped_at->toIso8601String())->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/');
 });
 
 test('handlePageFailed stores timestamp in ISO 8601 format', function () {
@@ -111,10 +109,9 @@ test('handlePageFailed stores timestamp in ISO 8601 format', function () {
 
     (new AuditPageSubscriber)->handlePageFailed($event);
 
-    $scannedUrls = $audit->fresh()->getCustomData('scanned_urls');
-    $timestamp = $scannedUrls['https://acme.com/error']['failedAt'];
+    $page = $audit->fresh()->pages->firstWhere('url', 'https://acme.com/error');
 
-    expect($timestamp)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/');
+    expect($page->failed_at->toIso8601String())->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/');
 });
 
 test('handlePageCompleted stores timestamp in ISO 8601 format', function () {
@@ -142,8 +139,7 @@ test('handlePageCompleted stores timestamp in ISO 8601 format', function () {
 
     (new AuditPageSubscriber)->handlePageCompleted($event);
 
-    $scannedUrls = $audit->fresh()->getCustomData('scanned_urls');
-    $timestamp = $scannedUrls['https://acme.com/services']['completedAt'];
+    $page = $audit->fresh()->pages->firstWhere('url', 'https://acme.com/services');
 
-    expect($timestamp)->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/');
+    expect($page->completed_at->toIso8601String())->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/');
 });

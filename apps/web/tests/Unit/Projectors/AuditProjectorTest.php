@@ -74,7 +74,7 @@ test('AuditProgressWasUpdated projects into custom_data.progress_state', functio
     ]);
 });
 
-test('page events merge into custom_data.scanned_urls keyed by url', function () {
+test('page events upsert into a single audit_pages row per url', function () {
     $user = User::factory()->create();
 
     AuditAggregateRoot::retrieve('crawler-5')
@@ -83,19 +83,26 @@ test('page events merge into custom_data.scanned_urls keyed by url', function ()
         ->pageCompleted('https://acme.com/about', 2, ['critical' => 1, 'serious' => 0, 'moderate' => 0, 'minor' => 1], '2026-07-26T00:01:00+00:00')
         ->persist();
 
-    $scannedUrls = Audit::findById('crawler-5')->getCustomData('scanned_urls');
+    $audit = Audit::findById('crawler-5');
 
-    expect($scannedUrls['https://acme.com/about'])->toBe([
-        'status' => 'completed',
-        'attemptsCount' => 1,
-        'startedAt' => '2026-07-26T00:00:00+00:00',
-        'violationsCount' => 2,
-        'severityBreakdown' => ['critical' => 1, 'serious' => 0, 'moderate' => 0, 'minor' => 1],
-        'completedAt' => '2026-07-26T00:01:00+00:00',
-    ]);
+    expect($audit->pages)->toHaveCount(1);
+
+    $page = $audit->pages->first();
+
+    expect($page->url)->toBe('https://acme.com/about')
+        ->and($page->status)->toBe('completed')
+        ->and($page->attempts_count)->toBe(1)
+        ->and($page->started_at->toIso8601String())->toBe('2026-07-26T00:00:00+00:00')
+        ->and($page->violations_count)->toBe(2)
+        ->and($page->critical_count)->toBe(1)
+        ->and($page->serious_count)->toBe(0)
+        ->and($page->moderate_count)->toBe(0)
+        ->and($page->minor_count)->toBe(1)
+        ->and($page->completed_at->toIso8601String())->toBe('2026-07-26T00:01:00+00:00')
+        ->and($page->last_activity_at->toIso8601String())->toBe('2026-07-26T00:01:00+00:00');
 });
 
-test('page skipped and page failed project the same scanned_urls shape as today', function () {
+test('page skipped and page failed project into separate audit_pages rows', function () {
     $user = User::factory()->create();
 
     AuditAggregateRoot::retrieve('crawler-6')
@@ -104,20 +111,43 @@ test('page skipped and page failed project the same scanned_urls shape as today'
         ->pageFailed('https://acme.com/about', 3, 'Navigation timeout', 'timeout', '2026-07-26T00:01:00+00:00')
         ->persist();
 
-    $scannedUrls = Audit::findById('crawler-6')->getCustomData('scanned_urls');
+    $audit = Audit::findById('crawler-6');
 
-    expect($scannedUrls['https://acme.com/robots'])->toBe([
-        'status' => 'skipped',
-        'skippingReason' => 'Blocked by robots.txt',
-        'skippedAt' => '2026-07-26T00:00:00+00:00',
-    ]);
-    expect($scannedUrls['https://acme.com/about'])->toBe([
-        'status' => 'failed',
-        'attemptsCount' => 3,
-        'errorMessage' => 'Navigation timeout',
-        'errorCode' => 'timeout',
-        'failedAt' => '2026-07-26T00:01:00+00:00',
-    ]);
+    $skipped = $audit->pages->firstWhere('url', 'https://acme.com/robots');
+    $failed = $audit->pages->firstWhere('url', 'https://acme.com/about');
+
+    expect($skipped->status)->toBe('skipped')
+        ->and($skipped->skipping_reason)->toBe('Blocked by robots.txt')
+        ->and($skipped->skipped_at->toIso8601String())->toBe('2026-07-26T00:00:00+00:00')
+        ->and($skipped->last_activity_at->toIso8601String())->toBe('2026-07-26T00:00:00+00:00');
+
+    expect($failed->status)->toBe('failed')
+        ->and($failed->attempts_count)->toBe(3)
+        ->and($failed->error_message)->toBe('Navigation timeout')
+        ->and($failed->error_code)->toBe('timeout')
+        ->and($failed->failed_at->toIso8601String())->toBe('2026-07-26T00:01:00+00:00')
+        ->and($failed->last_activity_at->toIso8601String())->toBe('2026-07-26T00:01:00+00:00');
+});
+
+test('a page transitioning from started to failed updates a single row, preserving attemptsCount history', function () {
+    $user = User::factory()->create();
+
+    AuditAggregateRoot::retrieve('crawler-10')
+        ->create($user->id, 'https://acme.com', 'acme.com')
+        ->pageStarted('https://acme.com/about', 1, '2026-07-26T00:00:00+00:00')
+        ->pageFailed('https://acme.com/about', 2, 'Navigation timeout', 'timeout', '2026-07-26T00:01:00+00:00')
+        ->persist();
+
+    $audit = Audit::findById('crawler-10');
+
+    expect($audit->pages)->toHaveCount(1);
+
+    $page = $audit->pages->first();
+
+    expect($page->status)->toBe('failed')
+        ->and($page->attempts_count)->toBe(2)
+        ->and($page->started_at->toIso8601String())->toBe('2026-07-26T00:00:00+00:00')
+        ->and($page->failed_at->toIso8601String())->toBe('2026-07-26T00:01:00+00:00');
 });
 
 test('AuditWasFailed projects status, failure_reason, and failure_code', function () {

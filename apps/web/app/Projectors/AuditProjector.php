@@ -3,6 +3,7 @@
 namespace App\Projectors;
 
 use App\Models\Audit;
+use App\Models\AuditPage;
 use App\StorableEvents\Audit\AuditPageWasCompleted;
 use App\StorableEvents\Audit\AuditPageWasFailed;
 use App\StorableEvents\Audit\AuditPageWasSkipped;
@@ -60,40 +61,47 @@ class AuditProjector extends Projector
 
     public function onAuditPageWasStarted(AuditPageWasStarted $event): void
     {
-        $this->mergeScannedUrl($event, $event->url, [
+        $this->upsertPage($event, $event->url, [
             'status' => 'started',
-            'attemptsCount' => $event->attemptsCount,
-            'startedAt' => $event->startedAt,
+            'attempts_count' => $event->attemptsCount,
+            'started_at' => $event->startedAt,
+            'last_activity_at' => $event->startedAt,
         ]);
     }
 
     public function onAuditPageWasSkipped(AuditPageWasSkipped $event): void
     {
-        $this->mergeScannedUrl($event, $event->url, [
+        $this->upsertPage($event, $event->url, [
             'status' => 'skipped',
-            'skippingReason' => $event->reason,
-            'skippedAt' => $event->skippedAt,
+            'skipping_reason' => $event->reason,
+            'skipped_at' => $event->skippedAt,
+            'last_activity_at' => $event->skippedAt,
         ]);
     }
 
     public function onAuditPageWasFailed(AuditPageWasFailed $event): void
     {
-        $this->mergeScannedUrl($event, $event->url, [
+        $this->upsertPage($event, $event->url, [
             'status' => 'failed',
-            'attemptsCount' => $event->attemptsCount,
-            'errorMessage' => $event->errorMessage,
-            'errorCode' => $event->errorCode,
-            'failedAt' => $event->failedAt,
+            'attempts_count' => $event->attemptsCount,
+            'error_message' => $event->errorMessage,
+            'error_code' => $event->errorCode,
+            'failed_at' => $event->failedAt,
+            'last_activity_at' => $event->failedAt,
         ]);
     }
 
     public function onAuditPageWasCompleted(AuditPageWasCompleted $event): void
     {
-        $this->mergeScannedUrl($event, $event->url, [
+        $this->upsertPage($event, $event->url, [
             'status' => 'completed',
-            'violationsCount' => $event->violationsCount,
-            'severityBreakdown' => $event->severityBreakdown,
-            'completedAt' => $event->completedAt,
+            'violations_count' => $event->violationsCount,
+            'critical_count' => $event->severityBreakdown['critical'],
+            'serious_count' => $event->severityBreakdown['serious'],
+            'moderate_count' => $event->severityBreakdown['moderate'],
+            'minor_count' => $event->severityBreakdown['minor'],
+            'completed_at' => $event->completedAt,
+            'last_activity_at' => $event->completedAt,
         ]);
     }
 
@@ -122,14 +130,18 @@ class AuditProjector extends Projector
         ]);
     }
 
-    protected function mergeScannedUrl(ShouldBeStored $event, string $url, array $attributes): void
+    protected function upsertPage(ShouldBeStored $event, string $url, array $attributes): void
     {
-        $this->audit($event)?->tapCustomData('scanned_urls', function (array $prev) use ($url, $attributes) {
-            $prevAttr = $prev[$url] ?? [];
-            $prev[$url] = [...$prevAttr, ...$attributes];
+        $audit = $this->audit($event);
 
-            return $prev;
-        }, []);
+        if (! $audit) {
+            return;
+        }
+
+        AuditPage::updateOrCreate(
+            ['audit_id' => $audit->id, 'url' => $url],
+            $attributes,
+        );
     }
 
     protected function audit(ShouldBeStored $event): ?Audit
