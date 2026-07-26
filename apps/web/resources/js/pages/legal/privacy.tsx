@@ -65,10 +65,41 @@ export default function Privacy({ lastUpdated }: PrivacyProps) {
                         </h2>
                         <p className="mt-2">
                             We share data with a small number of vendors who
-                            help us run the Service: Paddle (payment processing,
-                            as our Merchant of Record) and our
-                            infrastructure/hosting provider. If we add analytics
-                            or other processors in the future, we'll list them
+                            help us run the Service:
+                        </p>
+                        <ul className="mt-2 list-disc space-y-1 pl-5">
+                            <li>
+                                <strong>Paddle</strong> — payment processing,
+                                acting as our Merchant of Record. Paddle
+                                publishes its own{' '}
+                                <a
+                                    href="https://www.paddle.com/legal"
+                                    className="underline"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    Data Processing Agreement
+                                </a>
+                                , which covers its processing of your payment
+                                data on our behalf.
+                            </li>
+                            <li>
+                                <strong>
+                                    Our hosting/infrastructure provider
+                                </strong>{' '}
+                                — runs the servers the Service operates on.
+                            </li>
+                            <li>
+                                <strong>
+                                    Our transactional email provider
+                                </strong>{' '}
+                                — delivers account emails such as password
+                                resets and support replies.
+                            </li>
+                        </ul>
+                        <p className="mt-2">
+                            We don't use any analytics or advertising vendors
+                            today. If that changes, we'll list the new vendor
                             here.
                         </p>
                     </section>
@@ -78,19 +109,12 @@ export default function Privacy({ lastUpdated }: PrivacyProps) {
                             4. Data retention
                         </h2>
                         <p className="mt-2">
-                            We retain your account data for as long as your
-                            account is active. Audit history visible in-product
-                            follows your plan's retention window; older audits
-                            may still exist in storage beyond that window today.
-                            If you'd like your audit history fully deleted
-                            rather than just hidden, contact us at{' '}
-                            <a
-                                href="mailto:support@equalsite.app"
-                                className="underline"
-                            >
-                                support@equalsite.app
-                            </a>
-                            .
+                            We retain audit data for up to 24 months after the
+                            most recent scan of that site, or until you delete
+                            your account, whichever is sooner. Deleting your
+                            account permanently deletes your account data, audit
+                            history, and stored scan artifacts — it isn't just
+                            hidden from view.
                         </p>
                     </section>
 
@@ -101,14 +125,17 @@ export default function Privacy({ lastUpdated }: PrivacyProps) {
                         <p className="mt-2">
                             Depending on where you live, you may have the right
                             to access, export, correct, or delete your personal
-                            data. Contact us at{' '}
+                            data. You can export a copy of your account and
+                            audit data yourself at any time from Settings →
+                            Profile, or delete your account entirely from the
+                            same page. Contact us at{' '}
                             <a
                                 href="mailto:support@equalsite.app"
                                 className="underline"
                             >
                                 support@equalsite.app
                             </a>{' '}
-                            to exercise these rights.
+                            to exercise any other rights.
                         </p>
                     </section>
 
@@ -131,10 +158,12 @@ export default function Privacy({ lastUpdated }: PrivacyProps) {
                             7. Cookies
                         </h2>
                         <p className="mt-2">
-                            We use the minimum cookies necessary to keep you
-                            signed in and to protect the Service against abuse.
-                            We'll publish a dedicated cookie notice with more
-                            detail as the Service grows.
+                            We use only strictly-necessary session and
+                            authentication cookies to keep you signed in and
+                            protect the Service against abuse. No tracking,
+                            analytics, or marketing cookies are set today. If we
+                            add any in the future, we'll update this section
+                            and, where required, ask for your consent first.
                         </p>
                     </section>
 
