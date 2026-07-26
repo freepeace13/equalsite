@@ -2,6 +2,7 @@ import { Button, FormField, Heading, Input } from '@equalsite/ui';
 import { Form, Head, Link, usePage } from '@inertiajs/react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/delete-user';
+import ExportData from '@/components/export-data';
 import { edit } from '@/routes/profile';
 import { send } from '@/routes/verification';
 
@@ -104,6 +105,8 @@ export default function Profile({
                     )}
                 </Form>
             </div>
+
+            <ExportData />
 
             <DeleteUser />
         </>
