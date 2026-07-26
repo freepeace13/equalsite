@@ -90,5 +90,6 @@ function makeAuditViolation(
         'description' => 'Elements must meet minimum color contrast ratio requirements',
         'failure_summary' => 'Fix any of the following',
         'help_url' => 'https://dequeuniversity.com/rules/axe/4.7/color-contrast',
+        'nodes' => [],
     ]);
 }
