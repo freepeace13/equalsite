@@ -93,3 +93,13 @@ function makeAuditViolation(
         'nodes' => [],
     ]);
 }
+
+// Mirrors App\Actions\CreateAuditViolation's node-recording pattern.
+// Violation::addNode() exists but is dead/broken code (it tries to append
+// to the NodeCollection object as if it were an array) — this uses the
+// same nodes->sync()+save() call the real ingestion path uses instead.
+function addViolationNode(Violation $violation, string $url, string $target, string $html): void
+{
+    $violation->nodes->sync(['url' => $url, 'target' => $target, 'html' => $html]);
+    $violation->save();
+}

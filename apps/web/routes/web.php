@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Audit\CancelController;
+use App\Http\Controllers\Audit\ExportMarkdownController;
 use App\Http\Controllers\Audit\IndexController as AuditIndexController;
 use App\Http\Controllers\Audit\ProgressController;
 use App\Http\Controllers\Audit\ShowController as AuditShowController;
@@ -25,5 +26,6 @@ Route::middleware(['auth'])->group(function () {
         ->name('audit.store');
     Route::delete('/audit/{id}', CancelController::class)->name('audit.cancel');
     Route::get('/audit/{id}/progress', ProgressController::class)->name('audit.progress');
+    Route::get('/audit/{id}/export-markdown', ExportMarkdownController::class)->name('audit.export-markdown');
     Route::get('/audit/{id}', AuditShowController::class)->name('audit.show');
 });

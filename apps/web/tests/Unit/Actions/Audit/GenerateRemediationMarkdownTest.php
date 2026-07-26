@@ -2,23 +2,12 @@
 
 use App\Actions\Audit\GenerateRemediationMarkdown;
 use App\Models\User;
-use App\Models\Violation;
 use App\Value\Impact;
 use App\Value\Status;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
-
-// Mirrors App\Actions\CreateAuditViolation's node-recording pattern.
-// Violation::addNode() exists but is dead/broken code (it tries to append
-// to the NodeCollection object as if it were an array) — this uses the
-// same nodes->sync()+save() call the real ingestion path uses instead.
-function addViolationNode(Violation $violation, string $url, string $target, string $html): void
-{
-    $violation->nodes->sync(['url' => $url, 'target' => $target, 'html' => $html]);
-    $violation->save();
-}
 
 test('generates a heading with domain, audit id, and health score', function () {
     $user = User::factory()->create();
