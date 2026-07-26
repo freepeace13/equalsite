@@ -13,7 +13,7 @@ import type {
     StartedWsEvent,
 } from '@equalsite/types';
 import { omit } from '@/lib/obj';
-import type { ScanInfo, ScannedUrl, ScanProgress, ScanQueue } from '@/types';
+import type { AuditPage, ScanInfo, ScanProgress, ScanQueue } from '@/types';
 
 type AuditProgressWsEvent =
     | QueuedWsEvent
@@ -31,8 +31,24 @@ export type AuditProgressStreamProps = {
     scanInfo: ScanInfo;
     scanProgress: ScanProgress;
     scanQueue: ScanQueue;
-    scanUrls: Record<string, ScannedUrl>;
+    scanUrls: AuditPage[];
 };
+
+function upsertPage(
+    pages: AuditPage[],
+    url: string,
+    patch: Partial<AuditPage>,
+): AuditPage[] {
+    const index = pages.findIndex((page) => page.url === url);
+
+    if (index === -1) {
+        return [...pages, { url, ...patch } as AuditPage];
+    }
+
+    const next = [...pages];
+    next[index] = { ...next[index], ...patch } as AuditPage;
+    return next;
+}
 
 export function useAuditProgressStream(auditId: string): void {
     useEchoPublic<AuditProgressWsEvent>(
@@ -127,14 +143,12 @@ export function useAuditProgressStream(auditId: string): void {
                     preserveScroll: true,
                     props: (current) => ({
                         ...current,
-                        scanUrls: {
-                            ...current.scanUrls,
-                            [data.pageUrl]: {
-                                status: 'started',
-                                attemptsCount: data.attemptsCount,
-                                startedAt: timestamp,
-                            },
-                        },
+                        scanUrls: upsertPage(current.scanUrls, data.pageUrl, {
+                            status: 'started',
+                            attemptsCount: data.attemptsCount,
+                            startedAt: timestamp,
+                            lastActivityAt: timestamp,
+                        }),
                     }),
                 });
             } else if (e.type === 'audit.page.skipped') {
@@ -143,14 +157,12 @@ export function useAuditProgressStream(auditId: string): void {
                     preserveScroll: true,
                     props: (current) => ({
                         ...current,
-                        scanUrls: {
-                            ...current.scanUrls,
-                            [data.pageUrl]: {
-                                status: 'skipped',
-                                skippingReason: data.reason,
-                                skippedAt: timestamp,
-                            },
-                        },
+                        scanUrls: upsertPage(current.scanUrls, data.pageUrl, {
+                            status: 'skipped',
+                            skippingReason: data.reason,
+                            skippedAt: timestamp,
+                            lastActivityAt: timestamp,
+                        }),
                     }),
                 });
             } else if (e.type === 'audit.page.failed') {
@@ -159,17 +171,14 @@ export function useAuditProgressStream(auditId: string): void {
                     preserveScroll: true,
                     props: (current) => ({
                         ...current,
-                        scanUrls: {
-                            ...current.scanUrls,
-                            [data.pageUrl]: {
-                                ...current.scanUrls[data.pageUrl],
-                                status: 'failed',
-                                errorMessage: data.errorMessage,
-                                errorCode: data.errorCode,
-                                attemptsCount: data.attemptsCount,
-                                failedAt: timestamp,
-                            },
-                        },
+                        scanUrls: upsertPage(current.scanUrls, data.pageUrl, {
+                            status: 'failed',
+                            errorMessage: data.errorMessage,
+                            errorCode: data.errorCode,
+                            attemptsCount: data.attemptsCount,
+                            failedAt: timestamp,
+                            lastActivityAt: timestamp,
+                        }),
                     }),
                 });
             } else if (e.type === 'audit.page.completed') {
@@ -178,17 +187,16 @@ export function useAuditProgressStream(auditId: string): void {
                     preserveScroll: true,
                     props: (current) => ({
                         ...current,
-                        scanUrls: {
-                            ...current.scanUrls,
-                            [data.pageUrl]: {
-                                ...current.scanUrls[data.pageUrl],
-                                status: 'completed',
-                                violationsCount: data.violationsCount,
-                                passesCount: data.passesCount,
-                                severityBreakdown: data.severityBreakdown,
-                                completedAt: timestamp,
-                            },
-                        },
+                        scanUrls: upsertPage(current.scanUrls, data.pageUrl, {
+                            status: 'completed',
+                            violationsCount: data.violationsCount,
+                            criticalCount: data.severityBreakdown.critical,
+                            seriousCount: data.severityBreakdown.serious,
+                            moderateCount: data.severityBreakdown.moderate,
+                            minorCount: data.severityBreakdown.minor,
+                            completedAt: timestamp,
+                            lastActivityAt: timestamp,
+                        }),
                     }),
                 });
             }

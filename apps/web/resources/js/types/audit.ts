@@ -1,8 +1,4 @@
-import type {
-    ProgressState,
-    QueueStatus,
-    ServerityBreakdown,
-} from '@equalsite/types';
+import type { ProgressState, QueueStatus } from '@equalsite/types';
 
 export enum ImpactLevel {
     critical = 0,
@@ -37,19 +33,23 @@ export type ScanInfo = {
     createdAt: string;
 };
 
-export type ScannedUrl = {
-    status?: UrlStatus | undefined;
-    attemptsCount?: number | undefined;
-    startedAt?: string | undefined;
-    skippedAt?: string | undefined;
-    failedAt?: string | undefined;
-    completedAt?: string | undefined;
-    errorMessage?: string | undefined;
-    errorCode?: string | undefined;
-    skippingReason?: string | undefined;
-    violationsCount?: number | undefined;
-    passesCount?: number | undefined;
-    severityBreakdown?: ServerityBreakdown | undefined;
+export type AuditPage = {
+    url: string;
+    status: UrlStatus;
+    attemptsCount: number | null;
+    startedAt: string | null;
+    completedAt: string | null;
+    failedAt: string | null;
+    skippedAt: string | null;
+    lastActivityAt: string;
+    violationsCount: number | null;
+    criticalCount: number | null;
+    seriousCount: number | null;
+    moderateCount: number | null;
+    minorCount: number | null;
+    errorCode: string | null;
+    errorMessage: string | null;
+    skippingReason: string | null;
 };
 
 export interface RemediationSampleNode {
