@@ -5,7 +5,6 @@ use App\Http\Controllers\Audit\IndexController as AuditIndexController;
 use App\Http\Controllers\Audit\ProgressController;
 use App\Http\Controllers\Audit\ShowController as AuditShowController;
 use App\Http\Controllers\Audit\StoreController;
-use App\Http\Controllers\Auth\MagicLinkLoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Sites\IndexController;
@@ -28,7 +27,3 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/audit/{id}/progress', ProgressController::class)->name('audit.progress');
     Route::get('/audit/{id}', AuditShowController::class)->name('audit.show');
 });
-
-Route::get('magic-link/{user}', MagicLinkLoginController::class)
-    ->middleware('signed')
-    ->name('magic-link.login');

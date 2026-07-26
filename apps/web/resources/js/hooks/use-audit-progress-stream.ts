@@ -77,6 +77,7 @@ export function useAuditProgressStream(auditId: string): void {
                 const data = (e as QueuedWsEvent).data;
                 router.replace<AuditProgressStreamProps>({
                     preserveScroll: true,
+                    preserveState: true,
                     props: (current) => ({
                         ...current,
                         scanQueue: omit(data, ['auditId']) as ScanQueue,
@@ -86,6 +87,7 @@ export function useAuditProgressStream(auditId: string): void {
                 const { timestamp } = e as StartedWsEvent;
                 router.replace<AuditProgressStreamProps>({
                     preserveScroll: true,
+                    preserveState: true,
                     props: (current) => ({
                         ...current,
                         scanInfo: {
@@ -99,6 +101,7 @@ export function useAuditProgressStream(auditId: string): void {
                 const { data } = e as ProgressWsEvent;
                 router.replace<AuditProgressStreamProps>({
                     preserveScroll: true,
+                    preserveState: true,
                     props: (current) => ({
                         ...current,
                         scanProgress: { ...data },
@@ -108,6 +111,7 @@ export function useAuditProgressStream(auditId: string): void {
                 const { timestamp } = e as CompletedWsEvent;
                 router.replace<AuditProgressStreamProps>({
                     preserveScroll: true,
+                    preserveState: true,
                     props: (current) => ({
                         ...current,
                         scanInfo: {
@@ -121,6 +125,7 @@ export function useAuditProgressStream(auditId: string): void {
                 const { error, errorCode } = (e as FailedWsEvent).data;
                 router.replace<AuditProgressStreamProps>({
                     preserveScroll: true,
+                    preserveState: true,
                     props: (current) => ({
                         ...current,
                         scanInfo: {
@@ -135,6 +140,7 @@ export function useAuditProgressStream(auditId: string): void {
                 const { timestamp } = e as CancelledWsEvent;
                 router.replace<AuditProgressStreamProps>({
                     preserveScroll: true,
+                    preserveState: true,
                     props: (current) => ({
                         ...current,
                         scanInfo: {
@@ -148,6 +154,7 @@ export function useAuditProgressStream(auditId: string): void {
                 const { data, timestamp } = e as PageStartedWsEvent;
                 router.replace<AuditProgressStreamProps>({
                     preserveScroll: true,
+                    preserveState: true,
                     props: (current) => ({
                         ...current,
                         scanUrls: upsertPage(current.scanUrls, data.pageUrl, {
@@ -162,6 +169,7 @@ export function useAuditProgressStream(auditId: string): void {
                 const { data, timestamp } = e as PageSkippedWsEvent;
                 router.replace<AuditProgressStreamProps>({
                     preserveScroll: true,
+                    preserveState: true,
                     props: (current) => ({
                         ...current,
                         scanUrls: upsertPage(current.scanUrls, data.pageUrl, {
@@ -176,6 +184,7 @@ export function useAuditProgressStream(auditId: string): void {
                 const { data, timestamp } = e as PageFailedWsEvent;
                 router.replace<AuditProgressStreamProps>({
                     preserveScroll: true,
+                    preserveState: true,
                     props: (current) => ({
                         ...current,
                         scanUrls: upsertPage(current.scanUrls, data.pageUrl, {
@@ -192,6 +201,7 @@ export function useAuditProgressStream(auditId: string): void {
                 const { data, timestamp } = e as PageCompletedWsEvent;
                 router.replace<AuditProgressStreamProps>({
                     preserveScroll: true,
+                    preserveState: true,
                     props: (current) => ({
                         ...current,
                         scanUrls: upsertPage(current.scanUrls, data.pageUrl, {
