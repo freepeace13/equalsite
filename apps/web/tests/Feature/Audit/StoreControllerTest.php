@@ -4,6 +4,7 @@ use App\Contracts\Spider;
 use App\Exceptions\Spider\SpiderUnavailableException;
 use App\Exceptions\Spider\SpiderValidationException;
 use App\Models\Audit;
+use App\Models\DomainBlock;
 use App\Models\User;
 use App\Support\Spider\SpiderOptions;
 use App\Value\Status;
@@ -278,5 +279,18 @@ test('submitting without the confirmedAuthorized field at all is rejected', func
     );
 
     $response->assertSessionHasErrors('confirmedAuthorized');
+    expect(Audit::query()->count())->toBe(0);
+});
+
+test('submitting a url for a blocked domain is denied with a validation-style error, not a 403', function () {
+    DomainBlock::create(['domain' => 'blocked-example.com']);
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post(
+        route('audit.store'),
+        validAuditPayload(['url' => 'https://blocked-example.com']),
+    );
+
+    $response->assertRedirect()->assertSessionHasErrors('url');
     expect(Audit::query()->count())->toBe(0);
 });

@@ -5,9 +5,11 @@ namespace App\Actions\Audit;
 use App\AggregateRoots\AuditAggregateRoot;
 use App\Contracts\Spider;
 use App\Exceptions\Audit\AuditInProgressException;
+use App\Exceptions\Audit\DomainBlockedException;
 use App\Exceptions\Audit\RescanTooSoonException;
 use App\Exceptions\Audit\SiteCapExceededException;
 use App\Models\Audit;
+use App\Models\DomainBlock;
 use App\Models\User;
 use App\Support\Plan\PlanLimits;
 use App\Support\Spider\EnqueueStrategy;
@@ -27,6 +29,7 @@ class CreateAudit
     {
         $limits = PlanLimits::for($user->plan);
 
+        $this->assertDomainNotBlocked($url);
         $this->assertSiteCapAllowed($user, $url, $limits);
         $this->assertRescanAllowed($user, $url, $limits);
 
@@ -53,6 +56,18 @@ class CreateAudit
             ->persist();
 
         return Audit::findById($response['id']);
+    }
+
+    /**
+     * @throws DomainBlockedException
+     */
+    protected function assertDomainNotBlocked(string $url): void
+    {
+        $domain = parse_url($url, PHP_URL_HOST);
+
+        if ($domain && DomainBlock::isBlocked($domain)) {
+            throw new DomainBlockedException($domain);
+        }
     }
 
     /**

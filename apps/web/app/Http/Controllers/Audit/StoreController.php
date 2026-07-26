@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Audit;
 
 use App\Actions\Audit\CreateAudit;
 use App\Exceptions\Audit\AuditInProgressException;
+use App\Exceptions\Audit\DomainBlockedException;
 use App\Exceptions\Audit\RescanTooSoonException;
 use App\Exceptions\Audit\SiteCapExceededException;
 use App\Exceptions\Spider\SpiderException;
@@ -28,6 +29,8 @@ class StoreController extends Controller
                 ->withErrors(['url' => $e->getMessage()])
                 ->with('rescanAvailableAt', $e->availableAt->toDateTimeString());
         } catch (SiteCapExceededException $e) {
+            return back()->withErrors(['url' => $e->getMessage()]);
+        } catch (DomainBlockedException $e) {
             return back()->withErrors(['url' => $e->getMessage()]);
         } catch (SpiderException $e) {
             report($e);

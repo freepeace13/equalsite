@@ -3,8 +3,10 @@
 use App\Actions\Audit\CreateAudit;
 use App\Contracts\Spider;
 use App\Exceptions\Audit\AuditInProgressException;
+use App\Exceptions\Audit\DomainBlockedException;
 use App\Exceptions\Audit\RescanTooSoonException;
 use App\Exceptions\Audit\SiteCapExceededException;
+use App\Models\DomainBlock;
 use App\Models\User;
 use App\Value\Status;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -158,4 +160,36 @@ test('a free account bypasses the re-scan frequency when monetization is disable
     $audit = (new CreateAudit($spider))->create($user, 'https://acme.com'); // re-submitting same domain within rescan window
 
     expect($audit->crawler_id)->toBe('second-scan');
+});
+
+test('an account is blocked from scanning a domain on the block list', function () {
+    DomainBlock::create(['domain' => 'blocked-example.com']);
+    $user = User::factory()->create();
+
+    $action = new CreateAudit(Mockery::mock(Spider::class));
+
+    expect(fn () => $action->create($user, 'https://blocked-example.com'))
+        ->toThrow(DomainBlockedException::class);
+});
+
+test('a pro account is also blocked from scanning a domain on the block list', function () {
+    DomainBlock::create(['domain' => 'blocked-example.com']);
+    $user = User::factory()->pro()->create();
+
+    $action = new CreateAudit(Mockery::mock(Spider::class));
+
+    expect(fn () => $action->create($user, 'https://blocked-example.com'))
+        ->toThrow(DomainBlockedException::class);
+});
+
+test('a domain that is not on the block list is unaffected', function () {
+    DomainBlock::create(['domain' => 'blocked-example.com']);
+    $user = User::factory()->create();
+
+    $spider = Mockery::mock(Spider::class);
+    $spider->shouldReceive('create')->once()->andReturn(['id' => 'not-blocked']);
+
+    $audit = (new CreateAudit($spider))->create($user, 'https://acme.com');
+
+    expect($audit->crawler_id)->toBe('not-blocked');
 });
