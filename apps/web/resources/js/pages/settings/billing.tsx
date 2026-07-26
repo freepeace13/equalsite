@@ -117,14 +117,21 @@ function SubscribeCard({
                 {price.formatted}
             </p>
             {!isCurrent && (
-                <Button
-                    className="mt-4 w-full"
-                    size="sm"
-                    onClick={handleSubscribe}
-                    disabled={processing}
-                >
-                    Subscribe
-                </Button>
+                <>
+                    <Button
+                        className="mt-4 w-full"
+                        size="sm"
+                        onClick={handleSubscribe}
+                        disabled={processing}
+                    >
+                        Subscribe
+                    </Button>
+                    <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">
+                        <a href="/refund-policy" className="underline">
+                            Refund policy
+                        </a>
+                    </p>
+                </>
             )}
         </SurfacePanel>
     );
@@ -200,7 +207,15 @@ export default function Billing({ plan, subscription, prices }: BillingProps) {
                                         )}
                                     </p>
                                 )}
-                                <CancelSubscriptionButton />
+                                <div className="flex items-center gap-3">
+                                    <CancelSubscriptionButton />
+                                    <a
+                                        href="/refund-policy"
+                                        className="text-xs text-slate-500 underline dark:text-slate-400"
+                                    >
+                                        Refund policy
+                                    </a>
+                                </div>
                             </>
                         )}
                     </div>
