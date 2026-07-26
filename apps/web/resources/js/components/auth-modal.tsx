@@ -253,6 +253,18 @@ function RegisterForm() {
                         {processing && <Spinner />}
                         Create account
                     </Button>
+
+                    <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+                        By creating an account you agree to our{' '}
+                        <a href="/terms" className="underline">
+                            Terms of Service
+                        </a>{' '}
+                        and{' '}
+                        <a href="/privacy" className="underline">
+                            Privacy Policy
+                        </a>
+                        .
+                    </p>
                 </>
             )}
         </Form>
