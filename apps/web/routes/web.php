@@ -10,6 +10,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Legal\ContactController;
 use App\Http\Controllers\Legal\FaqController;
+use App\Http\Controllers\Legal\TermsController;
 use App\Http\Controllers\Sites\IndexController;
 use App\Http\Controllers\Sites\ShowController;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,7 @@ Route::post('/contact', [ContactController::class, 'store'])
     ->middleware('throttle:contact-form')
     ->name('legal.contact.store');
 Route::get('/faq', FaqController::class)->name('legal.faq');
+Route::get('/terms', TermsController::class)->name('legal.terms');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
