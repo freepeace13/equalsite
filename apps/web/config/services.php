@@ -40,4 +40,8 @@ return [
         'port' => env('CRAWLER_PORT', 3000),
         'secret' => env('CRAWLER_SECRET'),
     ],
+
+    'support' => [
+        'email' => env('SUPPORT_EMAIL', 'support@equalsite.app'),
+    ],
 ];
