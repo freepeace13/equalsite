@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { PublicHeader } from '@/components/public-header';
-import { index, show } from '@/routes/audit';
+import { exportMarkdown, index, show } from '@/routes/audit';
 import { show as siteShow, index as sitesIndex } from '@/routes/sites';
 import type { ServerityBreakdown } from '@equalsite/types';
 import type {
@@ -15,6 +15,7 @@ import {
     type ImpactKey,
 } from '@/components/reporting/impact-group';
 import {
+    Button,
     CheckIcon,
     EmptyState,
     GlobeIcon,
@@ -86,26 +87,33 @@ export default function Show({ report }: ReportProps) {
 
             <main className="container mx-auto py-10">
                 {/* Score + narrative */}
-                <div className="mb-6 flex items-start gap-5 border-b border-slate-200 pb-6 dark:border-slate-800">
-                    <ScoreRing
-                        score={report.healthScore}
-                        size={76}
-                        strokeWidth={7}
-                    />
-                    <div>
-                        <p className="mb-1.5 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                            <GlobeIcon width={13} height={13} />
-                            {`${domain} · ${pageCount} ${str.plural('page', pageCount)} scanned`}
-                        </p>
-                        <h1
-                            className="font-display text-lg leading-snug font-medium"
-                            aria-label={`Accessibility score: ${report.healthScore} out of 100`}
-                        >
-                            {report.summary.totalIssuesFound > 0
-                                ? `${report.summary.totalIssuesFound} ${str.plural('issue', report.summary.totalIssuesFound)} found — ${report.summary.totalPagesAtRisk} of ${report.summary.totalPagesScanned} ${str.plural('page', report.summary.totalPagesScanned)} affected`
-                                : `no issues found across ${report.summary.totalPagesScanned} ${str.plural('page', report.summary.totalPagesScanned)}`}
-                        </h1>
+                <div className="mb-6 flex items-start justify-between gap-5 border-b border-slate-200 pb-6 dark:border-slate-800">
+                    <div className="flex items-start gap-5">
+                        <ScoreRing
+                            score={report.healthScore}
+                            size={76}
+                            strokeWidth={7}
+                        />
+                        <div>
+                            <p className="mb-1.5 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                                <GlobeIcon width={13} height={13} />
+                                {`${domain} · ${pageCount} ${str.plural('page', pageCount)} scanned`}
+                            </p>
+                            <h1
+                                className="font-display text-lg leading-snug font-medium"
+                                aria-label={`Accessibility score: ${report.healthScore} out of 100`}
+                            >
+                                {report.summary.totalIssuesFound > 0
+                                    ? `${report.summary.totalIssuesFound} ${str.plural('issue', report.summary.totalIssuesFound)} found — ${report.summary.totalPagesAtRisk} of ${report.summary.totalPagesScanned} ${str.plural('page', report.summary.totalPagesScanned)} affected`
+                                    : `no issues found across ${report.summary.totalPagesScanned} ${str.plural('page', report.summary.totalPagesScanned)}`}
+                            </h1>
+                        </div>
                     </div>
+                    <Button size="sm" variant="secondary" asChild>
+                        <a href={exportMarkdown(report.auditId).url} download>
+                            export spec
+                        </a>
+                    </Button>
                 </div>
 
                 {/* Priority overview */}
