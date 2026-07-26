@@ -112,5 +112,9 @@ class AppServiceProvider extends ServiceProvider
                 ->by($request->user()->id)
                 ->after(fn ($response) => $response->getStatusCode() < 400 && blank(session('errors')));
         });
+
+        RateLimiter::for('contact-form', function (Request $request) {
+            return Limit::perMinute(3)->by($request->user()?->id ?: $request->ip());
+        });
     }
 }

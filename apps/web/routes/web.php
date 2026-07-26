@@ -8,6 +8,7 @@ use App\Http\Controllers\Audit\ShowController as AuditShowController;
 use App\Http\Controllers\Audit\StoreController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Legal\ContactController;
 use App\Http\Controllers\Sites\IndexController;
 use App\Http\Controllers\Sites\ShowController;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,11 @@ use Illuminate\Support\Facades\Route;
 // The MVP routes — also named 'home' so Fortify logout/redirect targets resolve
 Route::get('/', HomeController::class)->name('audit.create');
 Route::redirect('/home', '/')->name('home');
+
+Route::get('/contact', [ContactController::class, 'edit'])->name('legal.contact.edit');
+Route::post('/contact', [ContactController::class, 'store'])
+    ->middleware('throttle:contact-form')
+    ->name('legal.contact.store');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
