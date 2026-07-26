@@ -13,6 +13,8 @@ class ReportPresenter
 
     protected ScoreCalculator $calculator;
 
+    protected ?array $scannedUrlsCache = null;
+
     public function __construct(Audit $audit)
     {
         $this->audit = $audit;
@@ -154,7 +156,7 @@ class ReportPresenter
 
     public function scannedUrls(): array
     {
-        return array_unique(array_keys($this->audit->getCustomData('scanned_urls', [])));
+        return $this->scannedUrlsCache ??= $this->audit->pages()->pluck('url')->all();
     }
 
     public function summary(array $discoveredPageUrls): array

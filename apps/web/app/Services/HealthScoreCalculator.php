@@ -63,7 +63,7 @@ class HealthScoreCalculator implements ScoreCalculator
 
     protected function maxPossibleImpactPenalty(Audit $audit, Impact $impact): int
     {
-        return count($audit->getCustomData('scanned_urls', [])) * $impact->weight();
+        return $audit->pages()->count() * $impact->weight();
     }
 
     public function violationWeightedPenalty(Violation $violation): float

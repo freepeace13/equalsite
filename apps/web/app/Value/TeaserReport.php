@@ -31,7 +31,7 @@ class TeaserReport implements Arrayable
             'auditId' => $audit->crawler_id,
             'siteUrl' => $audit->url,
             'score' => (int) max(0, $score),
-            'scannedUrlsCount' => count($audit->getCustomData('scanned_urls', [])),
+            'scannedUrlsCount' => $audit->pages()->count(),
             'severityBreakdown' => $severityBreakdown,
         ]);
     }
