@@ -33,12 +33,12 @@ test('free accounts are throttled after 5 audit submissions in a minute', functi
         ->andReturnUsing(fn () => ['id' => (string) Str::uuid()]);
 
     for ($i = 0; $i < 5; $i++) {
-        $response = $this->post(route('audit.store'), ['url' => 'https://example.com']);
+        $response = $this->post(route('audit.store'), validAuditPayload(['url' => 'https://example.com']));
         expect($response->status())->not->toBe(429);
         completeLatestAudit($user);
     }
 
-    $this->post(route('audit.store'), ['url' => 'https://example.com'])
+    $this->post(route('audit.store'), validAuditPayload(['url' => 'https://example.com']))
         ->assertTooManyRequests();
 });
 
@@ -52,12 +52,12 @@ test('pro accounts are throttled after 5 audit submissions in a minute', functio
         ->andReturnUsing(fn () => ['id' => (string) Str::uuid()]);
 
     for ($i = 0; $i < 5; $i++) {
-        $response = $this->post(route('audit.store'), ['url' => 'https://example.com']);
+        $response = $this->post(route('audit.store'), validAuditPayload(['url' => 'https://example.com']));
         expect($response->status())->not->toBe(429);
         completeLatestAudit($user);
     }
 
-    $this->post(route('audit.store'), ['url' => 'https://example.com'])
+    $this->post(route('audit.store'), validAuditPayload(['url' => 'https://example.com']))
         ->assertTooManyRequests();
 });
 
@@ -77,13 +77,13 @@ test('requests denied by the in-flight audit rule do not count toward the submis
         ->once()
         ->andReturn(['id' => 'crawler-in-flight-holder']);
 
-    $this->post(route('audit.store'), ['url' => 'https://acme.com'])
+    $this->post(route('audit.store'), validAuditPayload(['url' => 'https://acme.com']))
         ->assertRedirect(route('audit.progress', ['id' => 'crawler-in-flight-holder']));
 
     // Far more than the free plan's 5/hour cap — if any of these counted,
     // the account would already be throttled by the time we check below.
     for ($i = 0; $i < 10; $i++) {
-        $this->post(route('audit.store'), ['url' => 'https://acme.com'])
+        $this->post(route('audit.store'), validAuditPayload(['url' => 'https://acme.com']))
             ->assertRedirect()
             ->assertSessionHasErrors('url');
     }
@@ -95,7 +95,7 @@ test('requests denied by the in-flight audit rule do not count toward the submis
         ->once()
         ->andReturn(['id' => 'crawler-after-denials']);
 
-    $this->post(route('audit.store'), ['url' => 'https://acme.com'])
+    $this->post(route('audit.store'), validAuditPayload(['url' => 'https://acme.com']))
         ->assertRedirect(route('audit.progress', ['id' => 'crawler-after-denials']));
 });
 
@@ -109,7 +109,7 @@ test('validation failures do not count toward the submission rate limit', functi
     $this->actingAs($user);
 
     for ($i = 0; $i < 10; $i++) {
-        $this->post(route('audit.store'), ['url' => 'not-a-valid-url'])
+        $this->post(route('audit.store'), validAuditPayload(['url' => 'not-a-valid-url']))
             ->assertSessionHasErrors('url');
     }
 
@@ -118,6 +118,6 @@ test('validation failures do not count toward the submission rate limit', functi
         ->once()
         ->andReturn(['id' => 'crawler-after-validation-failures']);
 
-    $this->post(route('audit.store'), ['url' => 'https://example.com'])
+    $this->post(route('audit.store'), validAuditPayload(['url' => 'https://example.com']))
         ->assertRedirect(route('audit.progress', ['id' => 'crawler-after-validation-failures']));
 });

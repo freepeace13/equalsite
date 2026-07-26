@@ -34,6 +34,7 @@ class AuditCreateRequest extends FormRequest
             'exclude' => ['sometimes', 'nullable', 'string', 'max:500'],
             'sameDomain' => ['sometimes', 'boolean'],
             'stayOnPage' => ['sometimes', 'boolean'],
+            'confirmedAuthorized' => ['required', 'accepted'],
         ];
     }
 }

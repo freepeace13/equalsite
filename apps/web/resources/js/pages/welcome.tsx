@@ -7,8 +7,10 @@ import { store } from '@/routes/audit';
 import {
     ArrowRightIcon,
     Button,
+    Checkbox,
     type IconProps,
     InputError,
+    Label,
     SearchIcon,
     UsersIcon,
     ZapIcon,
@@ -65,6 +67,7 @@ export default function Welcome({ canRegister, canResetPassword }: Props) {
         include: '',
         exclude: '',
         sameDomain: true,
+        confirmedAuthorized: false,
     });
     const [authModalOpen, setAuthModalOpen] = useState(false);
 
@@ -90,6 +93,7 @@ export default function Welcome({ canRegister, canResetPassword }: Props) {
                 include: form.data.include,
                 exclude: form.data.exclude,
                 sameDomain: form.data.sameDomain,
+                confirmedAuthorized: form.data.confirmedAuthorized,
             });
             setAuthModalOpen(true);
             return;
@@ -151,6 +155,34 @@ export default function Welcome({ canRegister, canResetPassword }: Props) {
                     {form.errors.url && (
                         <div className="mx-auto mt-2 max-w-md text-left">
                             <InputError message={form.errors.url} />
+                        </div>
+                    )}
+
+                    <div className="mx-auto mt-3 flex max-w-md items-start gap-2 text-left">
+                        <Checkbox
+                            id="confirmedAuthorized"
+                            checked={form.data.confirmedAuthorized}
+                            onCheckedChange={(checked) =>
+                                form.setData(
+                                    'confirmedAuthorized',
+                                    checked === true,
+                                )
+                            }
+                            className="mt-0.5"
+                        />
+                        <Label
+                            htmlFor="confirmedAuthorized"
+                            className="text-xs font-normal text-slate-500 dark:text-slate-400"
+                        >
+                            I confirm I own this site or am authorized to audit
+                            it.
+                        </Label>
+                    </div>
+                    {form.errors.confirmedAuthorized && (
+                        <div className="mx-auto mt-1 max-w-md text-left">
+                            <InputError
+                                message={form.errors.confirmedAuthorized}
+                            />
                         </div>
                     )}
 

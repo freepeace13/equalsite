@@ -78,6 +78,17 @@ function makeUserAudit(
     return $audit;
 }
 
+/**
+ * Every real POST to /audit now requires the self-certification checkbox
+ * (AuditCreateRequest::rules()); this keeps that boilerplate out of every
+ * individual test while still letting tests override or omit it to test
+ * the validation rule itself.
+ */
+function validAuditPayload(array $overrides = []): array
+{
+    return array_merge(['confirmedAuthorized' => true], $overrides);
+}
+
 function makeAuditViolation(
     Audit $audit,
     Impact $impact,

@@ -50,9 +50,10 @@ test('an authenticated user submitting a url creates an audit owned by their own
     fakeSpider('crawler-owned');
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->post(route('audit.store'), [
-        'url' => 'https://example.com',
-    ]);
+    $response = $this->actingAs($user)->post(
+        route('audit.store'),
+        validAuditPayload(['url' => 'https://example.com']),
+    );
 
     $audit = Audit::findById('crawler-owned');
 
@@ -67,7 +68,10 @@ test('the page cap is clamped to the free plan limit regardless of requested set
     fakeSpiderCapturing('crawler-free-pages', $capturedOptions);
     $user = User::factory()->create();
 
-    $this->actingAs($user)->post(route('audit.store'), ['url' => 'https://example.com']);
+    $this->actingAs($user)->post(
+        route('audit.store'),
+        validAuditPayload(['url' => 'https://example.com']),
+    );
 
     expect($capturedOptions->getOptions()['maxPages'])->toBe(50);
 });
@@ -77,7 +81,10 @@ test('the page cap is clamped to the pro plan limit', function () {
     fakeSpiderCapturing('crawler-pro-pages', $capturedOptions);
     $user = User::factory()->pro()->create();
 
-    $this->actingAs($user)->post(route('audit.store'), ['url' => 'https://example.com']);
+    $this->actingAs($user)->post(
+        route('audit.store'),
+        validAuditPayload(['url' => 'https://example.com']),
+    );
 
     expect($capturedOptions->getOptions()['maxPages'])->toBe(100);
 });
@@ -87,10 +94,10 @@ test('crawl depth requested beyond the free plan is silently clamped down to sha
     fakeSpiderCapturing('crawler-free-depth', $capturedOptions);
     $user = User::factory()->create();
 
-    $this->actingAs($user)->post(route('audit.store'), [
-        'url' => 'https://example.com',
-        'crawlDepth' => 5,
-    ]);
+    $this->actingAs($user)->post(
+        route('audit.store'),
+        validAuditPayload(['url' => 'https://example.com', 'crawlDepth' => 5]),
+    );
 
     expect($capturedOptions->getOptions()['maxDepth'])->toBe(1);
 });
@@ -100,10 +107,10 @@ test('pro accounts get their requested crawl depth honored', function () {
     fakeSpiderCapturing('crawler-pro-depth', $capturedOptions);
     $user = User::factory()->pro()->create();
 
-    $this->actingAs($user)->post(route('audit.store'), [
-        'url' => 'https://example.com',
-        'crawlDepth' => 5,
-    ]);
+    $this->actingAs($user)->post(
+        route('audit.store'),
+        validAuditPayload(['url' => 'https://example.com', 'crawlDepth' => 5]),
+    );
 
     expect($capturedOptions->getOptions()['maxDepth'])->toBe(5);
 });
@@ -112,7 +119,10 @@ test('a pro account can immediately re-scan the same domain without being blocke
     fakeSpider('crawler-pro-first');
     $user = User::factory()->pro()->create();
 
-    $this->actingAs($user)->post(route('audit.store'), ['url' => 'https://acme.com']);
+    $this->actingAs($user)->post(
+        route('audit.store'),
+        validAuditPayload(['url' => 'https://acme.com']),
+    );
 
     // Simulate the first crawl finishing so the "1 in-flight audit" cap
     // doesn't block the 2nd submission — we're isolating the re-scan-frequency
@@ -121,7 +131,10 @@ test('a pro account can immediately re-scan the same domain without being blocke
 
     fakeSpider('crawler-pro-second');
 
-    $response = $this->actingAs($user)->post(route('audit.store'), ['url' => 'https://acme.com']);
+    $response = $this->actingAs($user)->post(
+        route('audit.store'),
+        validAuditPayload(['url' => 'https://acme.com']),
+    );
 
     $response->assertRedirect(route('audit.progress', ['id' => 'crawler-pro-second']));
     expect(Audit::findById('crawler-pro-second'))->not->toBeNull();
@@ -138,7 +151,10 @@ test('a free account resubmitting to its own existing site is allowed by the sit
     fakeSpider('crawler-free-first');
     $user = User::factory()->create();
 
-    $this->actingAs($user)->post(route('audit.store'), ['url' => 'https://acme.com']);
+    $this->actingAs($user)->post(
+        route('audit.store'),
+        validAuditPayload(['url' => 'https://acme.com']),
+    );
 
     Audit::findById('crawler-free-first')->forceFill([
         'status' => Status::Completed,
@@ -147,7 +163,10 @@ test('a free account resubmitting to its own existing site is allowed by the sit
 
     fakeSpider('crawler-free-second');
 
-    $response = $this->actingAs($user)->post(route('audit.store'), ['url' => 'https://acme.com']);
+    $response = $this->actingAs($user)->post(
+        route('audit.store'),
+        validAuditPayload(['url' => 'https://acme.com']),
+    );
 
     $response->assertRedirect(route('audit.progress', ['id' => 'crawler-free-second']));
     expect(Audit::findById('crawler-free-second'))->not->toBeNull();
@@ -157,13 +176,19 @@ test('a free account resubmitting to its own existing site within the rescan win
     fakeSpider('crawler-free-recent');
     $user = User::factory()->create();
 
-    $this->actingAs($user)->post(route('audit.store'), ['url' => 'https://acme.com']);
+    $this->actingAs($user)->post(
+        route('audit.store'),
+        validAuditPayload(['url' => 'https://acme.com']),
+    );
 
     Audit::findById('crawler-free-recent')->forceFill(['status' => Status::Completed])->save();
 
     // No 2nd Spider::create expectation is set — the request should never
     // reach the crawler if it's denied by the re-scan rule.
-    $response = $this->actingAs($user)->post(route('audit.store'), ['url' => 'https://acme.com']);
+    $response = $this->actingAs($user)->post(
+        route('audit.store'),
+        validAuditPayload(['url' => 'https://acme.com']),
+    );
 
     $response->assertRedirect()->assertSessionHasErrors('url');
 });
@@ -182,7 +207,10 @@ test('a spider validation failure is reported and surfaced as a form error, not 
         ->once()
         ->andThrow(SpiderValidationException::fromResponse(new RequestException($response)));
 
-    $result = $this->actingAs($user)->post(route('audit.store'), ['url' => 'https://example.com']);
+    $result = $this->actingAs($user)->post(
+        route('audit.store'),
+        validAuditPayload(['url' => 'https://example.com']),
+    );
 
     $result->assertRedirect()->assertSessionHasErrors('url');
     expect(Audit::query()->count())->toBe(0);
@@ -196,7 +224,10 @@ test('a spider connection failure is reported and surfaced as a form error, not 
         ->once()
         ->andThrow(SpiderUnavailableException::fromConnectionFailure(new ConnectionException('Connection refused')));
 
-    $result = $this->actingAs($user)->post(route('audit.store'), ['url' => 'https://example.com']);
+    $result = $this->actingAs($user)->post(
+        route('audit.store'),
+        validAuditPayload(['url' => 'https://example.com']),
+    );
 
     $result->assertRedirect()->assertSessionHasErrors('url');
     expect(Audit::query()->count())->toBe(0);
@@ -206,7 +237,10 @@ test('a free account adding a genuinely new site beyond its site cap is denied w
     fakeSpider('crawler-free-site-one');
     $user = User::factory()->create();
 
-    $this->actingAs($user)->post(route('audit.store'), ['url' => 'https://acme.com']);
+    $this->actingAs($user)->post(
+        route('audit.store'),
+        validAuditPayload(['url' => 'https://acme.com']),
+    );
 
     Audit::findById('crawler-free-site-one')->forceFill([
         'status' => Status::Completed,
@@ -215,7 +249,34 @@ test('a free account adding a genuinely new site beyond its site cap is denied w
 
     // No Spider::create expectation for a 2nd domain — the request should
     // never reach the crawler if it's denied by the site cap.
-    $response = $this->actingAs($user)->post(route('audit.store'), ['url' => 'https://example.org']);
+    $response = $this->actingAs($user)->post(
+        route('audit.store'),
+        validAuditPayload(['url' => 'https://example.org']),
+    );
 
     $response->assertRedirect()->assertSessionHasErrors('url');
+});
+
+test('submitting without confirming authorization is rejected', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post(
+        route('audit.store'),
+        ['url' => 'https://example.com', 'confirmedAuthorized' => false],
+    );
+
+    $response->assertSessionHasErrors('confirmedAuthorized');
+    expect(Audit::query()->count())->toBe(0);
+});
+
+test('submitting without the confirmedAuthorized field at all is rejected', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post(
+        route('audit.store'),
+        ['url' => 'https://example.com'],
+    );
+
+    $response->assertSessionHasErrors('confirmedAuthorized');
+    expect(Audit::query()->count())->toBe(0);
 });
