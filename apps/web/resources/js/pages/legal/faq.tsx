@@ -59,6 +59,19 @@ const FAQ_GROUPS: FaqGroup[] = [
                     </>
                 ),
             },
+            {
+                question:
+                    'I found a bug or security issue — where do I report it?',
+                answer: (
+                    <>
+                        See our{' '}
+                        <a href="/security" className="underline">
+                            security disclosure page
+                        </a>
+                        .
+                    </>
+                ),
+            },
         ],
     },
 ];
