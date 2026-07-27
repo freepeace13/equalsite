@@ -22,7 +22,6 @@ export type AuditFormData = {
     include: string;
     exclude: string;
     sameDomain: boolean;
-    confirmedAuthorized: boolean;
 };
 
 export function AdvancedSettings({

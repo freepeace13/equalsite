@@ -165,6 +165,7 @@ function createPlaywrightCrawler({
           errorCode: classified.code
         }));
       },
+      respectRobotsTxtFile: true,
       // onSkippedRequest: async ({ url, reason }) => {
       //     await eventPublisher(pageSkippedEvent({
       //         auditId,

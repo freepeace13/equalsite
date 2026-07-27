@@ -1,6 +1,4 @@
 import { Head } from '@inertiajs/react';
-import { PublicHeader } from '@/components/public-header';
-import PublicLayout from '@/layouts/public-layout';
 import { Heading } from '@equalsite/ui';
 
 type RefundPolicyProps = {
@@ -9,16 +7,19 @@ type RefundPolicyProps = {
 
 export default function RefundPolicy({ lastUpdated }: RefundPolicyProps) {
     return (
-        <PublicLayout>
+        <>
             <Head title="Refund & Cancellation Policy" />
-            <PublicHeader />
 
-            <main className="mx-auto max-w-2xl px-6 py-16">
-                <Heading
-                    title="Refund & Cancellation Policy"
-                    description={`Last updated ${lastUpdated}`}
-                />
+            <div className="bg-primary text-primary-foreground">
+                <div className="mx-auto max-w-5xl px-6 pt-8 pb-2 text-center">
+                    <Heading
+                        title="Refund & Cancellation Policy"
+                        description={`Last updated ${lastUpdated}`}
+                    />
+                </div>
+            </div>
 
+            <main className="mx-auto max-w-2xl px-6 pb-16">
                 <div className="mt-8 space-y-8 text-sm text-slate-600 dark:text-slate-400">
                     <section>
                         <h2 className="font-medium text-slate-900 dark:text-slate-100">
@@ -107,6 +108,6 @@ export default function RefundPolicy({ lastUpdated }: RefundPolicyProps) {
                     </section>
                 </div>
             </main>
-        </PublicLayout>
+        </>
     );
 }

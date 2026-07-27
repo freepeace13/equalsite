@@ -7,6 +7,8 @@ declare module '@inertiajs/core' {
             auth: Auth;
             sidebarOpen: boolean;
             monetizationEnabled: boolean;
+            canRegister: boolean;
+            canResetPassword: boolean;
             [key: string]: unknown;
         };
     }

@@ -1,6 +1,4 @@
 import { Head } from '@inertiajs/react';
-import { PublicHeader } from '@/components/public-header';
-import PublicLayout from '@/layouts/public-layout';
 import { Heading } from '@equalsite/ui';
 
 type FaqItem = {
@@ -78,16 +76,19 @@ const FAQ_GROUPS: FaqGroup[] = [
 
 export default function Faq() {
     return (
-        <PublicLayout>
+        <>
             <Head title="Frequently asked questions" />
-            <PublicHeader />
 
-            <main className="mx-auto max-w-2xl px-6 py-16">
-                <Heading
-                    title="Frequently asked questions"
-                    description="Can't find what you're looking for? Reach out on our contact page."
-                />
+            <div className="bg-primary text-primary-foreground">
+                <div className="mx-auto max-w-5xl px-6 pt-8 pb-2 text-center">
+                    <Heading
+                        title="Frequently asked questions"
+                        description="Can't find what you're looking for? Reach out on our contact page."
+                    />
+                </div>
+            </div>
 
+            <main className="mx-auto max-w-2xl px-6 pb-16">
                 <div className="mt-8 space-y-10">
                     {FAQ_GROUPS.map((group) => (
                         <section key={group.title}>
@@ -110,6 +111,6 @@ export default function Faq() {
                     ))}
                 </div>
             </main>
-        </PublicLayout>
+        </>
     );
 }

@@ -1,6 +1,4 @@
 import { Head } from '@inertiajs/react';
-import { PublicHeader } from '@/components/public-header';
-import PublicLayout from '@/layouts/public-layout';
 import { Heading } from '@equalsite/ui';
 
 type TermsProps = {
@@ -9,16 +7,19 @@ type TermsProps = {
 
 export default function Terms({ lastUpdated }: TermsProps) {
     return (
-        <PublicLayout>
+        <>
             <Head title="Terms of Service" />
-            <PublicHeader />
 
-            <main className="mx-auto max-w-2xl px-6 py-16">
-                <Heading
-                    title="Terms of Service"
-                    description={`Last updated ${lastUpdated}`}
-                />
+            <div className="bg-primary text-primary-foreground">
+                <div className="mx-auto max-w-5xl px-6 pt-8 pb-2 text-center">
+                    <Heading
+                        title="Terms of Service"
+                        description={`Last updated ${lastUpdated}`}
+                    />
+                </div>
+            </div>
 
+            <main className="mx-auto max-w-2xl px-6 pb-16">
                 <div className="mt-8 space-y-8 text-sm text-slate-600 dark:text-slate-400">
                     <section>
                         <h2 className="font-medium text-slate-900 dark:text-slate-100">
@@ -209,6 +210,6 @@ export default function Terms({ lastUpdated }: TermsProps) {
                     </section>
                 </div>
             </main>
-        </PublicLayout>
+        </>
     );
 }

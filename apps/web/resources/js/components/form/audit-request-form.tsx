@@ -11,13 +11,7 @@ import {
 } from '@/components/form/advance-settings';
 import { savePendingAudit } from '@/lib/pending-audit';
 import { store } from '@/routes/audit';
-import {
-    ArrowRightIcon,
-    Button,
-    Checkbox,
-    InputError,
-    Label,
-} from '@equalsite/ui';
+import { ArrowRightIcon, Button, InputError } from '@equalsite/ui';
 
 type AuditRequestFormProps = {
     /** Whether the current visitor is signed in. Guests get diverted to `onUnauthenticated` instead of submitting. */
@@ -56,7 +50,6 @@ export function AuditRequestForm({
         include: '',
         exclude: '',
         sameDomain: true,
-        confirmedAuthorized: false,
     });
 
     form.transform((data) => ({ ...data, stayOnPage }));
@@ -83,7 +76,6 @@ export function AuditRequestForm({
                 include: form.data.include,
                 exclude: form.data.exclude,
                 sameDomain: form.data.sameDomain,
-                confirmedAuthorized: form.data.confirmedAuthorized,
             });
             onUnauthenticated?.();
             return;
@@ -131,28 +123,6 @@ export function AuditRequestForm({
             {form.errors.url && (
                 <div className="mx-auto mt-2 max-w-md text-left">
                     <InputError message={form.errors.url} />
-                </div>
-            )}
-
-            <div className="mx-auto mt-3 flex max-w-lg items-start gap-2 text-left">
-                <Checkbox
-                    id="confirmedAuthorized"
-                    checked={form.data.confirmedAuthorized}
-                    onCheckedChange={(checked) =>
-                        form.setData('confirmedAuthorized', checked === true)
-                    }
-                    className="mt-0.5"
-                />
-                <Label
-                    htmlFor="confirmedAuthorized"
-                    className="text-xs font-normal text-slate-500 dark:text-slate-400"
-                >
-                    I confirm I own this site or am authorized to audit it.
-                </Label>
-            </div>
-            {form.errors.confirmedAuthorized && (
-                <div className="mx-auto mt-1 max-w-md text-left">
-                    <InputError message={form.errors.confirmedAuthorized} />
                 </div>
             )}
 

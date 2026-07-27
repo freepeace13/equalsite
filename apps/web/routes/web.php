@@ -6,31 +6,30 @@ use App\Http\Controllers\Audit\IndexController as AuditIndexController;
 use App\Http\Controllers\Audit\ProgressController;
 use App\Http\Controllers\Audit\ShowController as AuditShowController;
 use App\Http\Controllers\Audit\StoreController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FaqController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\Legal\ContactController;
-use App\Http\Controllers\Legal\FaqController;
-use App\Http\Controllers\Legal\PrivacyController;
-use App\Http\Controllers\Legal\RefundPolicyController;
-use App\Http\Controllers\Legal\SecurityController;
-use App\Http\Controllers\Legal\TermsController;
+use App\Http\Controllers\PrivacyController;
+use App\Http\Controllers\RefundPolicyController;
+use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\Sites\IndexController;
 use App\Http\Controllers\Sites\ShowController;
+use App\Http\Controllers\TermsController;
 use Illuminate\Support\Facades\Route;
 
 // The MVP routes — also named 'home' so Fortify logout/redirect targets resolve
-Route::get('/', HomeController::class)->name('audit.create');
-Route::redirect('/home', '/')->name('home');
+Route::get('/', HomeController::class)->name('home');
 
-Route::get('/contact', [ContactController::class, 'edit'])->name('legal.contact.edit');
+Route::get('/contact', [ContactController::class, 'edit'])->name('contact.edit');
 Route::post('/contact', [ContactController::class, 'store'])
     ->middleware('throttle:contact-form')
-    ->name('legal.contact.store');
-Route::get('/faq', FaqController::class)->name('legal.faq');
-Route::get('/terms', TermsController::class)->name('legal.terms');
+    ->name('contact.store');
+Route::get('/faq', FaqController::class)->name('faq');
+Route::get('/terms', TermsController::class)->name('terms');
 Route::get('/privacy-policy', PrivacyController::class)->name('privacy-policy');
-Route::get('/refund-policy', RefundPolicyController::class)->name('legal.refund');
-Route::get('/security', SecurityController::class)->name('legal.security');
+Route::get('/refund-policy', RefundPolicyController::class)->name('refund');
+Route::get('/security', SecurityController::class)->name('security');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');

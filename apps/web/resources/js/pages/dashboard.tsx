@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useEffect } from 'react';
-import { PublicHeader } from '@/components/public-header';
-import { create, store } from '@/routes/audit';
+import { useEffect, useState } from 'react';
+import { store } from '@/routes/audit';
+import { AuditRequestModal } from '@/components/audit-request-modal';
 import { show as siteShow, index as sitesIndex } from '@/routes/sites';
 import { humanReadableDateTime, str } from '@/lib/utils';
 import { takePendingAudit } from '@/lib/pending-audit';
@@ -123,6 +123,7 @@ function SitePreviewCard({ site }: { site: SitePreview }) {
 }
 
 export default function Dashboard(props: DashboardProps) {
+    const [auditFormOpen, setAuditFormOpen] = useState(false);
     const {
         sitesTracked,
         auditsRun,
@@ -165,7 +166,7 @@ export default function Dashboard(props: DashboardProps) {
                         description="run your first audit and this page fills in with your portfolio's score trend and open issues."
                         action={
                             <Button size="sm" asChild>
-                                <Link href={create().url}>
+                                <Link href="/">
                                     run your first audit
                                     <ArrowRightIcon />
                                 </Link>
@@ -213,7 +214,7 @@ export default function Dashboard(props: DashboardProps) {
                                 />
                                 <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
                                     {criticalCount > 0 &&
-                                    props.oldestOpenCriticalDays !== null
+                                        props.oldestOpenCriticalDays !== null
                                         ? `oldest open ${props.oldestOpenCriticalDays} ${str.plural('day', props.oldestOpenCriticalDays)}`
                                         : 'none open right now'}
                                 </p>
@@ -261,6 +262,11 @@ export default function Dashboard(props: DashboardProps) {
                     </>
                 )}
             </main>
+
+            <AuditRequestModal
+                open={auditFormOpen}
+                onOpenChange={setAuditFormOpen}
+            />
         </>
     );
 }

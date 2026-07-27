@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\Legal;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Legal\ContactRequest;
 use App\Mail\ContactMessageMail;
 use Illuminate\Http\RedirectResponse;
@@ -14,7 +13,7 @@ class ContactController extends Controller
 {
     public function edit(): Response
     {
-        return Inertia::render('legal/contact');
+        return Inertia::render('contact');
     }
 
     public function store(ContactRequest $request): RedirectResponse
@@ -30,6 +29,6 @@ class ContactController extends Controller
             'message' => __("Thanks — we've received your message and will reply soon."),
         ]);
 
-        return to_route('legal.contact.edit');
+        return to_route('contact.edit');
     }
 }

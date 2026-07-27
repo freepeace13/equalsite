@@ -1,6 +1,4 @@
 import { Head, Link } from '@inertiajs/react';
-import { PublicHeader } from '@/components/public-header';
-import { dashboard } from '@/routes';
 import { show as auditShow, progress } from '@/routes/audit';
 import { show, index as sitesIndex } from '@/routes/sites';
 import { SCAN_STATUS_BADGE } from '@/lib/audit-status';

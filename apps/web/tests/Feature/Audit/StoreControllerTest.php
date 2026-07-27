@@ -258,30 +258,6 @@ test('a free account adding a genuinely new site beyond its site cap is denied w
     $response->assertRedirect()->assertSessionHasErrors('url');
 });
 
-test('submitting without confirming authorization is rejected', function () {
-    $user = User::factory()->create();
-
-    $response = $this->actingAs($user)->post(
-        route('audit.store'),
-        ['url' => 'https://example.com', 'confirmedAuthorized' => false],
-    );
-
-    $response->assertSessionHasErrors('confirmedAuthorized');
-    expect(Audit::query()->count())->toBe(0);
-});
-
-test('submitting without the confirmedAuthorized field at all is rejected', function () {
-    $user = User::factory()->create();
-
-    $response = $this->actingAs($user)->post(
-        route('audit.store'),
-        ['url' => 'https://example.com'],
-    );
-
-    $response->assertSessionHasErrors('confirmedAuthorized');
-    expect(Audit::query()->count())->toBe(0);
-});
-
 test('submitting a url for a blocked domain is denied with a validation-style error, not a 403', function () {
     DomainBlock::create(['domain' => 'blocked-example.com']);
     $user = User::factory()->create();

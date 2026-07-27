@@ -1,16 +1,13 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { AdvancedSettings } from '@/components/form/advance-settings';
 import { resolveIsPro } from '@/lib/plan';
-import { PublicHeader } from '@/components/public-header';
 import { AuthModal } from '@/components/auth-modal';
 import { store } from '@/routes/audit';
 import {
     ArrowRightIcon,
     Button,
-    Checkbox,
     type IconProps,
     InputError,
-    Label,
     SearchIcon,
     UsersIcon,
     ZapIcon,
@@ -22,11 +19,6 @@ import {
     useState,
 } from 'react';
 import { clearPendingAudit, savePendingAudit } from '@/lib/pending-audit';
-
-const NAV_LINKS = [
-    { label: 'How it works', href: '#how' },
-    { label: 'Pricing', href: '#pricing' },
-];
 
 const FEATURE_CARDS: {
     title: string;
@@ -53,13 +45,9 @@ const FEATURE_CARDS: {
     },
 ];
 
-type Props = {
-    canRegister: boolean;
-    canResetPassword: boolean;
-};
-
-export default function Welcome({ canRegister, canResetPassword }: Props) {
-    const { auth, monetizationEnabled } = usePage().props;
+export default function Welcome() {
+    const { auth, monetizationEnabled, canRegister, canResetPassword } =
+        usePage().props;
     const isPro = resolveIsPro(auth.user, monetizationEnabled);
     const form = useForm({
         url: '',
@@ -67,7 +55,6 @@ export default function Welcome({ canRegister, canResetPassword }: Props) {
         include: '',
         exclude: '',
         sameDomain: true,
-        confirmedAuthorized: false,
     });
     const [authModalOpen, setAuthModalOpen] = useState(false);
 
@@ -93,7 +80,6 @@ export default function Welcome({ canRegister, canResetPassword }: Props) {
                 include: form.data.include,
                 exclude: form.data.exclude,
                 sameDomain: form.data.sameDomain,
-                confirmedAuthorized: form.data.confirmedAuthorized,
             });
             setAuthModalOpen(true);
             return;
@@ -105,11 +91,6 @@ export default function Welcome({ canRegister, canResetPassword }: Props) {
     return (
         <>
             <Head title="Free WCAG accessibility audit" />
-
-            <PublicHeader
-                navLinks={NAV_LINKS}
-                auth={{ canRegister, canResetPassword }}
-            />
 
             <main>
                 {/* Hero */}
@@ -158,34 +139,6 @@ export default function Welcome({ canRegister, canResetPassword }: Props) {
                         </div>
                     )}
 
-                    <div className="mx-auto mt-3 flex max-w-md items-start gap-2 text-left">
-                        <Checkbox
-                            id="confirmedAuthorized"
-                            checked={form.data.confirmedAuthorized}
-                            onCheckedChange={(checked) =>
-                                form.setData(
-                                    'confirmedAuthorized',
-                                    checked === true,
-                                )
-                            }
-                            className="mt-0.5"
-                        />
-                        <Label
-                            htmlFor="confirmedAuthorized"
-                            className="text-xs font-normal text-slate-500 dark:text-slate-400"
-                        >
-                            I confirm I own this site or am authorized to audit
-                            it.
-                        </Label>
-                    </div>
-                    {form.errors.confirmedAuthorized && (
-                        <div className="mx-auto mt-1 max-w-md text-left">
-                            <InputError
-                                message={form.errors.confirmedAuthorized}
-                            />
-                        </div>
-                    )}
-
                     <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
                         scans up to 25 pages · results in ~2 minutes
                     </p>
@@ -227,53 +180,6 @@ export default function Welcome({ canRegister, canResetPassword }: Props) {
                 canResetPassword={canResetPassword}
                 description="log in or create an account to run this audit — we'll pick up right where you left off."
             />
-
-            <footer className="mx-auto max-w-5xl px-6 py-10 text-xs text-slate-400 dark:text-slate-600">
-                equalsite — an open accessibility diagnostic.{' '}
-                <a
-                    href="https://github.com/freepeace13/equalsite"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:text-slate-600 dark:hover:text-slate-400"
-                >
-                    source on GitHub
-                </a>
-                {' · '}
-                <a
-                    href="/faq"
-                    className="underline hover:text-slate-600 dark:hover:text-slate-400"
-                >
-                    FAQ
-                </a>
-                {' · '}
-                <a
-                    href="/contact"
-                    className="underline hover:text-slate-600 dark:hover:text-slate-400"
-                >
-                    Contact
-                </a>
-                {' · '}
-                <a
-                    href="/terms"
-                    className="underline hover:text-slate-600 dark:hover:text-slate-400"
-                >
-                    Terms
-                </a>
-                {' · '}
-                <a
-                    href="/privacy"
-                    className="underline hover:text-slate-600 dark:hover:text-slate-400"
-                >
-                    Privacy
-                </a>
-                {' · '}
-                <a
-                    href="/refund-policy"
-                    className="underline hover:text-slate-600 dark:hover:text-slate-400"
-                >
-                    Refund Policy
-                </a>
-            </footer>
         </>
     );
 }

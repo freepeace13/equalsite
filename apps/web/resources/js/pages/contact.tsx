@@ -1,7 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
-import ContactController from '@/actions/App/Http/Controllers/Legal/ContactController';
-import { PublicHeader } from '@/components/public-header';
-import PublicLayout from '@/layouts/public-layout';
+import ContactController from '@/actions/App/Http/Controllers/ContactController';
 import {
     Button,
     Heading,
@@ -26,11 +24,10 @@ export default function Contact() {
     };
 
     return (
-        <PublicLayout>
+        <>
             <Head title="Contact us" />
-            <PublicHeader />
 
-            <main className="mx-auto max-w-lg px-6 py-16">
+            <main className="mx-auto max-w-2xl px-6 py-16">
                 <Heading
                     title="Contact us"
                     description="Questions about billing, refunds, or your data — we read every message."
@@ -90,6 +87,6 @@ export default function Contact() {
                     We aim to respond within 2 business days.
                 </p>
             </main>
-        </PublicLayout>
+        </>
     );
 }

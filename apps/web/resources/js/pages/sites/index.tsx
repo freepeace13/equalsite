@@ -1,8 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import { AuditRequestModal } from '@/components/audit-request-modal';
-import { PublicHeader } from '@/components/public-header';
-import { dashboard } from '@/routes';
 import { index, show } from '@/routes/sites';
 import { isActiveStatus, SCAN_STATUS_BADGE } from '@/lib/audit-status';
 import { humanReadableDateTime, str } from '@/lib/utils';
@@ -34,8 +32,8 @@ function ScoreCell({ score }: { score: number | null }) {
         score >= 90
             ? 'text-emerald-600 dark:text-emerald-400'
             : score >= 60
-              ? 'text-yellow-600 dark:text-yellow-400'
-              : 'text-red-600 dark:text-red-400';
+                ? 'text-yellow-600 dark:text-yellow-400'
+                : 'text-red-600 dark:text-red-400';
 
     return <span className={`font-medium tabular-nums ${tone}`}>{score}</span>;
 }

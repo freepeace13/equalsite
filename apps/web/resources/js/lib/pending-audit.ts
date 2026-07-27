@@ -6,7 +6,6 @@ export type PendingAuditRequest = {
     include: string;
     exclude: string;
     sameDomain: boolean;
-    confirmedAuthorized: boolean;
 };
 
 /** Called when a guest submits the audit form, right before the auth modal opens. */

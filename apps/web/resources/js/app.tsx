@@ -4,9 +4,10 @@ import { Toaster } from '@/components/toaster';
 import { initializeTheme } from '@/hooks/use-appearance';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
+import GuestLayout from '@/layouts/guest-layout';
+import PublicLayout from '@/layouts/public-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { configureEcho } from '@laravel/echo-react';
-import PublicLayout from './layouts/public-layout';
 
 configureEcho({
     broadcaster: 'pusher',
@@ -23,7 +24,17 @@ createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
-            case ['welcome', 'privacy-policy', 'auth/login', 'auth/register'].includes(name):
+            case [
+                'welcome',
+                'privacy-policy',
+                'faq',
+                'terms',
+                'contact',
+                'security',
+                'refund-policy',
+            ].includes(name):
+                return GuestLayout;
+            case ['auth/login', 'auth/register'].includes(name):
                 return PublicLayout;
             case name.startsWith('auth/'):
                 return AuthLayout;

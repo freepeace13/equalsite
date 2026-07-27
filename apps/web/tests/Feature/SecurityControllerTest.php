@@ -3,10 +3,10 @@
 test('the security page renders with the support contact email', function () {
     config(['services.support.email' => 'support@equalsite.app']);
 
-    $this->get(route('legal.security'))
+    $this->get(route('security'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->component('legal/security')
+            ->component('security')
             ->where('contactEmail', 'support@equalsite.app')
         );
 });
