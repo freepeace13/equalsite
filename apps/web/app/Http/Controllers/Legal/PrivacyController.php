@@ -10,7 +10,7 @@ class PrivacyController extends Controller
 {
     public function __invoke(): Response
     {
-        return Inertia::render('legal/privacy', [
+        return Inertia::render('privacy-policy', [
             'lastUpdated' => '2026-07-26',
         ]);
     }

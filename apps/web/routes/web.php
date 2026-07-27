@@ -28,7 +28,7 @@ Route::post('/contact', [ContactController::class, 'store'])
     ->name('legal.contact.store');
 Route::get('/faq', FaqController::class)->name('legal.faq');
 Route::get('/terms', TermsController::class)->name('legal.terms');
-Route::get('/privacy', PrivacyController::class)->name('legal.privacy');
+Route::get('/privacy-policy', PrivacyController::class)->name('privacy-policy');
 Route::get('/refund-policy', RefundPolicyController::class)->name('legal.refund');
 Route::get('/security', SecurityController::class)->name('legal.security');
 
