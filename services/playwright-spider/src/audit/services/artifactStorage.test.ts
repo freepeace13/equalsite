@@ -2,7 +2,16 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { vi } from "vitest";
 import { createArtifactStorage } from "./artifactStorage";
+
+vi.mock("@aws-sdk/client-s3", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("@aws-sdk/client-s3")>();
+    return {
+        ...actual,
+        S3Client: vi.fn(),
+    };
+});
 
 function makeScratchDir(): string {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "equalsite-scratch-"));
@@ -19,6 +28,31 @@ function makeScratchDir(): string {
 
     return dir;
 }
+
+describe("artifactStorage driver selection", () => {
+    it("builds an S3Client with the configured bucket, endpoint, and path-style flag when driver is s3", async () => {
+        const { S3Client } = await import("@aws-sdk/client-s3");
+
+        createArtifactStorage({
+            driver: "s3",
+            bucket: "equalsite-audit-artifacts",
+            region: "us-east-1",
+            endpoint: "https://s3.us-east-1.backblazeb2.com",
+            accessKeyId: "key",
+            secretAccessKey: "secret",
+            forcePathStyle: true,
+        });
+
+        expect(S3Client).toHaveBeenCalledWith(
+            expect.objectContaining({
+                region: "us-east-1",
+                endpoint: "https://s3.us-east-1.backblazeb2.com",
+                forcePathStyle: true,
+                credentials: { accessKeyId: "key", secretAccessKey: "secret" },
+            })
+        );
+    });
+});
 
 describe("artifactStorage", () => {
     it("publishes dataset JSON and screenshots to the local disk and removes the scratch dir", async () => {
