@@ -196,13 +196,13 @@ test('a domain that is not on the block list is unaffected', function () {
     expect($audit->crawler_id)->toBe('not-blocked');
 });
 
-test('captureScreenshot is always sent as true regardless of plan', function () {
+test('captureScreenshot is always sent as false regardless of plan', function () {
     $user = User::factory()->create();
 
     $spider = Mockery::mock(Spider::class);
     $spider->shouldReceive('create')
         ->once()
-        ->withArgs(fn ($options) => $options->toArray()['options']['captureScreenshot'] === true)
+        ->withArgs(fn ($options) => $options->toArray()['options']['captureScreenshot'] === false)
         ->andReturn(['id' => 'capture-screenshot-check']);
 
     $audit = (new CreateAudit($spider))->create($user, 'https://acme.com');
@@ -230,7 +230,7 @@ test('the spider request parameters are stored on the audit as custom_data.reque
             'maxDepth' => $limits->clampCrawlDepth(CrawlDepth::Deep)->value,
             'includeGlobs' => [],
             'excludeGlobs' => [],
-            'captureScreenshot' => true,
+            'captureScreenshot' => false,
         ],
     ]);
 });
