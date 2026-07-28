@@ -3,8 +3,7 @@ import { PublicHeader } from '@/components/public-header';
 import PublicLayout from '@/layouts/public-layout';
 
 export const GUEST_NAV_LINKS = [
-    { label: 'How it works', href: '/#how' },
-    { label: 'Pricing', href: '/#pricing' },
+    //
 ];
 
 export default function GuestLayout({
