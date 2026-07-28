@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccessibilityController;
 use App\Http\Controllers\Audit\CancelController;
 use App\Http\Controllers\Audit\ExportMarkdownController;
 use App\Http\Controllers\Audit\IndexController as AuditIndexController;
@@ -26,6 +27,7 @@ Route::post('/contact', [ContactController::class, 'store'])
     ->middleware('throttle:contact-form')
     ->name('contact.store');
 Route::get('/faq', FaqController::class)->name('faq');
+Route::get('/accessibility-statement', AccessibilityController::class)->name('accessibility-statement');
 Route::get('/terms', TermsController::class)->name('terms');
 Route::get('/privacy-policy', PrivacyController::class)->name('privacy-policy');
 Route::get('/refund-policy', RefundPolicyController::class)->name('refund');
