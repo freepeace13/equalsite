@@ -21,6 +21,8 @@ class SpiderOptions implements Arrayable
 
     protected array $excludeGlobs = [];
 
+    protected bool $captureScreenshot = true;
+
     public function __construct(array $urls)
     {
         $this->urls = $urls;
@@ -71,6 +73,7 @@ class SpiderOptions implements Arrayable
             'maxDepth' => $this->getMaxDepth(),
             'includeGlobs' => $this->getIncludeGlobs(),
             'excludeGlobs' => $this->getExcludeGlobs(),
+            'captureScreenshot' => $this->getCaptureScreenshot(),
         ];
     }
 
@@ -92,6 +95,7 @@ class SpiderOptions implements Arrayable
             'maxDepth' => fn () => $this->setMaxDepth($value),
             'includeGlobs' => fn () => $this->setIncludeGlobs($value),
             'excludeGlobs' => fn () => $this->setExcludeGlobs($value),
+            'captureScreenshot' => fn () => $this->setCaptureScreenshot($value),
             default => $this
         });
     }
@@ -173,6 +177,18 @@ class SpiderOptions implements Arrayable
     public function getExcludeGlobs(): array
     {
         return $this->excludeGlobs;
+    }
+
+    public function setCaptureScreenshot(bool $value): self
+    {
+        $this->captureScreenshot = $value;
+
+        return $this;
+    }
+
+    public function getCaptureScreenshot(): bool
+    {
+        return $this->captureScreenshot;
     }
 
     public function toArray(): array
