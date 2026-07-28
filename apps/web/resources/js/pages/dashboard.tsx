@@ -5,7 +5,7 @@ import { AuditRequestModal } from '@/components/audit-request-modal';
 import { show as siteShow, index as sitesIndex } from '@/routes/sites';
 import { humanReadableDateTime, str } from '@/lib/utils';
 import { takePendingAudit } from '@/lib/pending-audit';
-import { isActiveStatus, SCAN_STATUS_BADGE } from '@/lib/audit-status';
+import { SCAN_STATUS_BADGE, isActiveStatus } from '@/lib/audit-status';
 import { ScoreTrendSparkline } from '@/components/reporting/score-trend-sparkline';
 import type { ScanStatus } from '@/types';
 import {

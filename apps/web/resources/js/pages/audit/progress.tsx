@@ -4,15 +4,15 @@ import { friendlyErrorMessage } from '@/lib/audit-errors';
 import { SCAN_STATUS_BADGE } from '@/lib/audit-status';
 import { hostnameOf } from '@/lib/utils';
 import {
+    CrawlingPanel,
     countFailedPages,
     countIssues,
-    CrawlingPanel,
 } from '@/components/scanning/crawling-panel';
 import { ReportCta } from '@/components/scanning/report-cta';
 import { WaitingPanel } from '@/components/scanning/waiting-panel';
 import {
-    useAuditProgressStream,
     type AuditProgressStreamProps as ScanProgressPageProps,
+    useAuditProgressStream,
 } from '@/hooks/use-audit-progress-stream';
 import { Callout, GlobeIcon, StatusBadge } from '@equalsite/ui';
 

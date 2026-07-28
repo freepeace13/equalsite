@@ -4,8 +4,8 @@ import { show, index as sitesIndex } from '@/routes/sites';
 import { SCAN_STATUS_BADGE } from '@/lib/audit-status';
 import { humanReadableDateTime, relativeTimeUntil, str } from '@/lib/utils';
 import {
-    CurrentAuditCard,
     type CurrentAudit,
+    CurrentAuditCard,
 } from '@/components/scanning/current-audit-card';
 import { runNewAudit } from '@/components/scanning/run-new-audit';
 import { ScoreTrendChart } from '@/components/reporting/score-trend-chart';

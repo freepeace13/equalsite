@@ -62,7 +62,7 @@ return [
 
         'audit_artifacts' => [
             'driver' => env('AUDIT_ARTIFACTS_DRIVER', 'local'),
-            'root' => env('AUDIT_ARTIFACTS_PATH', storage_path('app/audit-artifacts')),
+            'root' => env('AUDIT_ARTIFACTS_PATH') ?: storage_path('app/audit-artifacts'),
             'key' => env('AUDIT_ARTIFACTS_KEY'),
             'secret' => env('AUDIT_ARTIFACTS_SECRET'),
             'region' => env('AUDIT_ARTIFACTS_REGION'),

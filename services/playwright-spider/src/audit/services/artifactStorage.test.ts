@@ -3,10 +3,11 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { vi } from "vitest";
+import type * as ClientS3 from "@aws-sdk/client-s3";
 import { createArtifactStorage } from "./artifactStorage";
 
 vi.mock("@aws-sdk/client-s3", async (importOriginal) => {
-    const actual = await importOriginal<typeof import("@aws-sdk/client-s3")>();
+    const actual = await importOriginal<typeof ClientS3>();
     return {
         ...actual,
         S3Client: vi.fn(),

@@ -3,11 +3,11 @@ import { useState } from 'react';
 import { AuditRequestModal } from '@/components/audit-request-modal';
 import { index, show } from '@/routes/audit';
 import { show as siteShow } from '@/routes/sites';
-import { isActiveStatus, SCAN_STATUS_BADGE } from '@/lib/audit-status';
+import { SCAN_STATUS_BADGE, isActiveStatus } from '@/lib/audit-status';
 import { humanReadableDateTime, str } from '@/lib/utils';
 import {
-    LiveHistoryRow,
     type HistoryRow,
+    LiveHistoryRow,
 } from '@/components/scanning/live-history-row';
 import {
     ArrowRightIcon,

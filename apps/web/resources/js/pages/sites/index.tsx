@@ -2,7 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import { AuditRequestModal } from '@/components/audit-request-modal';
 import { index, show } from '@/routes/sites';
-import { isActiveStatus, SCAN_STATUS_BADGE } from '@/lib/audit-status';
+import { SCAN_STATUS_BADGE, isActiveStatus } from '@/lib/audit-status';
 import { humanReadableDateTime, str } from '@/lib/utils';
 import { LiveSiteRow, type Site } from '@/components/scanning/live-site-row';
 import {
