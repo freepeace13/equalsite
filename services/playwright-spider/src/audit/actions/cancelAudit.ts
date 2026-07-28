@@ -1,7 +1,8 @@
+import path from "node:path";
 import type { AuditRepository } from "../repositories/auditRepository";
 import type { EventPublisher } from "../repositories/eventPublisher";
 import { createAuditService } from "../services/auditService";
-import { createArtifactService } from "../services/artifactService";
+import { deleteDirectoryIfExists } from "../utils/fsDirectory";
 import { crawlerMap } from "../services/crawlerMap";
 
 export interface ICancelAuditAction {
@@ -13,11 +14,9 @@ export const createCancelAuditAction = (
     eventPublisher: EventPublisher,
     config: {
         artifactDirectory: string;
-        archiveDirectory: string;
     }
 ): ICancelAuditAction => {
     const auditService = createAuditService(auditRepository, eventPublisher);
-    const artifactService = createArtifactService(config.artifactDirectory, config.archiveDirectory);
     return {
         run: async (auditId) => {
             const audit = await auditRepository.findOrFail(auditId);
@@ -34,7 +33,7 @@ export const createCancelAuditAction = (
                 } else {
                     await auditRepository.save(audit.markAsCancelled());
                 }
-                await artifactService.cleanup(audit.id);
+                await deleteDirectoryIfExists(path.join(config.artifactDirectory, String(audit.id)));
             } catch (err) {
                 console.error(err);
             } finally {

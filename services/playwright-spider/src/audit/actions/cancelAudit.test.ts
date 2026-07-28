@@ -33,16 +33,13 @@ function makeAuditRepository(audit: AuditEntity): AuditRepository {
 
 describe("cancelAudit", () => {
     let artifactDirectory: string;
-    let archiveDirectory: string;
 
     beforeEach(() => {
         artifactDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "equalsite-cancel-test-"));
-        archiveDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "equalsite-cancel-archive-"));
     });
 
     afterEach(() => {
         fs.rmSync(artifactDirectory, { recursive: true, force: true });
-        fs.rmSync(archiveDirectory, { recursive: true, force: true });
         crawlerMap.clear();
     });
 
@@ -61,7 +58,6 @@ describe("cancelAudit", () => {
 
         await createCancelAuditAction(auditRepository, eventPublisher, {
             artifactDirectory,
-            archiveDirectory,
         }).run(cancelledAuditId);
 
         expect(fs.existsSync(path.join(artifactDirectory, cancelledAuditId))).toBe(false);
@@ -87,7 +83,6 @@ describe("cancelAudit", () => {
 
         await createCancelAuditAction(auditRepository, eventPublisher, {
             artifactDirectory,
-            archiveDirectory,
         }).run(auditId);
 
         expect(stop).toHaveBeenCalledWith('Audit cancelled by user');
