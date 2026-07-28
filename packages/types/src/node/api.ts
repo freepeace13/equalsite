@@ -10,6 +10,7 @@ export type AuditOptions = {
     maxDepth?: number | null;
     includeGlobs?: string[];
     excludeGlobs?: string[];
+    captureScreenshot?: boolean;
 }
 
 export type CreateAuditRequestBody = {

@@ -22,6 +22,7 @@ export default function createPlaywrightCrawler({
     options
 }: CrawlerFactoryParams): PlaywrightCrawler {
     const storageDir = path.join(artifactDirectory, String(auditId));
+    const screenshotsDir = path.join(storageDir, 'screenshots');
 
     const config = new Configuration({
         purgeOnStart: false,
@@ -32,7 +33,7 @@ export default function createPlaywrightCrawler({
 
     return new PlaywrightCrawler(
         {
-            requestHandler: createAuditPageRequestHandler(auditId, eventPublisher, options),
+            requestHandler: createAuditPageRequestHandler(auditId, eventPublisher, options, screenshotsDir),
             failedRequestHandler: async ({ request }, error) => {
                 const classified = classifyError(error);
                 await eventPublisher(pageFailedEvent({

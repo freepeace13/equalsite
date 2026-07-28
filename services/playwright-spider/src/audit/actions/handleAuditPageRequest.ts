@@ -3,6 +3,7 @@ import { Request } from "crawlee";
 import { pageStartedEvent } from "../events/pageStartedEvent";
 import type { EventPublisher } from "../repositories/eventPublisher";
 import { createProcessAxeResultAction } from "./processAxeResult";
+import { captureViolationScreenshots } from "./captureViolationScreenshots";
 import AxeBuilder from "@axe-core/playwright";
 import { progressEvent } from "../events/progressEvent";
 import type { AuditOptions } from "@equalsite/types";
@@ -29,54 +30,69 @@ const canonicalizeRequestUniqueKey = (request: RequestOptions): RequestOptions =
 export const createAuditPageRequestHandler = (
     auditId: string,
     eventPublisher: EventPublisher,
-    options: AuditOptions
-): PlaywrightCrawlerOptions['requestHandler'] => async ({
-    request,
-    page,
-    pushData,
-    enqueueLinks,
-    crawler
-}) => {
-    await eventPublisher(pageStartedEvent({
-        auditId,
-        pageUrl: request.url,
-        attemptsCount: request.retryCount
-    }));
+    options: AuditOptions,
+    screenshotsDir: string
+): PlaywrightCrawlerOptions['requestHandler'] => {
+    let pageIndex = 0;
 
-    const processAxeResultAction = createProcessAxeResultAction(pushData, eventPublisher);
+    return async ({
+        request,
+        page,
+        pushData,
+        enqueueLinks,
+        crawler
+    }) => {
+        await eventPublisher(pageStartedEvent({
+            auditId,
+            pageUrl: request.url,
+            attemptsCount: request.retryCount
+        }));
 
-    const axeResults = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag22aa'])
-        .options({ resultTypes: ['violations'] }) // @todo customizable by request
-        .analyze();
+        const processAxeResultAction = createProcessAxeResultAction(pushData, eventPublisher);
 
-    await processAxeResultAction.run({
-        pageUrl: request.url,
-        auditId,
-        axeResults
-    });
+        const axeResults = await new AxeBuilder({ page })
+            .withTags(['wcag2a', 'wcag2aa', 'wcag22aa'])
+            .options({ resultTypes: ['violations'] }) // @todo customizable by request
+            .analyze();
 
-    const queue = await crawler.getRequestQueue();
-    const info = await queue.getInfo();
+        const screenshotPaths = options.captureScreenshot
+            ? await captureViolationScreenshots({
+                page,
+                violations: axeResults.violations,
+                screenshotsDir,
+                pageIndex: pageIndex++,
+            })
+            : undefined;
 
-    await eventPublisher(progressEvent({
-        auditId,
-        completedRequests: info?.handledRequestCount ?? 0,
-        pendingRequests: info?.pendingRequestCount ?? 0,
-        totalRequests: info?.totalRequestCount ?? 0,
-    }));
-
-    const currentDepth = (request.userData?.depth as number | undefined) ?? 0;
-    const withinMaxDepth = options.maxDepth === undefined || options.maxDepth === null || currentDepth < options.maxDepth;
-
-    if (options.enqueueLinks && withinMaxDepth) {
-        await enqueueLinks({
-            strategy: options.enqueueStrategy as EnqueueStrategy,
-            selector: 'a',
-            globs: options.includeGlobs?.length ? options.includeGlobs : undefined,
-            exclude: options.excludeGlobs?.length ? options.excludeGlobs : undefined,
-            userData: { depth: currentDepth + 1 },
-            transformRequestFunction: canonicalizeRequestUniqueKey,
+        await processAxeResultAction.run({
+            pageUrl: request.url,
+            auditId,
+            axeResults,
+            screenshotPaths,
         });
-    }
+
+        const queue = await crawler.getRequestQueue();
+        const info = await queue.getInfo();
+
+        await eventPublisher(progressEvent({
+            auditId,
+            completedRequests: info?.handledRequestCount ?? 0,
+            pendingRequests: info?.pendingRequestCount ?? 0,
+            totalRequests: info?.totalRequestCount ?? 0,
+        }));
+
+        const currentDepth = (request.userData?.depth as number | undefined) ?? 0;
+        const withinMaxDepth = options.maxDepth === undefined || options.maxDepth === null || currentDepth < options.maxDepth;
+
+        if (options.enqueueLinks && withinMaxDepth) {
+            await enqueueLinks({
+                strategy: options.enqueueStrategy as EnqueueStrategy,
+                selector: 'a',
+                globs: options.includeGlobs?.length ? options.includeGlobs : undefined,
+                exclude: options.excludeGlobs?.length ? options.excludeGlobs : undefined,
+                userData: { depth: currentDepth + 1 },
+                transformRequestFunction: canonicalizeRequestUniqueKey,
+            });
+        }
+    };
 }

@@ -21,6 +21,7 @@ class Violation extends Model
         'failure_summary', // raw axe-core result
         'help_url',
         'nodes',
+        'screenshot_path',
     ];
 
     protected $casts = [
