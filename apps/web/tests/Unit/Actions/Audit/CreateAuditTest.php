@@ -8,6 +8,8 @@ use App\Exceptions\Audit\RescanTooSoonException;
 use App\Exceptions\Audit\SiteCapExceededException;
 use App\Models\DomainBlock;
 use App\Models\User;
+use App\Support\Plan\PlanLimits;
+use App\Value\CrawlDepth;
 use App\Value\Status;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -206,4 +208,29 @@ test('captureScreenshot is always sent as true regardless of plan', function () 
     $audit = (new CreateAudit($spider))->create($user, 'https://acme.com');
 
     expect($audit->crawler_id)->toBe('capture-screenshot-check');
+});
+
+test('the spider request parameters are stored on the audit as custom_data.request_params', function () {
+    $user = User::factory()->create();
+    $limits = PlanLimits::for($user->plan);
+
+    $spider = Mockery::mock(Spider::class);
+    $spider->shouldReceive('create')
+        ->once()
+        ->andReturn(['id' => 'request-params-check']);
+
+    $audit = (new CreateAudit($spider))->create($user, 'https://acme.com', ['crawlDepth' => CrawlDepth::Deep->value]);
+
+    expect($audit->getCustomData('request_params'))->toEqual([
+        'urls' => ['https://acme.com'],
+        'options' => [
+            'maxPages' => $limits->pageCap(),
+            'enqueueLinks' => true,
+            'enqueueStrategy' => 'same-domain',
+            'maxDepth' => $limits->clampCrawlDepth(CrawlDepth::Deep)->value,
+            'includeGlobs' => [],
+            'excludeGlobs' => [],
+            'captureScreenshot' => true,
+        ],
+    ]);
 });

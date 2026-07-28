@@ -20,9 +20,12 @@ class AuditAggregateRoot extends AggregateRoot
 {
     protected Status $status = Status::Queued;
 
-    public function create(int $userId, string $url, string $domain): self
+    /**
+     * @param  array<string, mixed>  $requestParams
+     */
+    public function create(int $userId, string $url, string $domain, array $requestParams = []): self
     {
-        $this->recordThat(new AuditWasCreated($userId, $url, $domain));
+        $this->recordThat(new AuditWasCreated($userId, $url, $domain, $requestParams));
 
         return $this;
     }

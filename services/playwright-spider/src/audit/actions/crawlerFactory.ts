@@ -44,7 +44,13 @@ export default function createPlaywrightCrawler({
                     errorCode: classified.code,
                 }));
             },
-            respectRobotsTxtFile: true,
+            // Disabled: robots.txt fetches go through got-scraping, not Playwright, and some
+            // WAFs (e.g. Cloudflare on marketdragon.ph) block/challenge that fingerprint while
+            // allowing the real page load. A failed fetch isn't cached, so every request pays
+            // a ~60s retry-and-fail tax, which can blow the AutoscaledPool's taskTimeoutSecs and
+            // fatally kill the whole crawl. We're not a search-engine crawler, so robots.txt
+            // compliance isn't required here.
+            respectRobotsTxtFile: false,
             // onSkippedRequest: async ({ url, reason }) => {
             //     await eventPublisher(pageSkippedEvent({
             //         auditId,

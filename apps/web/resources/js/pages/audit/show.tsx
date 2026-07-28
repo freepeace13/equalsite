@@ -7,8 +7,9 @@ import type {
     IViolation,
     RemediationGroup,
     ReportPages,
+    ScanSettings,
 } from '@/types';
-import { str, hostnameOf } from '@/lib/utils';
+import { hostnameOf, str } from '@/lib/utils';
 import {
     ImpactGroup,
     type ImpactKey,
@@ -22,6 +23,19 @@ import {
     ScoreRing,
     SectionLabel,
 } from '@equalsite/ui';
+
+const CRAWL_DEPTH_LABELS: Record<number, string> = {
+    1: 'shallow',
+    3: 'standard',
+    5: 'deep',
+};
+
+const ENQUEUE_STRATEGY_LABELS: Record<string, string> = {
+    all: 'entire site, following links off-domain',
+    'same-hostname': 'same hostname only',
+    'same-domain': 'same domain only',
+    'same-origin': 'same origin only',
+};
 
 type ReportSummary = {
     totalIssuesFound: number;
@@ -48,6 +62,7 @@ type ReportProps = {
             groupsCount: number;
         };
         violations: IViolation[];
+        scanSettings: ScanSettings | null;
     };
 };
 
@@ -137,6 +152,92 @@ export default function Show({ report }: ReportProps) {
                         </p>
                     </div>
                 </div>
+
+                {report.scanSettings && (
+                    <div className="mb-8">
+                        <SectionLabel className="mb-2">
+                            scan settings
+                        </SectionLabel>
+                        <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 rounded-lg border border-slate-200 p-4 text-sm sm:grid-cols-3 dark:border-slate-800">
+                            <div>
+                                <dt className="text-xs text-slate-500 dark:text-slate-400">
+                                    page limit
+                                </dt>
+                                <dd>
+                                    up to {report.scanSettings.maxPages}{' '}
+                                    {str.plural(
+                                        'page',
+                                        report.scanSettings.maxPages,
+                                    )}
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt className="text-xs text-slate-500 dark:text-slate-400">
+                                    crawl depth
+                                </dt>
+                                <dd>
+                                    {report.scanSettings.maxDepth !== null
+                                        ? (CRAWL_DEPTH_LABELS[
+                                              report.scanSettings.maxDepth
+                                          ] ??
+                                          `${report.scanSettings.maxDepth} levels`)
+                                        : 'unlimited'}
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt className="text-xs text-slate-500 dark:text-slate-400">
+                                    crawl scope
+                                </dt>
+                                <dd>
+                                    {ENQUEUE_STRATEGY_LABELS[
+                                        report.scanSettings.enqueueStrategy
+                                    ] ?? report.scanSettings.enqueueStrategy}
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt className="text-xs text-slate-500 dark:text-slate-400">
+                                    include patterns
+                                </dt>
+                                <dd>
+                                    {report.scanSettings.includeGlobs.length >
+                                    0
+                                        ? report.scanSettings.includeGlobs.join(
+                                              ', ',
+                                          )
+                                        : 'none'}
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt className="text-xs text-slate-500 dark:text-slate-400">
+                                    exclude patterns
+                                </dt>
+                                <dd>
+                                    {report.scanSettings.excludeGlobs.length >
+                                    0
+                                        ? report.scanSettings.excludeGlobs.join(
+                                              ', ',
+                                          )
+                                        : 'none'}
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt className="text-xs text-slate-500 dark:text-slate-400">
+                                    screenshots
+                                </dt>
+                                <dd>
+                                    {report.scanSettings.captureScreenshot
+                                        ? 'captured'
+                                        : 'not captured'}
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                )}
 
                 <SectionLabel className="mb-2">
                     grouped by who's affected

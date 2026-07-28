@@ -23,13 +23,15 @@ class AuditProjector extends Projector
 {
     public function onAuditWasCreated(AuditWasCreated $event): void
     {
-        Audit::create([
+        $audit = Audit::create([
             'user_id' => $event->userId,
             'url' => $event->url,
             'domain' => $event->domain,
             'status' => Status::Queued,
             'crawler_id' => $event->aggregateRootUuid(),
         ]);
+
+        $audit->setCustomData('request_params', $event->requestParams);
     }
 
     public function onAuditQueueStateWasUpdated(AuditQueueStateWasUpdated $event): void

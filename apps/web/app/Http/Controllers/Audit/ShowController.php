@@ -10,6 +10,7 @@ use App\Services\HealthScoreCalculator;
 use App\Services\ReportPresenter;
 use App\Value\SeverityBreakdown;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ShowController extends Controller
@@ -42,8 +43,30 @@ class ShowController extends Controller
                 'pages' => $presenter->pages($presenter->scannedUrls()),
                 'remediation' => $presenter->remediation($presenter->scannedUrls()),
                 'violations' => $this->violations($audit),
+                'scanSettings' => $this->scanSettings($audit),
             ],
         ]);
+    }
+
+    /**
+     * @return array{maxPages: int, maxDepth: ?int, enqueueStrategy: string, includeGlobs: string[], excludeGlobs: string[], captureScreenshot: bool}|null
+     */
+    protected function scanSettings(Audit $audit): ?array
+    {
+        $options = $audit->getCustomData('request_params.options');
+
+        if (! $options) {
+            return null;
+        }
+
+        return [
+            'maxPages' => $options['maxPages'],
+            'maxDepth' => $options['maxDepth'],
+            'enqueueStrategy' => $options['enqueueStrategy'],
+            'includeGlobs' => $options['includeGlobs'],
+            'excludeGlobs' => $options['excludeGlobs'],
+            'captureScreenshot' => $options['captureScreenshot'],
+        ];
     }
 
     protected function compareViolations(Violation $left, Violation $right): int

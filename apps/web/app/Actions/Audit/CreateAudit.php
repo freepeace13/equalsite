@@ -38,21 +38,22 @@ class CreateAudit
             : CrawlDepth::Standard;
         $depth = $limits->clampCrawlDepth($requestedDepth);
 
-        $response = $this->spider->create(
-            SpiderOptions::make([$url])->setOptions([
-                'maxPages' => $limits->pageCap(),
-                'enqueueLinks' => true,
-                'enqueueStrategy' => filter_var($settings['sameDomain'] ?? true, FILTER_VALIDATE_BOOLEAN)
-                    ? EnqueueStrategy::SameDomain
-                    : EnqueueStrategy::All,
-                'maxDepth' => $depth->value,
-                'includeGlobs' => $this->parsePatterns($settings['include'] ?? null),
-                'excludeGlobs' => $this->parsePatterns($settings['exclude'] ?? null),
-            ])
-        );
+        $spiderOptions = SpiderOptions::make([$url])->setOptions([
+            'maxPages' => $limits->pageCap(),
+            'captureScreenshot' => false,
+            'enqueueLinks' => true,
+            'enqueueStrategy' => filter_var($settings['sameDomain'] ?? true, FILTER_VALIDATE_BOOLEAN)
+                ? EnqueueStrategy::SameDomain
+                : EnqueueStrategy::All,
+            'maxDepth' => $depth->value,
+            'includeGlobs' => $this->parsePatterns($settings['include'] ?? null),
+            'excludeGlobs' => $this->parsePatterns($settings['exclude'] ?? null),
+        ]);
+
+        $response = $this->spider->create($spiderOptions);
 
         AuditAggregateRoot::retrieve($response['id'])
-            ->create($user->id, $url, parse_url($url, PHP_URL_HOST))
+            ->create($user->id, $url, parse_url($url, PHP_URL_HOST), $spiderOptions->toArray())
             ->persist();
 
         return Audit::findById($response['id']);

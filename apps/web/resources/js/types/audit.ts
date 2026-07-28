@@ -21,6 +21,15 @@ export type UrlStatus = 'started' | 'failed' | 'completed' | 'skipped';
 export type ScanQueue = QueueStatus;
 export type ScanProgress = ProgressState;
 
+export type ScanSettings = {
+    maxPages: number;
+    maxDepth: number | null;
+    enqueueStrategy: string;
+    includeGlobs: string[];
+    excludeGlobs: string[];
+    captureScreenshot: boolean;
+};
+
 export type ScanInfo = {
     auditId: string;
     siteUrl: string;
