@@ -13,8 +13,16 @@ export function ViolationCard({ violation }: { violation: IViolation }) {
 
     return (
         <article className="flex gap-3.5 rounded-lg border border-slate-200 p-3.5 dark:border-slate-800">
-            <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
-                <ImagePlaceholderIcon className="text-slate-400" />
+            <div className="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
+                {violation.screenshotUrl ? (
+                    <img
+                        src={violation.screenshotUrl}
+                        alt={`Screenshot highlighting the "${violation.summary}" violation`}
+                        className="h-full w-full object-cover"
+                    />
+                ) : (
+                    <ImagePlaceholderIcon className="text-slate-400" />
+                )}
             </div>
             <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">

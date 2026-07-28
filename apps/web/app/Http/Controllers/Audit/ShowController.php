@@ -75,6 +75,9 @@ class ShowController extends Controller
                     'failureSummary' => $violation->failure_summary,
                     'helpUrl' => $violation->help_url,
                     'fixInstruction' => $violation->fix_instruction,
+                    'screenshotUrl' => $violation->screenshot_path
+                        ? Storage::disk('public')->url($violation->screenshot_path)
+                        : null,
                     'remediationScope' => 'remediationScope',
                     'clusterReason' => 'clusterReason',
                     'affectedPagesCount' => count($affectedUrls),

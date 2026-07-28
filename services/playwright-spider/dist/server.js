@@ -55,7 +55,8 @@ var createAuditValidationRules = [
   body("options.includeGlobs").optional().isArray().withMessage("options.includeGlobs must be an array of strings"),
   body("options.includeGlobs.*").optional().isString().withMessage("each options.includeGlobs entry must be a string"),
   body("options.excludeGlobs").optional().isArray().withMessage("options.excludeGlobs must be an array of strings"),
-  body("options.excludeGlobs.*").optional().isString().withMessage("each options.excludeGlobs entry must be a string")
+  body("options.excludeGlobs.*").optional().isString().withMessage("each options.excludeGlobs entry must be a string"),
+  body("options.captureScreenshot").optional().isBoolean().withMessage("options.captureScreenshot must be a boolean")
 ];
 var cancelAuditValidationRules = [
   param("auditId").isString().trim().notEmpty().withMessage("auditId is required")

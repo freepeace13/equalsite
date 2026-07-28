@@ -21,7 +21,7 @@ import {
 import { Worker } from "bullmq";
 
 // src/audit/actions/crawlerFactory.ts
-import path from "path";
+import path2 from "path";
 import { Configuration, PlaywrightCrawler } from "crawlee";
 
 // src/audit/events/pageFailedEvent.ts
@@ -53,13 +53,17 @@ var createProcessAxeResultAction = (pushData, eventPublisher) => ({
   run: async ({
     auditId,
     pageUrl,
-    axeResults
+    axeResults,
+    screenshotPaths
   }) => {
     const violations = axeResults.violations;
     await pushData({
       auditId,
       pageUrl,
-      violations
+      violations: violations.map((violation) => ({
+        ...violation,
+        screenshotPath: screenshotPaths?.[violation.id]
+      }))
       // passes: axeResults.passes // @todo customizable by request
     });
     const severityBreakdown = violations.reduce(
@@ -86,6 +90,76 @@ var createProcessAxeResultAction = (pushData, eventPublisher) => ({
   }
 });
 
+// src/audit/actions/captureViolationScreenshots.ts
+import fs from "fs";
+import path from "path";
+var HIGHLIGHT_CLASS = "__equalsite_violation_highlight__";
+var sanitizeRuleId = (ruleId) => ruleId.replace(/[^a-zA-Z0-9-_]/g, "-");
+var resolveSelectors = (violation) => violation.nodes.map((node) => node.target[0]).filter((target) => typeof target === "string");
+var highlightSelectors = async (page, selectors) => {
+  await page.evaluate(
+    ({ selectors: selectors2, className }) => {
+      for (const selector of selectors2) {
+        let element = null;
+        try {
+          element = document.querySelector(selector);
+        } catch {
+          continue;
+        }
+        if (!element) {
+          continue;
+        }
+        const rect = element.getBoundingClientRect();
+        const box = document.createElement("div");
+        box.className = className;
+        box.style.position = "absolute";
+        box.style.left = `${rect.left + window.scrollX}px`;
+        box.style.top = `${rect.top + window.scrollY}px`;
+        box.style.width = `${rect.width}px`;
+        box.style.height = `${rect.height}px`;
+        box.style.border = "3px solid #ff3b30";
+        box.style.boxSizing = "border-box";
+        box.style.pointerEvents = "none";
+        box.style.zIndex = "2147483647";
+        document.body.appendChild(box);
+      }
+    },
+    { selectors, className: HIGHLIGHT_CLASS }
+  );
+};
+var clearHighlights = async (page) => {
+  await page.evaluate((className) => {
+    document.querySelectorAll(`.${className}`).forEach((element) => element.remove());
+  }, HIGHLIGHT_CLASS);
+};
+var captureViolationScreenshots = async ({
+  page,
+  violations,
+  screenshotsDir,
+  pageIndex
+}) => {
+  const paths = {};
+  for (const violation of violations) {
+    const selectors = resolveSelectors(violation);
+    if (selectors.length === 0) {
+      continue;
+    }
+    try {
+      await highlightSelectors(page, selectors);
+      const fileName = `${pageIndex}__${sanitizeRuleId(violation.id)}.png`;
+      const relativePath = path.join("screenshots", fileName);
+      fs.mkdirSync(screenshotsDir, { recursive: true });
+      await page.screenshot({ path: path.join(screenshotsDir, fileName), fullPage: true });
+      paths[violation.id] = relativePath;
+    } catch (error) {
+      console.error(`Failed to capture screenshot for rule "${violation.id}":`, error);
+    } finally {
+      await clearHighlights(page);
+    }
+  }
+  return paths;
+};
+
 // src/audit/actions/handleAuditPageRequest.ts
 import AxeBuilder from "@axe-core/playwright";
 var canonicalizeRequestUniqueKey = (request) => {
@@ -97,45 +171,55 @@ var canonicalizeRequestUniqueKey = (request) => {
     uniqueKey: Request.computeUniqueKey({ url: url.href, method: "GET" })
   };
 };
-var createAuditPageRequestHandler = (auditId, eventPublisher, options) => async ({
-  request,
-  page,
-  pushData,
-  enqueueLinks,
-  crawler: crawler2
-}) => {
-  await eventPublisher(pageStartedEvent({
-    auditId,
-    pageUrl: request.url,
-    attemptsCount: request.retryCount
-  }));
-  const processAxeResultAction = createProcessAxeResultAction(pushData, eventPublisher);
-  const axeResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag22aa"]).options({ resultTypes: ["violations"] }).analyze();
-  await processAxeResultAction.run({
-    pageUrl: request.url,
-    auditId,
-    axeResults
-  });
-  const queue = await crawler2.getRequestQueue();
-  const info = await queue.getInfo();
-  await eventPublisher(progressEvent({
-    auditId,
-    completedRequests: info?.handledRequestCount ?? 0,
-    pendingRequests: info?.pendingRequestCount ?? 0,
-    totalRequests: info?.totalRequestCount ?? 0
-  }));
-  const currentDepth = request.userData?.depth ?? 0;
-  const withinMaxDepth = options.maxDepth === void 0 || options.maxDepth === null || currentDepth < options.maxDepth;
-  if (options.enqueueLinks && withinMaxDepth) {
-    await enqueueLinks({
-      strategy: options.enqueueStrategy,
-      selector: "a",
-      globs: options.includeGlobs?.length ? options.includeGlobs : void 0,
-      exclude: options.excludeGlobs?.length ? options.excludeGlobs : void 0,
-      userData: { depth: currentDepth + 1 },
-      transformRequestFunction: canonicalizeRequestUniqueKey
+var createAuditPageRequestHandler = (auditId, eventPublisher, options, screenshotsDir) => {
+  let pageIndex = 0;
+  return async ({
+    request,
+    page,
+    pushData,
+    enqueueLinks,
+    crawler: crawler2
+  }) => {
+    await eventPublisher(pageStartedEvent({
+      auditId,
+      pageUrl: request.url,
+      attemptsCount: request.retryCount
+    }));
+    const processAxeResultAction = createProcessAxeResultAction(pushData, eventPublisher);
+    const axeResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag22aa"]).options({ resultTypes: ["violations"] }).analyze();
+    const screenshotPaths = options.captureScreenshot ? await captureViolationScreenshots({
+      page,
+      violations: axeResults.violations,
+      screenshotsDir,
+      pageIndex: pageIndex++
+    }) : void 0;
+    await processAxeResultAction.run({
+      pageUrl: request.url,
+      auditId,
+      axeResults,
+      screenshotPaths
     });
-  }
+    const queue = await crawler2.getRequestQueue();
+    const info = await queue.getInfo();
+    await eventPublisher(progressEvent({
+      auditId,
+      completedRequests: info?.handledRequestCount ?? 0,
+      pendingRequests: info?.pendingRequestCount ?? 0,
+      totalRequests: info?.totalRequestCount ?? 0
+    }));
+    const currentDepth = request.userData?.depth ?? 0;
+    const withinMaxDepth = options.maxDepth === void 0 || options.maxDepth === null || currentDepth < options.maxDepth;
+    if (options.enqueueLinks && withinMaxDepth) {
+      await enqueueLinks({
+        strategy: options.enqueueStrategy,
+        selector: "a",
+        globs: options.includeGlobs?.length ? options.includeGlobs : void 0,
+        exclude: options.excludeGlobs?.length ? options.excludeGlobs : void 0,
+        userData: { depth: currentDepth + 1 },
+        transformRequestFunction: canonicalizeRequestUniqueKey
+      });
+    }
+  };
 };
 
 // src/audit/actions/crawlerFactory.ts
@@ -145,7 +229,8 @@ function createPlaywrightCrawler({
   artifactDirectory,
   options
 }) {
-  const storageDir = path.join(artifactDirectory, String(auditId));
+  const storageDir = path2.join(artifactDirectory, String(auditId));
+  const screenshotsDir = path2.join(storageDir, "screenshots");
   const config = new Configuration({
     purgeOnStart: false,
     storageClientOptions: {
@@ -154,7 +239,7 @@ function createPlaywrightCrawler({
   });
   return new PlaywrightCrawler(
     {
-      requestHandler: createAuditPageRequestHandler(auditId, eventPublisher, options),
+      requestHandler: createAuditPageRequestHandler(auditId, eventPublisher, options, screenshotsDir),
       failedRequestHandler: async ({ request }, error) => {
         const classified = classifyError(error);
         await eventPublisher(pageFailedEvent({

@@ -133,6 +133,7 @@ export interface IViolation {
     failureSummary: string;
     helpUrl: string;
     fixInstruction?: string;
+    screenshotUrl?: string | null;
     remediationScope: string;
     clusterReason: string;
     affectedPagesCount: number;
