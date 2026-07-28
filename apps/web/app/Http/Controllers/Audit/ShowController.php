@@ -99,7 +99,7 @@ class ShowController extends Controller
                     'helpUrl' => $violation->help_url,
                     'fixInstruction' => $violation->fix_instruction,
                     'screenshotUrl' => $violation->screenshot_path
-                        ? Storage::disk('public')->url($violation->screenshot_path)
+                        ? Storage::disk('audit_artifacts')->temporaryUrl($violation->screenshot_path, now()->addMinutes(30))
                         : null,
                     'remediationScope' => 'remediationScope',
                     'clusterReason' => 'clusterReason',

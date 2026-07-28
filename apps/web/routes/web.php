@@ -6,6 +6,7 @@ use App\Http\Controllers\Audit\ExportMarkdownController;
 use App\Http\Controllers\Audit\IndexController as AuditIndexController;
 use App\Http\Controllers\Audit\ProgressController;
 use App\Http\Controllers\Audit\ShowController as AuditShowController;
+use App\Http\Controllers\Audit\ShowLocalArtifactController;
 use App\Http\Controllers\Audit\StoreController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
@@ -32,6 +33,12 @@ Route::get('/terms', TermsController::class)->name('terms');
 Route::get('/privacy-policy', PrivacyController::class)->name('privacy-policy');
 Route::get('/refund-policy', RefundPolicyController::class)->name('refund');
 Route::get('/security', SecurityController::class)->name('security');
+
+// Intentionally outside the auth group — the signed URL itself (time-bound, tamper-evident)
+// is the access control, matching how the s3/B2 temporaryUrl() path works in production.
+Route::get('/audit-artifacts/show', ShowLocalArtifactController::class)
+    ->name('audit-artifacts.show')
+    ->middleware('signed');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');

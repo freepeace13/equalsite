@@ -114,6 +114,13 @@ services:
             REDIS_PORT: '${REDIS_PORT:-6379}'
             SENTRY_DSN: '${SENTRY_DSN}'
             SENTRY_ENVIRONMENT: '${SENTRY_ENVIRONMENT:-production}'
+            STORAGE_DRIVER: s3
+            AUDIT_ARTIFACTS_BUCKET: '${AUDIT_ARTIFACTS_BUCKET}'
+            AUDIT_ARTIFACTS_REGION: '${AUDIT_ARTIFACTS_REGION}'
+            AUDIT_ARTIFACTS_ENDPOINT: '${AUDIT_ARTIFACTS_ENDPOINT}'
+            AUDIT_ARTIFACTS_KEY: '${AUDIT_ARTIFACTS_KEY}'
+            AUDIT_ARTIFACTS_SECRET: '${AUDIT_ARTIFACTS_SECRET}'
+            AUDIT_ARTIFACTS_USE_PATH_STYLE: '${AUDIT_ARTIFACTS_USE_PATH_STYLE:-true}'
         volumes:
             - 'crawler-storage:/app/services/playwright-spider/storage'
         depends_on:

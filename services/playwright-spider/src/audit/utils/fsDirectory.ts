@@ -1,6 +1,4 @@
 import fs from 'node:fs';
-import path from 'node:path';
-import { ZipArchive } from 'archiver';
 
 export async function deleteDirectoryIfExists(
     dir: string
@@ -14,58 +12,4 @@ export async function deleteDirectoryIfExists(
             },
         );
     }
-}
-
-export function deleteFileIfExists(
-    path: string
-): void {
-    if (fs.existsSync(path)) {
-        try {
-            fs.unlinkSync(path);
-        } catch (err) {
-            console.error('Error deleting file:', err);
-        }
-    }
-}
-
-export function ensureDirectoryExistence(
-    targetPath: string
-): void {
-    const dirname = path.dirname(targetPath);
-    if (! fs.existsSync(dirname)) {
-        ensureDirectoryExistence(dirname);
-        fs.mkdirSync(dirname);
-    }
-}
-
-export async function zipDirectory(
-    sourceDir: string,
-    outputZip: string,
-): Promise<{ path: string; }> {
-    return await new Promise((resolve, reject) => {
-        if (fs.existsSync(outputZip)) {
-            resolve({ path: outputZip });
-        }
-
-        if (! fs.existsSync(sourceDir)) {
-            reject('Source directory not exists.');
-        }
-
-        ensureDirectoryExistence(outputZip);
-
-        const output = fs.createWriteStream(outputZip);
-        const archive = new ZipArchive({
-            zlib: { level: 9 },
-        });
-
-        output.on('close', () => resolve({
-            path: output.path as string
-        }));
-
-        archive.on('error', reject);
-        archive.pipe(output);
-        archive.directory(sourceDir, false);
-
-        void archive.finalize();
-    });
 }

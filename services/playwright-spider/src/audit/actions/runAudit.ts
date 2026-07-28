@@ -4,8 +4,10 @@ import type { EventPublisher } from "../repositories/eventPublisher";
 import { crawlerMap } from "../services/crawlerMap";
 import { createAuditService } from "../services/auditService";
 import { createPerformCleanUpAction } from "./performCleanUp";
-import { createArtifactService } from "../services/artifactService";
+import { createArtifactStorage } from "../services/artifactStorage";
 import { wasCancelledExternally } from "./cancellationGuard";
+import path from "node:path";
+import type { StorageConfig } from "../../config";
 
 export interface IRunAuditAction {
     run: (auditId: string) => Promise<void>;
@@ -16,15 +18,15 @@ export const createRunAuditAction = (
     eventPublisher: EventPublisher,
     config: {
         artifactDirectory: string;
-        archiveDirectory: string;
+        storage: StorageConfig;
     }
 ): IRunAuditAction => {
     const {
         artifactDirectory,
-        archiveDirectory,
+        storage,
     } = config;
     const auditService = createAuditService(auditRepository, eventPublisher);
-    const artifactService = createArtifactService(artifactDirectory, archiveDirectory);
+    const artifactStorage = createArtifactStorage(storage);
     const performCleanUpAction = createPerformCleanUpAction(auditRepository);
     return {
         run: async (auditId) => {
@@ -51,7 +53,7 @@ export const createRunAuditAction = (
                     return;
                 }
 
-                await artifactService.compress(audit.id);
+                await artifactStorage.publish(audit.id, path.join(artifactDirectory, String(audit.id)));
                 await auditService.completeAudit(audit, crawler);
             } catch (err) {
                 if (wasCancelledExternally(await auditRepository.find(auditId))) {

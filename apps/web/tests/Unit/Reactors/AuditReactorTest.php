@@ -1,7 +1,5 @@
 <?php
 
-use App\Actions\Audit\UnzipCrawlerArtifacts;
-use App\Contracts\Spider;
 use App\Jobs\ProcessAuditArtifacts;
 use App\Reactors\AuditReactor;
 use App\StorableEvents\Audit\AuditWasCompleted;
@@ -16,30 +14,10 @@ function completedStorableEvent(string $crawlerId): AuditWasCompleted
         ->setAggregateRootUuid($crawlerId);
 }
 
-test('onAuditWasCompleted downloads, extracts, and queues processing of the artifacts', function () {
+test('onAuditWasCompleted dispatches ProcessAuditArtifacts for the crawler id', function () {
     Bus::fake();
 
-    $spider = Mockery::mock(Spider::class);
-    $spider->shouldReceive('download')->once()->with('crawler-1')->andReturn('zip-bytes');
-
-    $unzip = Mockery::mock(UnzipCrawlerArtifacts::class);
-    $unzip->shouldReceive('unzip')->once()->with('crawler-1', Mockery::type('string'));
-
-    (new AuditReactor($spider, $unzip))->onAuditWasCompleted(completedStorableEvent('crawler-1'));
+    (new AuditReactor)->onAuditWasCompleted(completedStorableEvent('crawler-1'));
 
     Bus::assertDispatched(ProcessAuditArtifacts::class, fn ($job) => $job->crawlerId === 'crawler-1');
-});
-
-test('onAuditWasCompleted swallows and reports a download failure without dispatching the job', function () {
-    Bus::fake();
-
-    $spider = Mockery::mock(Spider::class);
-    $spider->shouldReceive('download')->once()->andThrow(new Exception('boom'));
-
-    $unzip = Mockery::mock(UnzipCrawlerArtifacts::class);
-    $unzip->shouldNotReceive('unzip');
-
-    (new AuditReactor($spider, $unzip))->onAuditWasCompleted(completedStorableEvent('crawler-2'));
-
-    Bus::assertNotDispatched(ProcessAuditArtifacts::class);
 });

@@ -11,7 +11,6 @@ const cancelAuditAction = createCancelAuditAction(
     publishEvent,
     {
         artifactDirectory: Config.crawler.artifactDirectory,
-        archiveDirectory: Config.crawler.archiveDirectory,
     }
 );
 

@@ -36,7 +36,7 @@ const crawlerWorker = new Worker<{ auditId: string }>(
             publishEvent,
             {
                 artifactDirectory: Config.crawler.artifactDirectory,
-                archiveDirectory: Config.crawler.archiveDirectory,
+                storage: Config.storage,
             }
         ).run(data.auditId);
     },

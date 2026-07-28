@@ -17,9 +17,12 @@ services:
             XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
             XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
+            AUDIT_ARTIFACTS_DRIVER: local
+            AUDIT_ARTIFACTS_PATH: /shared/audit-artifacts
         volumes:
             - './apps/web:/var/www/html'
             - './.env:/var/www/html/.env'
+            - './storage/audit-artifacts:/shared/audit-artifacts'
         networks:
             - equalsite
         depends_on:
@@ -64,6 +67,7 @@ services:
             - '.:/app'
             - 'crawler-node-modules:/app/node_modules'
             - 'crawler-service-node-modules:/app/services/playwright-spider/node_modules'
+            - './storage/audit-artifacts:/shared/audit-artifacts'
         environment:
             NODE_ENV: development
             STREAM_NAME: '${STREAM_NAME:-equalsite:crawler:events}'
@@ -71,6 +75,8 @@ services:
             CRAWLER_PORT: ${CRAWLER_PORT:-3000}
             REDIS_HOST: '${REDIS_HOST:-redis}'
             REDIS_PORT: '${REDIS_PORT:-6379}'
+            STORAGE_DRIVER: local
+            AUDIT_ARTIFACTS_PATH: /shared/audit-artifacts
         depends_on:
             - redis
         networks:

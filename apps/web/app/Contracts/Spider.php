@@ -28,6 +28,4 @@ interface Spider
      * @throws SpiderUnavailableException
      */
     public function cancel(string $id): array;
-
-    public function download(string $id): string;
 }

@@ -71,39 +71,3 @@ test('cancel throws an unavailable exception when the crawler-api cannot be reac
         expect($e->status)->toBeNull();
     }
 });
-
-test('download returns the raw response body on success', function () {
-    Http::fake([
-        '*/api/v1/download/*' => Http::response('zip-bytes', 200),
-    ]);
-
-    $result = (new SpiderClient)->download('crawler-123');
-
-    expect($result)->toBe('zip-bytes');
-});
-
-test('download throws an unavailable exception when the crawler-api cannot be reached', function () {
-    Http::fake([
-        '*/api/v1/download/*' => Http::failedConnection(),
-    ]);
-
-    try {
-        (new SpiderClient)->download('crawler-123');
-        $this->fail('Expected SpiderUnavailableException to be thrown.');
-    } catch (SpiderUnavailableException $e) {
-        expect($e->status)->toBeNull();
-    }
-});
-
-test('download throws an unavailable exception on a non-validation error response', function () {
-    Http::fake([
-        '*/api/v1/download/*' => Http::response('Not Found', 404),
-    ]);
-
-    try {
-        (new SpiderClient)->download('crawler-123');
-        $this->fail('Expected SpiderUnavailableException to be thrown.');
-    } catch (SpiderUnavailableException $e) {
-        expect($e->status)->toBe(404);
-    }
-});

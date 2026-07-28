@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Contracts\ArtifactRepository as ArtifactRepositoryContract;
 use App\Value\AxeResult;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 class ArtifactRepository implements ArtifactRepositoryContract
@@ -13,25 +12,19 @@ class ArtifactRepository implements ArtifactRepositoryContract
 
     public function getAxeResults(string $id): array
     {
-        $pattern = $this->getPath($id).'datasets/default/*.json';
+        $disk = Storage::disk('audit_artifacts');
+        $prefix = "{$this->directory}/{$id}/artifacts";
 
-        return collect(File::glob($pattern))
-            ->map(fn (string $path) => File::json($path))
+        return collect($disk->files($prefix))
+            ->map(fn (string $path) => json_decode($disk->get($path), true))
+            ->filter(fn ($array) => is_array($array))
+            ->values()
             ->map(fn (array $array) => AxeResult::fromArray($array))
             ->all();
     }
 
-    public function getPath(string $id): string
-    {
-        return Storage::path("{$this->directory}/{$id}/");
-    }
-
     public function delete(string $id): void
     {
-        $path = $this->getPath($id);
-
-        if (File::isDirectory($path)) {
-            File::deleteDirectory($path);
-        }
+        Storage::disk('audit_artifacts')->deleteDirectory("{$this->directory}/{$id}");
     }
 }
