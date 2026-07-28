@@ -28,7 +28,7 @@ class CreateAuditViolation
 
         if ($model->wasRecentlyCreated && $violation->screenshotPath) {
             $model->forceFill([
-                'screenshot_path' => $this->persistScreenshot($audit->crawler_id, $violation->screenshotPath),
+                'screenshot_path' => $this->resolveScreenshotPath($audit->crawler_id, $violation->screenshotPath),
             ]);
         }
 
@@ -43,17 +43,10 @@ class CreateAuditViolation
         $model->save();
     }
 
-    protected function persistScreenshot(string $crawlerId, string $relativePath): ?string
+    protected function resolveScreenshotPath(string $crawlerId, string $relativePath): ?string
     {
-        $sourcePath = $this->repository->getPath($crawlerId).$relativePath;
+        $path = "audits/{$crawlerId}/{$relativePath}";
 
-        if (! is_file($sourcePath)) {
-            return null;
-        }
-
-        $destination = "audits/{$crawlerId}/".basename($relativePath);
-        Storage::disk('public')->put($destination, file_get_contents($sourcePath));
-
-        return $destination;
+        return Storage::disk('audit_artifacts')->exists($path) ? $path : null;
     }
 }

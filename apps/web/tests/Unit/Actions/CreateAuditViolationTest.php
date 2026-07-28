@@ -36,14 +36,13 @@ function makeAxeItem(array $overrides = []): AxeItem
     );
 }
 
-test('the first occurrence of a rule copies its screenshot into the public disk', function () {
-    Storage::fake('local');
-    Storage::fake('public');
+test('the first occurrence of a rule records the already-published screenshot path', function () {
+    Storage::fake('audit_artifacts');
 
     $user = User::factory()->create();
     $audit = makeUserAudit($user, 'crawler-screenshot-1', 'acme.com', Status::Completed);
 
-    Storage::disk('local')->put('audits/crawler-screenshot-1/screenshots/0__color-contrast.png', 'fake-png-bytes');
+    Storage::disk('audit_artifacts')->put('audits/crawler-screenshot-1/screenshots/0__color-contrast.png', 'fake-png-bytes');
 
     $violation = makeAxeItem(['screenshotPath' => 'screenshots/0__color-contrast.png']);
 
@@ -52,20 +51,17 @@ test('the first occurrence of a rule copies its screenshot into the public disk'
 
     $model = $audit->violations()->where('rule_id', 'color-contrast')->firstOrFail();
 
-    expect($model->screenshot_path)->not->toBeNull()
-        ->and(Storage::disk('public')->exists($model->screenshot_path))->toBeTrue()
-        ->and(Storage::disk('public')->get($model->screenshot_path))->toBe('fake-png-bytes');
+    expect($model->screenshot_path)->toBe('audits/crawler-screenshot-1/screenshots/0__color-contrast.png');
 });
 
-test('a second page with the same rule does not overwrite the first screenshot', function () {
-    Storage::fake('local');
-    Storage::fake('public');
+test('a second page with the same rule does not overwrite the first recorded path', function () {
+    Storage::fake('audit_artifacts');
 
     $user = User::factory()->create();
     $audit = makeUserAudit($user, 'crawler-screenshot-2', 'acme.com', Status::Completed);
 
-    Storage::disk('local')->put('audits/crawler-screenshot-2/screenshots/0__color-contrast.png', 'first-page-bytes');
-    Storage::disk('local')->put('audits/crawler-screenshot-2/screenshots/1__color-contrast.png', 'second-page-bytes');
+    Storage::disk('audit_artifacts')->put('audits/crawler-screenshot-2/screenshots/0__color-contrast.png', 'first-page-bytes');
+    Storage::disk('audit_artifacts')->put('audits/crawler-screenshot-2/screenshots/1__color-contrast.png', 'second-page-bytes');
 
     $action = new CreateAuditViolation(app(ArtifactRepository::class));
 
@@ -74,18 +70,33 @@ test('a second page with the same rule does not overwrite the first screenshot',
 
     $model = $audit->violations()->where('rule_id', 'color-contrast')->firstOrFail();
 
-    expect(Storage::disk('public')->get($model->screenshot_path))->toBe('first-page-bytes');
+    expect($model->screenshot_path)->toBe('audits/crawler-screenshot-2/screenshots/0__color-contrast.png');
 });
 
 test('a violation with no screenshotPath leaves screenshot_path null', function () {
-    Storage::fake('local');
-    Storage::fake('public');
+    Storage::fake('audit_artifacts');
 
     $user = User::factory()->create();
     $audit = makeUserAudit($user, 'crawler-screenshot-3', 'acme.com', Status::Completed);
 
     (new CreateAuditViolation(app(ArtifactRepository::class)))
         ->create($audit, 'https://acme.com/', makeAxeItem());
+
+    $model = $audit->violations()->where('rule_id', 'color-contrast')->firstOrFail();
+
+    expect($model->screenshot_path)->toBeNull();
+});
+
+test('a screenshotPath that does not exist on the disk leaves screenshot_path null', function () {
+    Storage::fake('audit_artifacts');
+
+    $user = User::factory()->create();
+    $audit = makeUserAudit($user, 'crawler-screenshot-4', 'acme.com', Status::Completed);
+
+    $violation = makeAxeItem(['screenshotPath' => 'screenshots/missing.png']);
+
+    (new CreateAuditViolation(app(ArtifactRepository::class)))
+        ->create($audit, 'https://acme.com/', $violation);
 
     $model = $audit->violations()->where('rule_id', 'color-contrast')->firstOrFail();
 
