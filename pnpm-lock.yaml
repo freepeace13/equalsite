@@ -341,7 +341,7 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       '@flystorage/file-storage':
-        specifier: ^1.2.2
+        specifier: ^1.2.0
         version: 1.2.2
       '@flystorage/local-fs':
         specifier: ^1.2.0
