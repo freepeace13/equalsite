@@ -202,6 +202,7 @@ type AuditOptions = {
     maxDepth?: number | null;
     includeGlobs?: string[];
     excludeGlobs?: string[];
+    captureScreenshot?: boolean;
 };
 type CreateAuditRequestBody = {
     urls: string[];
