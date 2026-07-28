@@ -16,9 +16,12 @@ services:
         networks:
             - equalsite
         depends_on:
-            - mysql
-            - redis
-            - soketi
+            mysql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+            soketi:
+                condition: service_started
         mem_limit: 512m
         cpus: 1.0
         healthcheck:
@@ -37,8 +40,10 @@ services:
         networks:
             - equalsite
         depends_on:
-            - mysql
-            - redis
+            mysql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
         mem_limit: 512m
         cpus: 1.0
 
@@ -51,7 +56,8 @@ services:
         networks:
             - equalsite
         depends_on:
-            - redis
+            redis:
+                condition: service_healthy
         mem_limit: 256m
         cpus: 0.5
 
@@ -75,7 +81,8 @@ services:
         volumes:
             - 'crawler-storage:/app/services/playwright-spider/storage'
         depends_on:
-            - redis
+            redis:
+                condition: service_healthy
         networks:
             - equalsite
         mem_limit: 512m
@@ -110,7 +117,8 @@ services:
         volumes:
             - 'crawler-storage:/app/services/playwright-spider/storage'
         depends_on:
-            - redis
+            redis:
+                condition: service_healthy
         networks:
             - equalsite
         mem_limit: 2500m
@@ -184,8 +192,10 @@ services:
             - 'caddy-data:/data'
             - 'caddy-config:/config'
         depends_on:
-            - web
-            - soketi
+            web:
+                condition: service_started
+            soketi:
+                condition: service_started
         networks:
             - equalsite
         mem_limit: 128m
