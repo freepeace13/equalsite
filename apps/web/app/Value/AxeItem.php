@@ -22,6 +22,7 @@ class AxeItem implements Arrayable
         public readonly string $helpUrl,
         public readonly array $nodes,
         public readonly ?string $impact,
+        public readonly ?string $screenshotPath = null,
     ) {}
 
     public static function fromArray(array $array): static
@@ -35,7 +36,8 @@ class AxeItem implements Arrayable
             helpUrl: $array['helpUrl'],
             nodes: collect($array['nodes'])
                 ->map(fn (array $i) => AxeNode::fromArray($i))
-                ->all()
+                ->all(),
+            screenshotPath: $array['screenshotPath'] ?? null,
         );
     }
 
@@ -49,6 +51,7 @@ class AxeItem implements Arrayable
             'help' => $this->help,
             'helpUrl' => $this->helpUrl,
             'nodes' => collect($this->nodes)->toArray(),
+            'screenshotPath' => $this->screenshotPath,
         ];
     }
 }
