@@ -11,6 +11,7 @@ services:
                 VITE_PUSHER_SCHEME: https
         image: ghcr.io/freepeace13/equalsite-web:latest
         restart: always
+        stop_grace_period: 30s
         env_file: .env
         networks:
             - equalsite
@@ -30,6 +31,8 @@ services:
         image: ghcr.io/freepeace13/equalsite-web:latest
         command: php artisan horizon
         restart: always
+        # Horizon needs time to finish in-flight jobs after SIGTERM; 10s default got it SIGKILLed mid-drain.
+        stop_grace_period: 60s
         env_file: .env
         networks:
             - equalsite
@@ -43,6 +46,7 @@ services:
         image: ghcr.io/freepeace13/equalsite-web:latest
         command: php artisan spider:listen
         restart: always
+        stop_grace_period: 30s
         env_file: .env
         networks:
             - equalsite
@@ -112,8 +116,12 @@ services:
         mem_limit: 2500m
         cpus: 2.0
 
+    # Infra images are pinned by digest: a floating tag re-resolving during a deploy's
+    # `compose pull && up -d` recreates the container mid-deploy, breaking DNS for the
+    # service name while old app containers are still draining (Sentry getaddrinfo burst,
+    # 2026-07-26). To upgrade, update the tag AND digest together, deliberately.
     mysql:
-        image: 'mysql:8.4'
+        image: 'mysql:8.4.10@sha256:8dbcf531a03aade657e181b9cf2f1d1803ce621a1d55610cb44cb531ab7d7db6'
         restart: always
         environment:
             MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
@@ -133,7 +141,7 @@ services:
             timeout: 5s
 
     redis:
-        image: 'redis:alpine'
+        image: 'redis:8.8.1-alpine@sha256:8096655e437712b07503796fb64d81359256cfcff0ab29d95a7da72863786efb'
         restart: always
         volumes:
             - 'redis-data:/data'
@@ -147,7 +155,7 @@ services:
             timeout: 5s
 
     soketi:
-        image: 'quay.io/soketi/soketi:latest-16-alpine'
+        image: 'quay.io/soketi/soketi:latest-16-alpine@sha256:fe7e68cdec157343b40cdbe604dd3ca2788d3fbf5624d3ab8f085b623d700ece'
         restart: always
         environment:
             SOKETI_DEBUG: '0'
@@ -163,7 +171,7 @@ services:
         cpus: 0.5
 
     caddy:
-        image: caddy:alpine
+        image: 'caddy:2.11.4-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648'
         restart: always
         environment:
             APP_DOMAIN: '${APP_DOMAIN}'
