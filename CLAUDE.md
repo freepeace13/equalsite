@@ -129,6 +129,8 @@ docker compose up -d --build
 docker compose exec web php artisan migrate
 docker compose exec web php artisan crawler:listen   # required for live progress — not automatic
 ```
+Cross-service HTTP calls use `CRAWLER_SECRET` for auth; in production, `crawler-worker` also needs `AUDIT_ARTIFACTS_*` B2 credentials in the deploy host's `.env` for direct artifact publishing.
+
 Vite must run **on the host**, not in the container — the app embeds `http://127.0.0.1:5174/` asset
 URLs, which only resolve from the host: `pnpm --filter @equalsite/web dev`.
 
