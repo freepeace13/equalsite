@@ -60,6 +60,20 @@ return [
             'report' => false,
         ],
 
+        'audit_artifacts' => [
+            'driver' => env('AUDIT_ARTIFACTS_DRIVER', 'local'),
+            'root' => env('AUDIT_ARTIFACTS_PATH', storage_path('app/audit-artifacts')),
+            'key' => env('AUDIT_ARTIFACTS_KEY'),
+            'secret' => env('AUDIT_ARTIFACTS_SECRET'),
+            'region' => env('AUDIT_ARTIFACTS_REGION'),
+            'bucket' => env('AUDIT_ARTIFACTS_BUCKET'),
+            'endpoint' => env('AUDIT_ARTIFACTS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AUDIT_ARTIFACTS_USE_PATH_STYLE', false),
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*
