@@ -29,6 +29,22 @@ test('getAxeResults reads and parses every JSON file under the artifacts prefix'
         ]);
 });
 
+test('getAxeResults skips files that fail to decode into an array', function () {
+    Storage::fake('audit_artifacts');
+
+    Storage::disk('audit_artifacts')->put('audits/crawler-3/artifacts/000000001.json', 'not valid json');
+    Storage::disk('audit_artifacts')->put('audits/crawler-3/artifacts/000000002.json', json_encode([
+        'auditId' => 'crawler-3',
+        'pageUrl' => 'https://acme.com/',
+        'violations' => [],
+    ]));
+
+    $results = app(ArtifactRepository::class)->getAxeResults('crawler-3');
+
+    expect($results)->toHaveCount(1)
+        ->and($results[0]->url)->toBe('https://acme.com/');
+});
+
 test('getAxeResults returns an empty array when nothing has been published yet', function () {
     Storage::fake('audit_artifacts');
 

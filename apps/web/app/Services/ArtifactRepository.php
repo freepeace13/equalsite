@@ -17,6 +17,8 @@ class ArtifactRepository implements ArtifactRepositoryContract
 
         return collect($disk->files($prefix))
             ->map(fn (string $path) => json_decode($disk->get($path), true))
+            ->filter(fn ($array) => is_array($array))
+            ->values()
             ->map(fn (array $array) => AxeResult::fromArray($array))
             ->all();
     }
