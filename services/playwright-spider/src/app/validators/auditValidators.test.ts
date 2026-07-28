@@ -137,6 +137,29 @@ describe("auditValidators", () => {
             });
         });
 
+        it("accepts a valid payload with captureScreenshot set", async () => {
+            const response = await postAudit({
+                ...validAuditBody,
+                options: { ...validAuditBody.options, captureScreenshot: false },
+            });
+
+            expect(response.status).toBe(202);
+        });
+
+        it("rejects a non-boolean options.captureScreenshot", async () => {
+            const response = await postAudit({
+                ...validAuditBody,
+                options: { ...validAuditBody.options, captureScreenshot: "yes" },
+            });
+            const payload = await response.json() as ErrorPayload;
+
+            expect(response.status).toBe(400);
+            expect(payload.errors).toContainEqual({
+                field: 'options.captureScreenshot',
+                message: 'options.captureScreenshot must be a boolean.',
+            });
+        });
+
         it("rejects a non-string entry in options.includeGlobs", async () => {
             const response = await postAudit({
                 ...validAuditBody,

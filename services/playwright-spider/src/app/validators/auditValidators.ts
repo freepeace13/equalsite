@@ -47,6 +47,10 @@ export const createAuditValidationRules: ValidationChain[] = [
         .optional()
         .isString()
         .withMessage('each options.excludeGlobs entry must be a string'),
+    body('options.captureScreenshot')
+        .optional()
+        .isBoolean()
+        .withMessage('options.captureScreenshot must be a boolean'),
 ];
 
 export const cancelAuditValidationRules: ValidationChain[] = [
