@@ -3,12 +3,14 @@ import type { EventPublisher } from "../repositories/eventPublisher";
 import type { ServerityBreakdown } from "@equalsite/types";
 import { pageCompletedEvent } from "../events/pageCompletedEvent";
 import type { PlaywrightCrawler } from "crawlee";
+import type { ViolationScreenshotMap } from "./captureViolationScreenshots";
 
 export interface IProcessAxeResultAction {
     run: (params: {
         auditId: string;
         pageUrl: string;
-        axeResults: AxeResults
+        axeResults: AxeResults;
+        screenshotPaths?: ViolationScreenshotMap;
     }) => Promise<void>;
 }
 
@@ -19,13 +21,17 @@ export const createProcessAxeResultAction = (
     run: async ({
         auditId,
         pageUrl,
-        axeResults
+        axeResults,
+        screenshotPaths
     }) => {
         const violations = axeResults.violations;
         await pushData({
             auditId,
             pageUrl,
-            violations,
+            violations: violations.map((violation) => ({
+                ...violation,
+                screenshotPath: screenshotPaths?.[violation.id],
+            })),
             // passes: axeResults.passes // @todo customizable by request
         });
 
