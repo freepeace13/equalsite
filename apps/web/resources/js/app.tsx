@@ -16,6 +16,7 @@ configureEcho({
     wsPort: Number(import.meta.env.VITE_PUSHER_PORT || 6001),
     forceTLS: false,
     enabledTransports: ['ws', 'wss'],
+    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER
 });
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
