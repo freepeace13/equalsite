@@ -49,6 +49,7 @@ jobs:
             VITE_PUSHER_HOST=${{ secrets.VITE_PUSHER_HOST }}
             VITE_PUSHER_PORT=443
             VITE_PUSHER_SCHEME=https
+            VITE_PUSHER_APP_CLUSTER=${{ secrets.VITE_PUSHER_APP_CLUSTER }}
           tags: |
             ghcr.io/freepeace13/equalsite-web:latest
             ghcr.io/freepeace13/equalsite-web:${{ github.sha }}
