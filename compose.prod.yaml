@@ -9,6 +9,7 @@ services:
                 VITE_PUSHER_HOST: '${SOKETI_DOMAIN}'
                 VITE_PUSHER_PORT: 443
                 VITE_PUSHER_SCHEME: https
+                VITE_PUSHER_APP_CLUSTER: '${PUSHER_APP_CLUSTER}'
         image: ghcr.io/freepeace13/equalsite-web:latest
         restart: always
         stop_grace_period: 30s
