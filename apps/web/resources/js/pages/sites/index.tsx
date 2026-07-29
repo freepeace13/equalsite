@@ -77,7 +77,7 @@ export default function Index({ sites }: SitesIndexProps) {
         <>
             <Head title="Your sites" />
 
-            <main className="container mx-auto py-10">
+            <main className="container mx-auto py-10 px-6">
                 <div className="mb-6 flex items-end justify-between gap-4">
                     <div>
                         <h1 className="font-display text-xl font-medium">

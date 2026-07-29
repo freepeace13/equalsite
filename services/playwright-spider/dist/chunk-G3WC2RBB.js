@@ -12,8 +12,19 @@ var bullmq = {
 var storagePath = path.join(process.cwd(), "storage");
 var crawler = {
   maxRequestsPerCrawl: Number(process.env.CRAWLER_PAGE_LIMIT || 50),
-  artifactDirectory: path.join(storagePath, "artifacts"),
-  archiveDirectory: path.join(storagePath, "archives")
+  artifactDirectory: path.join(storagePath, "artifacts")
+};
+var storage = process.env.STORAGE_DRIVER === "s3" ? {
+  driver: "s3",
+  bucket: String(process.env.AUDIT_ARTIFACTS_BUCKET),
+  region: process.env.AUDIT_ARTIFACTS_REGION,
+  endpoint: process.env.AUDIT_ARTIFACTS_ENDPOINT,
+  accessKeyId: String(process.env.AUDIT_ARTIFACTS_KEY),
+  secretAccessKey: String(process.env.AUDIT_ARTIFACTS_SECRET),
+  forcePathStyle: process.env.AUDIT_ARTIFACTS_USE_PATH_STYLE === "true"
+} : {
+  driver: "local",
+  localPath: process.env.AUDIT_ARTIFACTS_PATH || path.join(storagePath, "audit-artifacts")
 };
 
 // src/app/services/redis.ts
@@ -450,14 +461,11 @@ var createAuditService = (auditRepository2, eventPublisher) => ({
   }
 });
 
-// src/audit/services/artifactService.ts
-import fs2 from "fs";
-import path3 from "path";
+// src/audit/services/crawlerMap.ts
+var crawlerMap = /* @__PURE__ */ new Map();
 
 // src/audit/utils/fsDirectory.ts
 import fs from "fs";
-import path2 from "path";
-import { ZipArchive } from "archiver";
 async function deleteDirectoryIfExists(dir) {
   if (fs.existsSync(dir)) {
     await fs.promises.rm(
@@ -469,89 +477,12 @@ async function deleteDirectoryIfExists(dir) {
     );
   }
 }
-function deleteFileIfExists(path4) {
-  if (fs.existsSync(path4)) {
-    try {
-      fs.unlinkSync(path4);
-    } catch (err) {
-      console.error("Error deleting file:", err);
-    }
-  }
-}
-function ensureDirectoryExistence(targetPath) {
-  const dirname = path2.dirname(targetPath);
-  if (!fs.existsSync(dirname)) {
-    ensureDirectoryExistence(dirname);
-    fs.mkdirSync(dirname);
-  }
-}
-async function zipDirectory(sourceDir, outputZip) {
-  return await new Promise((resolve, reject) => {
-    if (fs.existsSync(outputZip)) {
-      resolve({ path: outputZip });
-    }
-    if (!fs.existsSync(sourceDir)) {
-      reject("Source directory not exists.");
-    }
-    ensureDirectoryExistence(outputZip);
-    const output = fs.createWriteStream(outputZip);
-    const archive = new ZipArchive({
-      zlib: { level: 9 }
-    });
-    output.on("close", () => resolve({
-      path: output.path
-    }));
-    archive.on("error", reject);
-    archive.pipe(output);
-    archive.directory(sourceDir, false);
-    void archive.finalize();
-  });
-}
-
-// src/audit/services/artifactService.ts
-var createArtifactService = (artifactDirectory, archiveDirectory) => {
-  const directoryPath = (auditId) => {
-    return path3.join(artifactDirectory, auditId);
-  };
-  const zippedPath = (auditId) => {
-    return path3.join(archiveDirectory, `${auditId}.zip`);
-  };
-  const compress = async (auditId) => {
-    const source = directoryPath(auditId);
-    const result = await zipDirectory(source, zippedPath(auditId));
-    await deleteDirectoryIfExists(source);
-    return result.path;
-  };
-  const cleanup = async (auditId) => {
-    await deleteDirectoryIfExists(directoryPath(auditId));
-    deleteFileIfExists(zippedPath(auditId));
-  };
-  const zippedFile = (auditId) => {
-    const zipPath = zippedPath(auditId);
-    if (fs2.existsSync(zipPath)) {
-      return zipPath;
-    }
-    if (fs2.existsSync(directoryPath(auditId))) {
-      return compress(auditId);
-    }
-    throw new Error("Missing artifacts download.");
-  };
-  return {
-    zippedFile,
-    cleanup,
-    compress,
-    zippedPath,
-    directoryPath
-  };
-};
-
-// src/audit/services/crawlerMap.ts
-var crawlerMap = /* @__PURE__ */ new Map();
 
 export {
   secretKey,
   bullmq,
   crawler,
+  storage,
   bullClient,
   auditRepository,
   crawlerQueue,
@@ -560,7 +491,7 @@ export {
   progressEvent,
   classifyError,
   createAuditService,
-  createArtifactService,
+  deleteDirectoryIfExists,
   crawlerMap,
   initSentry,
   attachSentryErrorHandler,

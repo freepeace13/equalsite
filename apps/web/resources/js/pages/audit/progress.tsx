@@ -44,8 +44,8 @@ export default function Progress({
         scanInfo.status === 'started' || scanInfo.status === 'completed'
             ? 'crawling'
             : scanInfo.status === 'queued'
-              ? 'waiting'
-              : null;
+                ? 'waiting'
+                : null;
     const issuesCount = countIssues(scanUrls);
     const failedPagesCount = countFailedPages(scanUrls);
     const attemptedPagesCount = scanUrls.length;
@@ -55,7 +55,7 @@ export default function Progress({
         <>
             <Head title={`Auditing ${domain}`} />
 
-            <main className="container mx-auto py-10">
+            <main className="container mx-auto py-10 px-6">
                 <div className="mb-6 flex items-center justify-between">
                     <p className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
                         <GlobeIcon />
@@ -106,7 +106,7 @@ export default function Progress({
                         {scanInfo.failureCode
                             ? friendlyErrorMessage(scanInfo.failureCode)
                             : (scanInfo.failureReason ??
-                              'An unexpected error occurred.')}
+                                'An unexpected error occurred.')}
                     </Callout>
                 )}
 

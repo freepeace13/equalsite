@@ -23,12 +23,12 @@ function buildSidebarNavItems(monetizationEnabled: boolean): NavItem[] {
         },
         ...(monetizationEnabled
             ? [
-                  {
-                      title: 'Billing',
-                      href: editBilling(),
-                      icon: null,
-                  },
-              ]
+                {
+                    title: 'Billing',
+                    href: editBilling(),
+                    icon: null,
+                },
+            ]
             : []),
         {
             title: 'Appearance',
@@ -44,7 +44,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     const sidebarNavItems = buildSidebarNavItems(monetizationEnabled);
 
     return (
-        <div className="container mx-auto py-10">
+        <div className="container mx-auto py-10 px-6">
             <Heading
                 title="Settings"
                 description="Manage your profile and account settings"

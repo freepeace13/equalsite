@@ -9,9 +9,7 @@ import { SCAN_STATUS_BADGE, isActiveStatus } from '@/lib/audit-status';
 import { ScoreTrendSparkline } from '@/components/reporting/score-trend-sparkline';
 import type { ScanStatus } from '@/types';
 import {
-    ArrowRightIcon,
     Button,
-    EmptyState,
     MetricCard,
     type MetricCardTone,
     ScoreRing,
@@ -148,119 +146,96 @@ export default function Dashboard(props: DashboardProps) {
         <>
             <Head title="Dashboard" />
 
-            <main className="container mx-auto py-10">
-                <div className="mb-8">
-                    <h1 className="font-display text-xl font-medium">
-                        dashboard
-                    </h1>
-                    {story && (
-                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                            {story}
-                        </p>
-                    )}
+            <main className="container mx-auto py-10 px-6">
+                <div className="mb-8 flex items-end justify-between gap-4">
+                    <div>
+                        <h1 className="font-display text-xl font-medium">
+                            dashboard
+                        </h1>
+                        {story && (
+                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                {story}
+                            </p>
+                        )}
+                    </div>
+                    <Button size="sm" onClick={() => setAuditFormOpen(true)}>
+                        new audit
+                    </Button>
                 </div>
 
-                {sitesTracked === 0 ? (
-                    <EmptyState
-                        title="no audits yet"
-                        description="run your first audit and this page fills in with your portfolio's score trend and open issues."
-                        action={
-                            <Button size="sm" asChild>
-                                <Link href="/">
-                                    run your first audit
-                                    <ArrowRightIcon />
-                                </Link>
-                            </Button>
-                        }
-                    />
-                ) : (
-                    <>
-                        <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                            <div>
-                                <MetricCard
-                                    label="sites tracked"
-                                    value={sitesTracked}
-                                />
-                                <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-                                    {auditsRun} {str.plural('audit', auditsRun)}{' '}
-                                    run in total
-                                </p>
-                            </div>
+                <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                    <div>
+                        <MetricCard
+                            label="sites tracked"
+                            value={sitesTracked}
+                        />
+                        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            {auditsRun} {str.plural('audit', auditsRun)} run in
+                            total
+                        </p>
+                    </div>
 
-                            <div>
-                                <MetricCard
-                                    label="overall score"
-                                    value={latestScore ?? '—'}
-                                    tone={
-                                        latestScore !== null
-                                            ? scoreTone(latestScore)
-                                            : 'default'
-                                    }
-                                />
-                                {scoreTrend.length >= 2 && (
-                                    <ScoreTrendSparkline data={scoreTrend} />
-                                )}
-                            </div>
-
-                            <div>
-                                <MetricCard
-                                    label="critical issues open"
-                                    value={criticalCount}
-                                    tone={
-                                        criticalCount > 0
-                                            ? 'warning'
-                                            : 'success'
-                                    }
-                                />
-                                <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-                                    {criticalCount > 0 &&
-                                        props.oldestOpenCriticalDays !== null
-                                        ? `oldest open ${props.oldestOpenCriticalDays} ${str.plural('day', props.oldestOpenCriticalDays)}`
-                                        : 'none open right now'}
-                                </p>
-                            </div>
-
-                            <div>
-                                <MetricCard
-                                    label="quick wins available"
-                                    value={quickWinsCount}
-                                    tone={
-                                        quickWinsCount > 0
-                                            ? 'success'
-                                            : 'default'
-                                    }
-                                />
-                                <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-                                    {quickWinsCount > 0
-                                        ? 'high impact — do these first'
-                                        : 'nothing queued up'}
-                                </p>
-                            </div>
-                        </div>
-
-                        <SectionLabel
-                            className="mb-3"
-                            action={
-                                <Link
-                                    href={sitesIndex().url}
-                                    className="text-xs font-medium text-indigo-700 hover:underline dark:text-indigo-400"
-                                >
-                                    view all sites
-                                </Link>
+                    <div>
+                        <MetricCard
+                            label="overall score"
+                            value={latestScore ?? '—'}
+                            tone={
+                                latestScore !== null
+                                    ? scoreTone(latestScore)
+                                    : 'default'
                             }
+                        />
+                        {scoreTrend.length >= 2 && (
+                            <ScoreTrendSparkline data={scoreTrend} />
+                        )}
+                    </div>
+
+                    <div>
+                        <MetricCard
+                            label="critical issues open"
+                            value={criticalCount}
+                            tone={criticalCount > 0 ? 'warning' : 'success'}
+                        />
+                        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            {criticalCount > 0 &&
+                                props.oldestOpenCriticalDays !== null
+                                ? `oldest open ${props.oldestOpenCriticalDays} ${str.plural('day', props.oldestOpenCriticalDays)}`
+                                : 'none open right now'}
+                        </p>
+                    </div>
+
+                    <div>
+                        <MetricCard
+                            label="quick wins available"
+                            value={quickWinsCount}
+                            tone={quickWinsCount > 0 ? 'success' : 'default'}
+                        />
+                        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            {quickWinsCount > 0
+                                ? 'high impact — do these first'
+                                : 'nothing queued up'}
+                        </p>
+                    </div>
+                </div>
+
+                <SectionLabel
+                    className="mb-3"
+                    action={
+                        <Link
+                            href={sitesIndex().url}
+                            className="text-xs font-medium text-indigo-700 hover:underline dark:text-indigo-400"
                         >
-                            your sites
-                        </SectionLabel>
-                        <div className="flex gap-3 overflow-x-auto pb-1">
-                            {sitesPreview.map((site) => (
-                                <SitePreviewCard
-                                    key={site.domain}
-                                    site={site}
-                                />
-                            ))}
-                        </div>
-                    </>
-                )}
+                            view all sites
+                        </Link>
+                    }
+                >
+                    your sites
+                </SectionLabel>
+                <div className="flex gap-3 overflow-x-auto pb-1">
+                    {sitesPreview.map((site) => (
+                        <SitePreviewCard key={site.domain} site={site} />
+                    ))}
+                </div>
             </main>
 
             <AuditRequestModal

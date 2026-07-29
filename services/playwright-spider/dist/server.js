@@ -4,13 +4,13 @@ import {
   crawler,
   crawlerMap,
   crawlerQueue,
-  createArtifactService,
   createAuditService,
   createQueuePositionService,
+  deleteDirectoryIfExists,
   initSentry,
   publishEvent,
   secretKey
-} from "./chunk-6K4R3JGH.js";
+} from "./chunk-G3WC2RBB.js";
 
 // src/app.ts
 import express from "express";
@@ -95,9 +95,9 @@ var CreateAuditController = async (request, response) => {
 };
 
 // src/audit/actions/cancelAudit.ts
+import path from "path";
 var createCancelAuditAction = (auditRepository2, eventPublisher, config) => {
   const auditService = createAuditService(auditRepository2, eventPublisher);
-  const artifactService2 = createArtifactService(config.artifactDirectory, config.archiveDirectory);
   return {
     run: async (auditId) => {
       const audit = await auditRepository2.findOrFail(auditId);
@@ -112,7 +112,7 @@ var createCancelAuditAction = (auditRepository2, eventPublisher, config) => {
         } else {
           await auditRepository2.save(audit.markAsCancelled());
         }
-        await artifactService2.cleanup(audit.id);
+        await deleteDirectoryIfExists(path.join(config.artifactDirectory, String(audit.id)));
       } catch (err) {
         console.error(err);
       } finally {
@@ -128,8 +128,7 @@ var cancelAuditAction = createCancelAuditAction(
   auditRepository,
   publishEvent,
   {
-    artifactDirectory: crawler.artifactDirectory,
-    archiveDirectory: crawler.archiveDirectory
+    artifactDirectory: crawler.artifactDirectory
   }
 );
 var CancelAuditController = async (request, response) => {
@@ -145,25 +144,6 @@ var CancelAuditController = async (request, response) => {
   });
 };
 
-// src/app/controllers/downloadArtifactsController.ts
-var { artifactDirectory, archiveDirectory } = crawler;
-var artifactService = createArtifactService(artifactDirectory, archiveDirectory);
-var DownloadArtifactsController = async (request, response) => {
-  const { auditId } = request.params;
-  const zippedFile = await artifactService.zippedFile(auditId);
-  return response.download(zippedFile, (err) => {
-    if (err) {
-      console.error("Error during file transfer:", err);
-      if (!response.headersSent) {
-        return response.status(500).send("Could not download file.");
-      }
-    } else {
-      console.log("Download complete. Proceeding to delete file...");
-      void artifactService.cleanup(auditId);
-    }
-  });
-};
-
 // src/routes/index.ts
 var router = Router();
 router.post(
@@ -176,7 +156,6 @@ router.delete(
   validationMiddleware(cancelAuditValidationRules),
   CancelAuditController
 );
-router.get("/download/:auditId", DownloadArtifactsController);
 router.get("/ping", (req, res) => {
   res.json({ ok: true });
 });

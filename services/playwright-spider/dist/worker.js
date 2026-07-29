@@ -7,15 +7,16 @@ import {
   crawler,
   crawlerMap,
   crawlerQueue,
-  createArtifactService,
   createAuditService,
   createQueuePositionService,
+  deleteDirectoryIfExists,
   initSentry,
   onUncaughtException,
   onUnhandledRejection,
   progressEvent,
-  publishEvent
-} from "./chunk-6K4R3JGH.js";
+  publishEvent,
+  storage
+} from "./chunk-G3WC2RBB.js";
 
 // src/worker.ts
 import { Worker } from "bullmq";
@@ -337,19 +338,65 @@ var createPerformCleanUpAction = (auditRepository2) => ({
   }
 });
 
+// src/audit/services/artifactStorage.ts
+import fs2 from "fs";
+import path3 from "path";
+import { FileStorage } from "@flystorage/file-storage";
+import { LocalStorageAdapter } from "@flystorage/local-fs";
+import { AwsS3StorageAdapter } from "@flystorage/aws-s3";
+import { S3Client } from "@aws-sdk/client-s3";
+var createAdapter = (config) => {
+  if (config.driver === "s3") {
+    const client = new S3Client({
+      region: config.region,
+      endpoint: config.endpoint,
+      forcePathStyle: config.forcePathStyle,
+      credentials: {
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: config.secretAccessKey
+      }
+    });
+    return new AwsS3StorageAdapter(client, { bucket: config.bucket });
+  }
+  return new LocalStorageAdapter(config.localPath);
+};
+var createArtifactStorage = (config) => {
+  const storage2 = new FileStorage(createAdapter(config));
+  const publishDirectory = async (sourceDir, targetPrefix) => {
+    if (!fs2.existsSync(sourceDir)) {
+      return;
+    }
+    for (const fileName of fs2.readdirSync(sourceDir)) {
+      const filePath = path3.join(sourceDir, fileName);
+      if (fs2.statSync(filePath).isDirectory()) {
+        continue;
+      }
+      await storage2.write(`${targetPrefix}/${fileName}`, fs2.createReadStream(filePath));
+    }
+  };
+  return {
+    publish: async (auditId, scratchDir) => {
+      await publishDirectory(path3.join(scratchDir, "datasets", "default"), `audits/${auditId}/artifacts`);
+      await publishDirectory(path3.join(scratchDir, "screenshots"), `audits/${auditId}/screenshots`);
+      await deleteDirectoryIfExists(scratchDir);
+    }
+  };
+};
+
 // src/audit/actions/cancellationGuard.ts
 function wasCancelledExternally(freshAudit) {
   return freshAudit === null || freshAudit.status.is("cancelled");
 }
 
 // src/audit/actions/runAudit.ts
+import path4 from "path";
 var createRunAuditAction = (auditRepository2, eventPublisher, config) => {
   const {
     artifactDirectory,
-    archiveDirectory
+    storage: storage2
   } = config;
   const auditService = createAuditService(auditRepository2, eventPublisher);
-  const artifactService = createArtifactService(artifactDirectory, archiveDirectory);
+  const artifactStorage = createArtifactStorage(storage2);
   const performCleanUpAction = createPerformCleanUpAction(auditRepository2);
   return {
     run: async (auditId) => {
@@ -370,7 +417,7 @@ var createRunAuditAction = (auditRepository2, eventPublisher, config) => {
         if (wasCancelledExternally(await auditRepository2.find(auditId))) {
           return;
         }
-        await artifactService.compress(audit.id);
+        await artifactStorage.publish(audit.id, path4.join(artifactDirectory, String(audit.id)));
         await auditService.completeAudit(audit, crawler2);
       } catch (err) {
         if (wasCancelledExternally(await auditRepository2.find(auditId))) {
@@ -399,7 +446,7 @@ var crawlerWorker = new Worker(
       publishEvent,
       {
         artifactDirectory: crawler.artifactDirectory,
-        archiveDirectory: crawler.archiveDirectory
+        storage
       }
     ).run(data.auditId);
   },

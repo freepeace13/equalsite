@@ -15,14 +15,26 @@ import {
     type ImpactKey,
 } from '@/components/reporting/impact-group';
 import {
+    Badge,
     Button,
+    CheckCircleIcon,
     CheckIcon,
     EmptyState,
     GlobeIcon,
     MetricCard,
+    MinusCircleIcon,
     ScoreRing,
     SectionLabel,
+    SlidersIcon,
 } from '@equalsite/ui';
+
+function Dot() {
+    return (
+        <span className="text-slate-300 dark:text-slate-700" aria-hidden>
+            ·
+        </span>
+    );
+}
 
 const CRAWL_DEPTH_LABELS: Record<number, string> = {
     1: 'shallow',
@@ -99,7 +111,7 @@ export default function Show({ report }: ReportProps) {
         <>
             <Head title={`Accessibility report for ${domain}`} />
 
-            <main className="container mx-auto py-10">
+            <main className="container mx-auto py-10 px-6">
                 {/* Score + narrative */}
                 <div className="mb-6 flex items-start justify-between gap-5 border-b border-slate-200 pb-6 dark:border-slate-800">
                     <div className="flex items-start gap-5">
@@ -154,88 +166,90 @@ export default function Show({ report }: ReportProps) {
                 </div>
 
                 {report.scanSettings && (
-                    <div className="mb-8">
-                        <SectionLabel className="mb-2">
-                            scan settings
-                        </SectionLabel>
-                        <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 rounded-lg border border-slate-200 p-4 text-sm sm:grid-cols-3 dark:border-slate-800">
-                            <div>
-                                <dt className="text-xs text-slate-500 dark:text-slate-400">
-                                    page limit
-                                </dt>
-                                <dd>
-                                    up to {report.scanSettings.maxPages}{' '}
-                                    {str.plural(
-                                        'page',
-                                        report.scanSettings.maxPages,
-                                    )}
-                                </dd>
-                            </div>
+                    <div className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-slate-200 px-3 py-1.5 text-xs text-slate-600 dark:border-slate-800 dark:text-slate-300">
+                        <SlidersIcon
+                            width={12}
+                            height={12}
+                            className="shrink-0 text-slate-400 dark:text-slate-500"
+                        />
 
-                            <div>
-                                <dt className="text-xs text-slate-500 dark:text-slate-400">
-                                    crawl depth
-                                </dt>
-                                <dd>
-                                    {report.scanSettings.maxDepth !== null
-                                        ? (CRAWL_DEPTH_LABELS[
-                                              report.scanSettings.maxDepth
-                                          ] ??
-                                          `${report.scanSettings.maxDepth} levels`)
-                                        : 'unlimited'}
-                                </dd>
-                            </div>
+                        <span>
+                            {report.scanSettings.maxPages}{' '}
+                            {str.plural('page', report.scanSettings.maxPages)}{' '}
+                            max
+                        </span>
 
-                            <div>
-                                <dt className="text-xs text-slate-500 dark:text-slate-400">
-                                    crawl scope
-                                </dt>
-                                <dd>
-                                    {ENQUEUE_STRATEGY_LABELS[
-                                        report.scanSettings.enqueueStrategy
-                                    ] ?? report.scanSettings.enqueueStrategy}
-                                </dd>
-                            </div>
+                        <Dot />
 
-                            <div>
-                                <dt className="text-xs text-slate-500 dark:text-slate-400">
-                                    include patterns
-                                </dt>
-                                <dd>
-                                    {report.scanSettings.includeGlobs.length >
-                                    0
-                                        ? report.scanSettings.includeGlobs.join(
-                                              ', ',
-                                          )
-                                        : 'none'}
-                                </dd>
-                            </div>
+                        <span>
+                            {report.scanSettings.maxDepth !== null
+                                ? (CRAWL_DEPTH_LABELS[
+                                    report.scanSettings.maxDepth
+                                ] ?? `${report.scanSettings.maxDepth}-level`)
+                                : 'unlimited'}{' '}
+                            depth
+                        </span>
 
-                            <div>
-                                <dt className="text-xs text-slate-500 dark:text-slate-400">
-                                    exclude patterns
-                                </dt>
-                                <dd>
-                                    {report.scanSettings.excludeGlobs.length >
-                                    0
-                                        ? report.scanSettings.excludeGlobs.join(
-                                              ', ',
-                                          )
-                                        : 'none'}
-                                </dd>
-                            </div>
+                        <Dot />
 
-                            <div>
-                                <dt className="text-xs text-slate-500 dark:text-slate-400">
-                                    screenshots
-                                </dt>
-                                <dd>
-                                    {report.scanSettings.captureScreenshot
-                                        ? 'captured'
-                                        : 'not captured'}
-                                </dd>
-                            </div>
-                        </dl>
+                        <span>
+                            {ENQUEUE_STRATEGY_LABELS[
+                                report.scanSettings.enqueueStrategy
+                            ] ?? report.scanSettings.enqueueStrategy}
+                        </span>
+
+                        <Dot />
+
+                        <span className="inline-flex items-center gap-1">
+                            {report.scanSettings.captureScreenshot ? (
+                                <CheckCircleIcon
+                                    width={12}
+                                    height={12}
+                                    className="text-emerald-600 dark:text-emerald-500"
+                                />
+                            ) : (
+                                <MinusCircleIcon
+                                    width={12}
+                                    height={12}
+                                    className="text-slate-400 dark:text-slate-500"
+                                />
+                            )}
+                            screenshots{' '}
+                            {report.scanSettings.captureScreenshot
+                                ? 'on'
+                                : 'off'}
+                        </span>
+
+                        {(report.scanSettings.includeGlobs.length > 0 ||
+                            report.scanSettings.excludeGlobs.length > 0) && (
+                                <>
+                                    <Dot />
+                                    <span className="inline-flex flex-wrap items-center gap-1">
+                                        {report.scanSettings.includeGlobs.map(
+                                            (glob) => (
+                                                <Badge
+                                                    key={`in-${glob}`}
+                                                    variant="outline"
+                                                    className="gap-0.5 px-1.5 py-0 font-mono text-[10px] font-normal"
+                                                >
+                                                    +{glob}
+                                                </Badge>
+                                            ),
+                                        )}
+                                        {report.scanSettings.excludeGlobs.map(
+                                            (glob) => (
+                                                <Badge
+                                                    key={`ex-${glob}`}
+                                                    variant="outline"
+                                                    className="gap-0.5 px-1.5 py-0 font-mono text-[10px] font-normal"
+                                                >
+                                                    −{glob}
+                                                </Badge>
+                                            ),
+                                        )}
+                                    </span>
+                                </>
+                            )}
                     </div>
                 )}
 

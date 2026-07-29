@@ -128,7 +128,7 @@ export default function Show({
         <>
             <Head title={`Audit history for ${domain}`} />
 
-            <main className="container mx-auto py-10">
+            <main className="container mx-auto py-10 px-6">
                 <Link
                     href={sitesIndex().url}
                     className="mb-3 inline-block text-xs text-slate-500 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-white"
