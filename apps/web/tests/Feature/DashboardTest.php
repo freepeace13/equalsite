@@ -24,7 +24,9 @@ test('the dashboard is empty for a user with no audits', function () {
             ->where('scoreTrend', [])
             ->where('criticalCount', 0)
             ->where('quickWinsCount', 0)
-            ->where('sitesPreview', []),
+            ->loadDeferredProps(fn (Assert $page) => $page
+                ->where('sitesPreview', []),
+            ),
         );
 });
 
@@ -52,7 +54,9 @@ test('the dashboard aggregates open issues and score trend across all sites', fu
             ->where('criticalCount', 1)
             ->where('oldestOpenCriticalDays', 10)
             ->where('quickWinsCount', 2)
-            ->has('sitesPreview', 2),
+            ->loadDeferredProps(fn (Assert $page) => $page
+                ->has('sitesPreview', 2),
+            ),
         );
 });
 
@@ -73,9 +77,11 @@ test('an in-progress site is included in the preview without a score', function 
         ->assertInertia(fn (Assert $page) => $page
             ->component('dashboard')
             ->where('sitesTracked', 1)
-            ->where('sitesPreview.0.domain', 'wip.com')
-            ->where('sitesPreview.0.status', 'started')
-            ->where('sitesPreview.0.score', null),
+            ->loadDeferredProps(fn (Assert $page) => $page
+                ->where('sitesPreview.0.domain', 'wip.com')
+                ->where('sitesPreview.0.status', 'started')
+                ->where('sitesPreview.0.score', null),
+            ),
         );
 });
 
@@ -89,6 +95,8 @@ test('a user only sees their own sites on the dashboard', function () {
         ->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page
             ->where('sitesTracked', 0)
-            ->where('sitesPreview', []),
+            ->loadDeferredProps(fn (Assert $page) => $page
+                ->where('sitesPreview', []),
+            ),
         );
 });
