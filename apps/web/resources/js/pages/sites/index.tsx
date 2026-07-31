@@ -18,6 +18,7 @@ import {
     TableHeader,
     TableRow,
 } from '@equalsite/ui';
+import { AuditRequestProvider, useAuditRequestForm } from '@/components/audit-request';
 
 type SitesIndexProps = {
     sites: Site[];
@@ -70,87 +71,88 @@ function SiteRow({ site }: { site: Site }) {
     );
 }
 
-export default function Index({ sites }: SitesIndexProps) {
-    const [auditFormOpen, setAuditFormOpen] = useState(false);
-
+function SitesContent({ sites }: { sites: Site[] }) {
+    const auditRequestForm = useAuditRequestForm()
     return (
         <>
-            <Head title="Your sites" />
-
-            <main className="container mx-auto py-10 px-6">
-                <div className="mb-6 flex items-end justify-between gap-4">
-                    <div>
-                        <h1 className="font-display text-xl font-medium">
-                            your sites
-                        </h1>
-                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                            {sites.length} {str.plural('site', sites.length)}{' '}
-                            tracked
-                        </p>
-                    </div>
-                    {sites.length > 0 && (
-                        <button
-                            type="button"
-                            onClick={() => setAuditFormOpen(true)}
-                            className="text-xs font-medium text-indigo-700 hover:underline dark:text-indigo-400"
-                        >
-                            run a new audit
-                        </button>
-                    )}
+            <div className="mb-6 flex items-end justify-between gap-4">
+                <div>
+                    <h1 className="font-display text-xl font-medium">
+                        your sites
+                    </h1>
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        {sites.length} {str.plural('site', sites.length)}{' '}
+                        tracked
+                    </p>
                 </div>
-
-                {sites.length === 0 ? (
-                    <EmptyState
-                        title="no sites yet"
-                        description="run your first audit and it'll show up here, grouped with the rest of that site's history."
-                        action={
-                            <Button
-                                size="sm"
-                                onClick={() => setAuditFormOpen(true)}
-                            >
-                                run your first audit
-                                <ArrowRightIcon />
-                            </Button>
-                        }
-                    />
-                ) : (
-                    <TableCard>
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-slate-50 dark:bg-slate-900">
-                                    <TableHead>domain</TableHead>
-                                    <TableHead>status</TableHead>
-                                    <TableHead>score</TableHead>
-                                    <TableHead>audits</TableHead>
-                                    <TableHead>last run</TableHead>
-                                    <TableHead />
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {sites.map((site) =>
-                                    isActiveStatus(site.status) ? (
-                                        <LiveSiteRow
-                                            key={site.domain}
-                                            site={site}
-                                        />
-                                    ) : (
-                                        <SiteRow
-                                            key={site.domain}
-                                            site={site}
-                                        />
-                                    ),
-                                )}
-                            </TableBody>
-                        </Table>
-                    </TableCard>
+                {sites.length > 0 && (
+                    <button
+                        type="button"
+                        onClick={() => auditRequestForm.open()}
+                        className="text-xs font-medium text-indigo-700 hover:underline dark:text-indigo-400"
+                    >
+                        run a new audit
+                    </button>
                 )}
-            </main>
+            </div>
 
-            <AuditRequestModal
-                open={auditFormOpen}
-                onOpenChange={setAuditFormOpen}
-            />
+            {sites.length === 0 ? (
+                <EmptyState
+                    title="no sites yet"
+                    description="run your first audit and it'll show up here, grouped with the rest of that site's history."
+                    action={
+                        <Button
+                            size="sm"
+                            onClick={() => auditRequestForm.open()}
+                        >
+                            run your first audit
+                            <ArrowRightIcon />
+                        </Button>
+                    }
+                />
+            ) : (
+                <TableCard>
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="bg-slate-50 dark:bg-slate-900">
+                                <TableHead>domain</TableHead>
+                                <TableHead>status</TableHead>
+                                <TableHead>score</TableHead>
+                                <TableHead>audits</TableHead>
+                                <TableHead>last run</TableHead>
+                                <TableHead />
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {sites.map((site) =>
+                                isActiveStatus(site.status) ? (
+                                    <LiveSiteRow
+                                        key={site.domain}
+                                        site={site}
+                                    />
+                                ) : (
+                                    <SiteRow
+                                        key={site.domain}
+                                        site={site}
+                                    />
+                                ),
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableCard>
+            )}
         </>
+    )
+}
+
+export default function Index({ sites }: SitesIndexProps) {
+    return (
+        <AuditRequestProvider>
+            <Head title="Your sites" />
+            <main className="container mx-auto py-10 px-6">
+                <SitesContent sites={sites} />
+            </main>
+        </AuditRequestProvider>
     );
 }
 

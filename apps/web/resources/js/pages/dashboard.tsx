@@ -1,7 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { store } from '@/routes/audit';
-import { AuditRequestModal } from '@/components/audit-request-modal';
 import { show as siteShow, index as sitesIndex } from '@/routes/sites';
 import { humanReadableDateTime, str } from '@/lib/utils';
 import { takePendingAudit } from '@/lib/pending-audit';
@@ -16,6 +15,7 @@ import {
     SectionLabel,
     StatusBadge,
 } from '@equalsite/ui';
+import { AuditRequestProvider, useAuditRequestForm } from '@/components/audit-request';
 
 type ScoreTrendPoint = {
     auditId: string;
@@ -120,8 +120,8 @@ function SitePreviewCard({ site }: { site: SitePreview }) {
     );
 }
 
-export default function Dashboard(props: DashboardProps) {
-    const [auditFormOpen, setAuditFormOpen] = useState(false);
+function DashboardContent(props: DashboardProps) {
+    const auditRequestForm = useAuditRequestForm();
     const {
         sitesTracked,
         auditsRun,
@@ -132,7 +132,111 @@ export default function Dashboard(props: DashboardProps) {
     } = props;
     const latestScore = scoreTrend.at(-1)?.score ?? null;
     const story = narrative(props);
+    return (
+        <>
+            <div className="mb-8 flex items-end justify-between gap-4">
+                <div>
+                    <h1 className="font-display text-xl font-medium">
+                        dashboard
+                    </h1>
+                    {story && (
+                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                            {story}
+                        </p>
+                    )}
+                </div>
+                <Button size="sm" onClick={() => auditRequestForm.open()}>
+                    new audit
+                </Button>
+            </div>
 
+            <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div>
+                    <MetricCard
+                        label="sites tracked"
+                        value={sitesTracked}
+                    />
+                    <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                        {auditsRun} {str.plural('audit', auditsRun)} run in
+                        total
+                    </p>
+                </div>
+
+                <div>
+                    <MetricCard
+                        label="overall score"
+                        value={latestScore ?? '—'}
+                        tone={
+                            latestScore !== null
+                                ? scoreTone(latestScore)
+                                : 'default'
+                        }
+                    />
+                    {scoreTrend.length >= 2 && (
+                        <ScoreTrendSparkline data={scoreTrend} />
+                    )}
+                </div>
+
+                <div>
+                    <MetricCard
+                        label="critical issues open"
+                        value={criticalCount}
+                        tone={criticalCount > 0 ? 'warning' : 'success'}
+                    />
+                    <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                        {criticalCount > 0 &&
+                            props.oldestOpenCriticalDays !== null
+                            ? `oldest open ${props.oldestOpenCriticalDays} ${str.plural('day', props.oldestOpenCriticalDays)}`
+                            : 'none open right now'}
+                    </p>
+                </div>
+
+                <div>
+                    <MetricCard
+                        label="quick wins available"
+                        value={quickWinsCount}
+                        tone={quickWinsCount > 0 ? 'success' : 'default'}
+                    />
+                    <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                        {quickWinsCount > 0
+                            ? 'high impact — do these first'
+                            : 'nothing queued up'}
+                    </p>
+                </div>
+            </div>
+
+            <SectionLabel
+                className="mb-3"
+                action={
+                    <Link
+                        href={sitesIndex().url}
+                        className="text-xs font-medium text-indigo-700 hover:underline dark:text-indigo-400"
+                    >
+                        view all sites
+                    </Link>
+                }
+            >
+                your sites
+            </SectionLabel>
+            <div className="flex gap-3 overflow-x-auto pb-1">
+                {sitesPreview.map((site) => (
+                    <SitePreviewCard key={site.domain} site={site} />
+                ))}
+            </div>
+        </>
+    );
+}
+
+export default function Dashboard(props: DashboardProps) {
+    const {
+        sitesTracked,
+        auditsRun,
+        scoreTrend,
+        criticalCount,
+        quickWinsCount,
+        sitesPreview,
+        oldestOpenCriticalDays
+    } = props;
     // Guests who submit the audit form get sent through login/register; this
     // is where they land afterwards, so pick the request back up and fire it.
     useEffect(() => {
@@ -143,105 +247,19 @@ export default function Dashboard(props: DashboardProps) {
     }, []);
 
     return (
-        <>
+        <AuditRequestProvider>
             <Head title="Dashboard" />
-
             <main className="container mx-auto py-10 px-6">
-                <div className="mb-8 flex items-end justify-between gap-4">
-                    <div>
-                        <h1 className="font-display text-xl font-medium">
-                            dashboard
-                        </h1>
-                        {story && (
-                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                {story}
-                            </p>
-                        )}
-                    </div>
-                    <Button size="sm" onClick={() => setAuditFormOpen(true)}>
-                        new audit
-                    </Button>
-                </div>
-
-                <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                    <div>
-                        <MetricCard
-                            label="sites tracked"
-                            value={sitesTracked}
-                        />
-                        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-                            {auditsRun} {str.plural('audit', auditsRun)} run in
-                            total
-                        </p>
-                    </div>
-
-                    <div>
-                        <MetricCard
-                            label="overall score"
-                            value={latestScore ?? '—'}
-                            tone={
-                                latestScore !== null
-                                    ? scoreTone(latestScore)
-                                    : 'default'
-                            }
-                        />
-                        {scoreTrend.length >= 2 && (
-                            <ScoreTrendSparkline data={scoreTrend} />
-                        )}
-                    </div>
-
-                    <div>
-                        <MetricCard
-                            label="critical issues open"
-                            value={criticalCount}
-                            tone={criticalCount > 0 ? 'warning' : 'success'}
-                        />
-                        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-                            {criticalCount > 0 &&
-                                props.oldestOpenCriticalDays !== null
-                                ? `oldest open ${props.oldestOpenCriticalDays} ${str.plural('day', props.oldestOpenCriticalDays)}`
-                                : 'none open right now'}
-                        </p>
-                    </div>
-
-                    <div>
-                        <MetricCard
-                            label="quick wins available"
-                            value={quickWinsCount}
-                            tone={quickWinsCount > 0 ? 'success' : 'default'}
-                        />
-                        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-                            {quickWinsCount > 0
-                                ? 'high impact — do these first'
-                                : 'nothing queued up'}
-                        </p>
-                    </div>
-                </div>
-
-                <SectionLabel
-                    className="mb-3"
-                    action={
-                        <Link
-                            href={sitesIndex().url}
-                            className="text-xs font-medium text-indigo-700 hover:underline dark:text-indigo-400"
-                        >
-                            view all sites
-                        </Link>
-                    }
-                >
-                    your sites
-                </SectionLabel>
-                <div className="flex gap-3 overflow-x-auto pb-1">
-                    {sitesPreview.map((site) => (
-                        <SitePreviewCard key={site.domain} site={site} />
-                    ))}
-                </div>
+                <DashboardContent
+                    oldestOpenCriticalDays={oldestOpenCriticalDays}
+                    auditsRun={auditsRun}
+                    criticalCount={criticalCount}
+                    quickWinsCount={quickWinsCount}
+                    sitesPreview={sitesPreview}
+                    scoreTrend={scoreTrend}
+                    sitesTracked={sitesTracked}
+                />
             </main>
-
-            <AuditRequestModal
-                open={auditFormOpen}
-                onOpenChange={setAuditFormOpen}
-            />
-        </>
+        </AuditRequestProvider>
     );
 }
