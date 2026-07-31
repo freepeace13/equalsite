@@ -1,5 +1,7 @@
 <?php
 
+use App\Contracts\Spider;
+use App\Exceptions\Spider\SpiderException;
 use App\Http\Controllers\AccessibilityController;
 use App\Http\Controllers\Audit\CancelController;
 use App\Http\Controllers\Audit\ExportMarkdownController;
@@ -39,6 +41,17 @@ Route::get('/security', SecurityController::class)->name('security');
 Route::get('/audit-artifacts/show', ShowLocalArtifactController::class)
     ->name('audit-artifacts.show')
     ->middleware('signed');
+
+Route::get('/healthcheck', function (Spider $spider) {
+    try {
+        return response()->json($spider->healthcheck());
+    } catch (SpiderException $e) {
+        return response()->json([
+            'ok' => false,
+            'error' => $e->getMessage(),
+        ], 503);
+    }
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');

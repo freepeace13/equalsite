@@ -92,7 +92,7 @@ services:
             test:
                 [
                     'CMD-SHELL',
-                    'curl -sf -H "Authorization: Bearer $$CRAWLER_SECRET" http://localhost:3000/api/v1/ping || exit 1',
+                    'curl -sf -H "Authorization: Bearer $$CRAWLER_SECRET" http://localhost:3000/api/v1/healthcheck || exit 1',
                 ]
             interval: 30s
             timeout: 5s

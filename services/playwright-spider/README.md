@@ -58,7 +58,7 @@ Authentication: `Authorization: Bearer <CRAWLER_SECRET>`
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/ping` | Health check |
+| `GET` | `/healthcheck` | Health check (redis, queue, and artifact storage read/write status) |
 | `POST` | `/audit` | Enqueue a new audit |
 | `DELETE` | `/audit/:auditId` | Cancel a queued or running audit |
 | `GET` | `/download/:auditId` | Download the zipped artifact archive for a completed audit; deletes it once the download finishes |

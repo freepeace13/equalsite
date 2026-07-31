@@ -92,4 +92,4 @@ jobs:
             set +a
             curl -fsS "https://${APP_DOMAIN}/up"
             docker compose -f compose.prod.yaml exec -T crawler-api curl -fsS \
-              -H "Authorization: Bearer ${CRAWLER_SECRET}" http://localhost:3000/api/v1/ping
+              -H "Authorization: Bearer ${CRAWLER_SECRET}" http://localhost:3000/api/v1/healthcheck

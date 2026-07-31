@@ -49,5 +49,24 @@ export const createArtifactStorage = (config: StorageConfig) => {
             await publishDirectory(path.join(scratchDir, "screenshots"), `audits/${auditId}/screenshots`);
             await deleteDirectoryIfExists(scratchDir);
         },
+        healthcheck: async (): Promise<{ ok: boolean; error?: string }> => {
+            const probePath = `healthcheck/${Date.now()}-${Math.random().toString(36).slice(2)}.probe`;
+            const probeContents = "ok";
+
+            try {
+                await storage.write(probePath, probeContents);
+                const readBack = await storage.readToString(probePath);
+
+                if (readBack !== probeContents) {
+                    return { ok: false, error: "Read-back contents did not match what was written" };
+                }
+
+                return { ok: true };
+            } catch (error) {
+                return { ok: false, error: error instanceof Error ? error.message : String(error) };
+            } finally {
+                await storage.deleteFile(probePath).catch(() => undefined);
+            }
+        },
     };
 };

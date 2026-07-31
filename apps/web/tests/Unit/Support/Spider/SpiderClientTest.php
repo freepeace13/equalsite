@@ -59,6 +59,29 @@ test('create throws an unavailable exception on a non-validation error response'
     }
 });
 
+test('healthcheck returns the decoded response on success', function () {
+    Http::fake([
+        '*/api/v1/healthcheck' => Http::response(['ok' => true], 200),
+    ]);
+
+    $result = (new SpiderClient)->healthcheck();
+
+    expect($result)->toBe(['ok' => true]);
+});
+
+test('healthcheck throws an unavailable exception when the crawler-api reports itself unhealthy', function () {
+    Http::fake([
+        '*/api/v1/healthcheck' => Http::response(['ok' => false], 503),
+    ]);
+
+    try {
+        (new SpiderClient)->healthcheck();
+        $this->fail('Expected SpiderUnavailableException to be thrown.');
+    } catch (SpiderUnavailableException $e) {
+        expect($e->status)->toBe(503);
+    }
+});
+
 test('cancel throws an unavailable exception when the crawler-api cannot be reached', function () {
     Http::fake([
         '*/api/v1/audit/*' => Http::failedConnection(),

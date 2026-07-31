@@ -17,9 +17,9 @@ class SpiderClient implements Spider
         return $this->send(fn () => Http::spider()->delete("audit/{$id}"));
     }
 
-    public function ping(): array
+    public function healthcheck(): array
     {
-        return $this->send(fn () => Http::spider()->get('ping'));
+        return $this->send(fn () => Http::spider()->get('healthcheck'));
     }
 
     public function create(SpiderOptions $options): array

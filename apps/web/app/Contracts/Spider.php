@@ -15,7 +15,7 @@ interface Spider
      * @throws SpiderValidationException
      * @throws SpiderUnavailableException
      */
-    public function ping(): array;
+    public function healthcheck(): array;
 
     /**
      * @throws SpiderValidationException
