@@ -1,16 +1,22 @@
 import {
   attachSentryErrorHandler,
   auditRepository,
+  bullClient,
+  cacheClient,
+  captureWorkerFailure,
   crawler,
   crawlerMap,
   crawlerQueue,
+  createArtifactStorage,
   createAuditService,
   createQueuePositionService,
   deleteDirectoryIfExists,
   initSentry,
   publishEvent,
-  secretKey
-} from "./chunk-G3WC2RBB.js";
+  secretKey,
+  storage,
+  streamClient
+} from "./chunk-HX3M3JWE.js";
 
 // src/app.ts
 import express from "express";
@@ -144,6 +150,58 @@ var CancelAuditController = async (request, response) => {
   });
 };
 
+// src/app/controllers/healthcheckController.ts
+var artifactStorage = createArtifactStorage(storage);
+var pingRedisClient = async (client) => {
+  try {
+    await client.ping();
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
+  }
+};
+var HealthcheckController = async (request, response) => {
+  try {
+    const [cache, stream, bull, queueCounts, artifacts] = await Promise.all([
+      pingRedisClient(cacheClient),
+      pingRedisClient(streamClient),
+      pingRedisClient(bullClient),
+      crawlerQueue.getJobCounts(),
+      artifactStorage.healthcheck()
+    ]);
+    const ok = cache.ok && stream.ok && bull.ok && artifacts.ok;
+    if (!ok) {
+      console.error("Healthcheck reporting unhealthy", { cache, stream, bull, artifacts });
+    }
+    return response.status(ok ? 200 : 503).json({
+      ok,
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      uptimeSeconds: process.uptime(),
+      memory: process.memoryUsage(),
+      redis: {
+        cache,
+        stream,
+        bull
+      },
+      queue: {
+        name: crawlerQueue.name,
+        counts: queueCounts
+      },
+      artifactStorage: {
+        driver: storage.driver,
+        ...artifacts
+      }
+    });
+  } catch (error) {
+    console.error("Healthcheck failed unexpectedly", error);
+    captureWorkerFailure(error);
+    return response.status(503).json({
+      ok: false,
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+};
+
 // src/routes/index.ts
 var router = Router();
 router.post(
@@ -156,9 +214,7 @@ router.delete(
   validationMiddleware(cancelAuditValidationRules),
   CancelAuditController
 );
-router.get("/ping", (req, res) => {
-  res.json({ ok: true });
-});
+router.get("/healthcheck", HealthcheckController);
 var routes_default = router;
 
 // src/app/middleware/authenticateInternalRequest.ts

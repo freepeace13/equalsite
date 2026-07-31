@@ -464,6 +464,14 @@ var createAuditService = (auditRepository2, eventPublisher) => ({
 // src/audit/services/crawlerMap.ts
 var crawlerMap = /* @__PURE__ */ new Map();
 
+// src/audit/services/artifactStorage.ts
+import fs2 from "fs";
+import path2 from "path";
+import { FileStorage } from "@flystorage/file-storage";
+import { LocalStorageAdapter } from "@flystorage/local-fs";
+import { AwsS3StorageAdapter } from "@flystorage/aws-s3";
+import { S3Client } from "@aws-sdk/client-s3";
+
 // src/audit/utils/fsDirectory.ts
 import fs from "fs";
 async function deleteDirectoryIfExists(dir) {
@@ -478,11 +486,69 @@ async function deleteDirectoryIfExists(dir) {
   }
 }
 
+// src/audit/services/artifactStorage.ts
+var createAdapter = (config) => {
+  if (config.driver === "s3") {
+    const client = new S3Client({
+      region: config.region,
+      endpoint: config.endpoint,
+      forcePathStyle: config.forcePathStyle,
+      credentials: {
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: config.secretAccessKey
+      }
+    });
+    return new AwsS3StorageAdapter(client, { bucket: config.bucket });
+  }
+  return new LocalStorageAdapter(config.localPath);
+};
+var createArtifactStorage = (config) => {
+  const storage2 = new FileStorage(createAdapter(config));
+  const publishDirectory = async (sourceDir, targetPrefix) => {
+    if (!fs2.existsSync(sourceDir)) {
+      return;
+    }
+    for (const fileName of fs2.readdirSync(sourceDir)) {
+      const filePath = path2.join(sourceDir, fileName);
+      if (fs2.statSync(filePath).isDirectory()) {
+        continue;
+      }
+      await storage2.write(`${targetPrefix}/${fileName}`, fs2.createReadStream(filePath));
+    }
+  };
+  return {
+    publish: async (auditId, scratchDir) => {
+      await publishDirectory(path2.join(scratchDir, "datasets", "default"), `audits/${auditId}/artifacts`);
+      await publishDirectory(path2.join(scratchDir, "screenshots"), `audits/${auditId}/screenshots`);
+      await deleteDirectoryIfExists(scratchDir);
+    },
+    healthcheck: async () => {
+      const probePath = `healthcheck/${Date.now()}-${Math.random().toString(36).slice(2)}.probe`;
+      const probeContents = "ok";
+      try {
+        await storage2.write(probePath, probeContents);
+        const readBack = await storage2.readToString(probePath);
+        if (readBack !== probeContents) {
+          return { ok: false, error: "Read-back contents did not match what was written" };
+        }
+        return { ok: true };
+      } catch (error) {
+        console.error("Artifact storage healthcheck failed", error);
+        return { ok: false, error: error instanceof Error ? error.message : String(error) };
+      } finally {
+        await storage2.deleteFile(probePath).catch(() => void 0);
+      }
+    }
+  };
+};
+
 export {
   secretKey,
   bullmq,
   crawler,
   storage,
+  streamClient,
+  cacheClient,
   bullClient,
   auditRepository,
   crawlerQueue,
@@ -493,6 +559,7 @@ export {
   createAuditService,
   deleteDirectoryIfExists,
   crawlerMap,
+  createArtifactStorage,
   initSentry,
   attachSentryErrorHandler,
   captureWorkerFailure,

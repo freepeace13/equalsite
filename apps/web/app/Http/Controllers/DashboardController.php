@@ -48,10 +48,10 @@ class DashboardController extends Controller
             'criticalCount' => $criticalCount,
             'oldestOpenCriticalDays' => $oldestOpenCriticalDays,
             'quickWinsCount' => $quickWinsCount,
-            'sitesPreview' => $siteGroups
+            'sitesPreview' => Inertia::defer(fn () => $siteGroups
                 ->map(fn ($domainAudits, string $domain) => $this->presentSitePreview($domain, $domainAudits))
                 ->values()
-                ->take(6),
+                ->take(6)),
         ]);
     }
 

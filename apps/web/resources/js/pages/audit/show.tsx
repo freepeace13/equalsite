@@ -111,7 +111,7 @@ export default function Show({ report }: ReportProps) {
         <>
             <Head title={`Accessibility report for ${domain}`} />
 
-            <main className="container mx-auto py-10 px-6">
+            <main className="container mx-auto px-6 py-10">
                 {/* Score + narrative */}
                 <div className="mb-6 flex items-start justify-between gap-5 border-b border-slate-200 pb-6 dark:border-slate-800">
                     <div className="flex items-start gap-5">
@@ -142,29 +142,6 @@ export default function Show({ report }: ReportProps) {
                     </Button>
                 </div>
 
-                {/* Priority overview */}
-                <div className="mb-8 grid grid-cols-2 gap-3">
-                    <div>
-                        <MetricCard
-                            tone="success"
-                            label="quick wins"
-                            value={`${quickWinsCount} fix${quickWinsCount !== 1 ? 'es' : ''}`}
-                        />
-                        <p className="mt-1.5 text-xs text-emerald-600 dark:text-emerald-500">
-                            high impact — do these first
-                        </p>
-                    </div>
-                    <div>
-                        <MetricCard
-                            label="structural work"
-                            value={`${structuralCount} fix${structuralCount !== 1 ? 'es' : ''}`}
-                        />
-                        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-                            needs dev time — plan these
-                        </p>
-                    </div>
-                </div>
-
                 {report.scanSettings && (
                     <div className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-slate-200 px-3 py-1.5 text-xs text-slate-600 dark:border-slate-800 dark:text-slate-300">
                         <SlidersIcon
@@ -184,8 +161,8 @@ export default function Show({ report }: ReportProps) {
                         <span>
                             {report.scanSettings.maxDepth !== null
                                 ? (CRAWL_DEPTH_LABELS[
-                                    report.scanSettings.maxDepth
-                                ] ?? `${report.scanSettings.maxDepth}-level`)
+                                      report.scanSettings.maxDepth
+                                  ] ?? `${report.scanSettings.maxDepth}-level`)
                                 : 'unlimited'}{' '}
                             depth
                         </span>
@@ -222,36 +199,59 @@ export default function Show({ report }: ReportProps) {
 
                         {(report.scanSettings.includeGlobs.length > 0 ||
                             report.scanSettings.excludeGlobs.length > 0) && (
-                                <>
-                                    <Dot />
-                                    <span className="inline-flex flex-wrap items-center gap-1">
-                                        {report.scanSettings.includeGlobs.map(
-                                            (glob) => (
-                                                <Badge
-                                                    key={`in-${glob}`}
-                                                    variant="outline"
-                                                    className="gap-0.5 px-1.5 py-0 font-mono text-[10px] font-normal"
-                                                >
-                                                    +{glob}
-                                                </Badge>
-                                            ),
-                                        )}
-                                        {report.scanSettings.excludeGlobs.map(
-                                            (glob) => (
-                                                <Badge
-                                                    key={`ex-${glob}`}
-                                                    variant="outline"
-                                                    className="gap-0.5 px-1.5 py-0 font-mono text-[10px] font-normal"
-                                                >
-                                                    −{glob}
-                                                </Badge>
-                                            ),
-                                        )}
-                                    </span>
-                                </>
-                            )}
+                            <>
+                                <Dot />
+                                <span className="inline-flex flex-wrap items-center gap-1">
+                                    {report.scanSettings.includeGlobs.map(
+                                        (glob) => (
+                                            <Badge
+                                                key={`in-${glob}`}
+                                                variant="outline"
+                                                className="gap-0.5 px-1.5 py-0 font-mono text-[10px] font-normal"
+                                            >
+                                                +{glob}
+                                            </Badge>
+                                        ),
+                                    )}
+                                    {report.scanSettings.excludeGlobs.map(
+                                        (glob) => (
+                                            <Badge
+                                                key={`ex-${glob}`}
+                                                variant="outline"
+                                                className="gap-0.5 px-1.5 py-0 font-mono text-[10px] font-normal"
+                                            >
+                                                −{glob}
+                                            </Badge>
+                                        ),
+                                    )}
+                                </span>
+                            </>
+                        )}
                     </div>
                 )}
+
+                {/* Priority overview */}
+                <div className="mb-8 grid grid-cols-2 gap-3">
+                    <div>
+                        <MetricCard
+                            tone="success"
+                            label="quick wins"
+                            value={`${quickWinsCount} fix${quickWinsCount !== 1 ? 'es' : ''}`}
+                        />
+                        <p className="mt-1.5 text-xs text-emerald-600 dark:text-emerald-500">
+                            high impact — do these first
+                        </p>
+                    </div>
+                    <div>
+                        <MetricCard
+                            label="structural work"
+                            value={`${structuralCount} fix${structuralCount !== 1 ? 'es' : ''}`}
+                        />
+                        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            needs dev time — plan these
+                        </p>
+                    </div>
+                </div>
 
                 <SectionLabel className="mb-2">
                     grouped by who's affected
@@ -288,21 +288,21 @@ Show.layout = (props: ReportProps) => ({
     breadcrumbs:
         props.from === 'site'
             ? [
-                { title: 'Sites', href: sitesIndex() },
-                {
-                    title: hostnameOf(props.report.siteUrl),
-                    href: siteShow(hostnameOf(props.report.siteUrl)),
-                },
-                {
-                    title: props.report.auditId,
-                    href: show(props.report.auditId),
-                },
-            ]
+                  { title: 'Sites', href: sitesIndex() },
+                  {
+                      title: hostnameOf(props.report.siteUrl),
+                      href: siteShow(hostnameOf(props.report.siteUrl)),
+                  },
+                  {
+                      title: props.report.auditId,
+                      href: show(props.report.auditId),
+                  },
+              ]
             : [
-                { title: 'Audits', href: index() },
-                {
-                    title: props.report.auditId,
-                    href: show(props.report.auditId),
-                },
-            ],
+                  { title: 'Audits', href: index() },
+                  {
+                      title: props.report.auditId,
+                      href: show(props.report.auditId),
+                  },
+              ],
 });

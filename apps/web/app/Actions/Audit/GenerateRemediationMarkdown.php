@@ -104,11 +104,14 @@ class GenerateRemediationMarkdown
         ];
 
         foreach ($nodes as $node) {
+            $lines[] = "  - Selector `{$node['target']}`:";
+            $lines[] = '    ```html';
+            $lines[] = "    {$node['html']}";
+            $lines[] = '    ```';
+            $lines[] = '    Affected pages:';
+
             foreach ($node['urls'] as $url) {
-                $lines[] = "  - `{$url}` → selector `{$node['target']}`";
-                $lines[] = '    ```html';
-                $lines[] = "    {$node['html']}";
-                $lines[] = '    ```';
+                $lines[] = "    - `{$url}`";
             }
         }
 

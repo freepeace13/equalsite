@@ -7,16 +7,16 @@ import {
   crawler,
   crawlerMap,
   crawlerQueue,
+  createArtifactStorage,
   createAuditService,
   createQueuePositionService,
-  deleteDirectoryIfExists,
   initSentry,
   onUncaughtException,
   onUnhandledRejection,
   progressEvent,
   publishEvent,
   storage
-} from "./chunk-G3WC2RBB.js";
+} from "./chunk-HX3M3JWE.js";
 
 // src/worker.ts
 import { Worker } from "bullmq";
@@ -338,58 +338,13 @@ var createPerformCleanUpAction = (auditRepository2) => ({
   }
 });
 
-// src/audit/services/artifactStorage.ts
-import fs2 from "fs";
-import path3 from "path";
-import { FileStorage } from "@flystorage/file-storage";
-import { LocalStorageAdapter } from "@flystorage/local-fs";
-import { AwsS3StorageAdapter } from "@flystorage/aws-s3";
-import { S3Client } from "@aws-sdk/client-s3";
-var createAdapter = (config) => {
-  if (config.driver === "s3") {
-    const client = new S3Client({
-      region: config.region,
-      endpoint: config.endpoint,
-      forcePathStyle: config.forcePathStyle,
-      credentials: {
-        accessKeyId: config.accessKeyId,
-        secretAccessKey: config.secretAccessKey
-      }
-    });
-    return new AwsS3StorageAdapter(client, { bucket: config.bucket });
-  }
-  return new LocalStorageAdapter(config.localPath);
-};
-var createArtifactStorage = (config) => {
-  const storage2 = new FileStorage(createAdapter(config));
-  const publishDirectory = async (sourceDir, targetPrefix) => {
-    if (!fs2.existsSync(sourceDir)) {
-      return;
-    }
-    for (const fileName of fs2.readdirSync(sourceDir)) {
-      const filePath = path3.join(sourceDir, fileName);
-      if (fs2.statSync(filePath).isDirectory()) {
-        continue;
-      }
-      await storage2.write(`${targetPrefix}/${fileName}`, fs2.createReadStream(filePath));
-    }
-  };
-  return {
-    publish: async (auditId, scratchDir) => {
-      await publishDirectory(path3.join(scratchDir, "datasets", "default"), `audits/${auditId}/artifacts`);
-      await publishDirectory(path3.join(scratchDir, "screenshots"), `audits/${auditId}/screenshots`);
-      await deleteDirectoryIfExists(scratchDir);
-    }
-  };
-};
-
 // src/audit/actions/cancellationGuard.ts
 function wasCancelledExternally(freshAudit) {
   return freshAudit === null || freshAudit.status.is("cancelled");
 }
 
 // src/audit/actions/runAudit.ts
-import path4 from "path";
+import path3 from "path";
 var createRunAuditAction = (auditRepository2, eventPublisher, config) => {
   const {
     artifactDirectory,
@@ -417,7 +372,7 @@ var createRunAuditAction = (auditRepository2, eventPublisher, config) => {
         if (wasCancelledExternally(await auditRepository2.find(auditId))) {
           return;
         }
-        await artifactStorage.publish(audit.id, path4.join(artifactDirectory, String(audit.id)));
+        await artifactStorage.publish(audit.id, path3.join(artifactDirectory, String(audit.id)));
         await auditService.completeAudit(audit, crawler2);
       } catch (err) {
         if (wasCancelledExternally(await auditRepository2.find(auditId))) {

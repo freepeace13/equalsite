@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Deferred, Head, Link, router } from '@inertiajs/react';
 import { useEffect } from 'react';
 import { store } from '@/routes/audit';
 import { show as siteShow, index as sitesIndex } from '@/routes/sites';
@@ -13,9 +13,13 @@ import {
     type MetricCardTone,
     ScoreRing,
     SectionLabel,
+    Skeleton,
     StatusBadge,
 } from '@equalsite/ui';
-import { AuditRequestProvider, useAuditRequestForm } from '@/components/audit-request';
+import {
+    AuditRequestProvider,
+    useAuditRequestForm,
+} from '@/components/audit-request';
 
 type ScoreTrendPoint = {
     auditId: string;
@@ -38,7 +42,7 @@ type DashboardProps = {
     criticalCount: number;
     oldestOpenCriticalDays: number | null;
     quickWinsCount: number;
-    sitesPreview: SitePreview[];
+    sitesPreview?: SitePreview[];
 };
 
 function scoreTone(score: number): MetricCardTone {
@@ -120,6 +124,28 @@ function SitePreviewCard({ site }: { site: SitePreview }) {
     );
 }
 
+function SitePreviewCardSkeleton() {
+    return (
+        <div className="flex min-w-48 shrink-0 items-center gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+            <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+            <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-16" />
+            </div>
+        </div>
+    );
+}
+
+function SitesPreviewSkeleton() {
+    return (
+        <div className="flex gap-3 overflow-x-auto pb-1">
+            {Array.from({ length: 4 }).map((_, index) => (
+                <SitePreviewCardSkeleton key={index} />
+            ))}
+        </div>
+    );
+}
+
 function DashboardContent(props: DashboardProps) {
     const auditRequestForm = useAuditRequestForm();
     const {
@@ -152,10 +178,7 @@ function DashboardContent(props: DashboardProps) {
 
             <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <div>
-                    <MetricCard
-                        label="sites tracked"
-                        value={sitesTracked}
-                    />
+                    <MetricCard label="sites tracked" value={sitesTracked} />
                     <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
                         {auditsRun} {str.plural('audit', auditsRun)} run in
                         total
@@ -185,7 +208,7 @@ function DashboardContent(props: DashboardProps) {
                     />
                     <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
                         {criticalCount > 0 &&
-                            props.oldestOpenCriticalDays !== null
+                        props.oldestOpenCriticalDays !== null
                             ? `oldest open ${props.oldestOpenCriticalDays} ${str.plural('day', props.oldestOpenCriticalDays)}`
                             : 'none open right now'}
                     </p>
@@ -218,11 +241,15 @@ function DashboardContent(props: DashboardProps) {
             >
                 your sites
             </SectionLabel>
-            <div className="flex gap-3 overflow-x-auto pb-1">
-                {sitesPreview.map((site) => (
-                    <SitePreviewCard key={site.domain} site={site} />
-                ))}
-            </div>
+            <Deferred data="sitesPreview" fallback={<SitesPreviewSkeleton />}>
+                {sitesPreview && (
+                    <div className="flex gap-3 overflow-x-auto pb-1">
+                        {sitesPreview.map((site) => (
+                            <SitePreviewCard key={site.domain} site={site} />
+                        ))}
+                    </div>
+                )}
+            </Deferred>
         </>
     );
 }
@@ -235,7 +262,7 @@ export default function Dashboard(props: DashboardProps) {
         criticalCount,
         quickWinsCount,
         sitesPreview,
-        oldestOpenCriticalDays
+        oldestOpenCriticalDays,
     } = props;
     // Guests who submit the audit form get sent through login/register; this
     // is where they land afterwards, so pick the request back up and fire it.
@@ -249,7 +276,7 @@ export default function Dashboard(props: DashboardProps) {
     return (
         <AuditRequestProvider>
             <Head title="Dashboard" />
-            <main className="container mx-auto py-10 px-6">
+            <main className="container mx-auto px-6 py-10">
                 <DashboardContent
                     oldestOpenCriticalDays={oldestOpenCriticalDays}
                     auditsRun={auditsRun}
