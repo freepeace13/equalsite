@@ -81,16 +81,16 @@ test('a free account is allowed to re-scan again once the 1h window has elapsed'
     expect($audit->crawler_id)->toBe('second-scan');
 });
 
-test('a pro account is never blocked by the re-scan frequency rule', function () {
+test('a pro account is also blocked from re-scanning the same domain inside the rescan window', function () {
+    // page_cap/crawl_depths/rescan_frequency_minutes come from config/spider.php
+    // for every plan — the rescan cap is not a monetization lever.
     $user = User::factory()->pro()->create();
     makeUserAudit($user, 'first-scan', 'acme.com', Status::Completed);
 
-    $spider = Mockery::mock(Spider::class);
-    $spider->shouldReceive('create')->once()->andReturn(['id' => 'second-scan']);
+    $action = new CreateAudit(Mockery::mock(Spider::class));
 
-    $audit = (new CreateAudit($spider))->create($user, 'https://acme.com');
-
-    expect($audit->crawler_id)->toBe('second-scan');
+    expect(fn () => $action->create($user, 'https://acme.com'))
+        ->toThrow(RescanTooSoonException::class);
 });
 
 test('a free account adding a genuinely new site beyond its site cap is blocked with an upgrade message', function () {
@@ -149,19 +149,17 @@ test('a free account bypasses the site cap when monetization is disabled', funct
     expect($audit->crawler_id)->toBe('second-site');
 });
 
-test('a free account bypasses the re-scan frequency when monetization is disabled', function () {
+test('disabling monetization does not bypass the re-scan frequency, since it is not plan-driven', function () {
     config(['plans.enabled' => false]);
 
     $user = User::factory()->create();
     $lastAudit = makeUserAudit($user, 'first-scan', 'acme.com', Status::Completed);
-    $lastAudit->forceFill(['created_at' => now()->subMinutes(2)])->save(); // inside the free-plan rescan window
+    $lastAudit->forceFill(['created_at' => now()->subMinutes(2)])->save(); // inside the spider-config rescan window
 
-    $spider = Mockery::mock(Spider::class);
-    $spider->shouldReceive('create')->once()->andReturn(['id' => 'second-scan']);
+    $action = new CreateAudit(Mockery::mock(Spider::class));
 
-    $audit = (new CreateAudit($spider))->create($user, 'https://acme.com'); // re-submitting same domain within rescan window
-
-    expect($audit->crawler_id)->toBe('second-scan');
+    expect(fn () => $action->create($user, 'https://acme.com'))
+        ->toThrow(RescanTooSoonException::class);
 });
 
 test('an account is blocked from scanning a domain on the block list', function () {

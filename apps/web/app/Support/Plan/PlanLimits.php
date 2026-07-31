@@ -27,7 +27,7 @@ final class PlanLimits
 
     public function pageCap(): int
     {
-        return $this->get('page_cap');
+        return config('spider.page_cap');
     }
 
     /**
@@ -37,7 +37,7 @@ final class PlanLimits
     {
         return array_map(
             fn (int $value): CrawlDepth => CrawlDepth::from($value),
-            $this->get('crawl_depths'),
+            config('spider.crawl_depths'),
         );
     }
 
@@ -55,7 +55,7 @@ final class PlanLimits
 
     public function rescanFrequencyMinutes(): ?int
     {
-        return $this->get('rescan_frequency_minutes');
+        return config('spider.rescan_frequency_minutes');
     }
 
     public function historyRetention(): ?int

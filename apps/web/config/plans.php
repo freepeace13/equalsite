@@ -1,7 +1,5 @@
 <?php
 
-use App\Value\CrawlDepth;
-
 return [
 
     /*
@@ -12,10 +10,11 @@ return [
     | Centralizes every numeric/behavioral limit driven by a user's plan, keyed
     | by App\Value\Plan::value. This is a deploy-time constant, not something
     | edited at runtime — read exclusively through App\Support\Plan\PlanLimits,
-    | never via config('plans.*') directly from other classes. The env-backed
-    | exceptions are free.rescan_frequency_minutes (RESCAN_FREQUENCY_MINUTES),
-    | free.page_cap (FREE_PAGE_CAP), and pro.page_cap (PRO_PAGE_CAP), for
-    | experimenting with those limits without a code change.
+    | never via config('plans.*') directly from other classes.
+    |
+    | page_cap, crawl_depths, and rescan_frequency_minutes are NOT plan-driven:
+    | PlanLimits reads those from config/spider.php for every plan (free and
+    | pro alike), so they are intentionally absent here.
     |
     | 'queue_priority' is populated for a future BullMQ-priority pass but is not
     | read by anything yet in this pass.
@@ -31,24 +30,12 @@ return [
 
     'free' => [
         'site_cap' => 1,
-        'page_cap' => env('FREE_PAGE_CAP', 50),
-        'crawl_depths' => [
-            CrawlDepth::Shallow->value,
-        ],
-        'rescan_frequency_minutes' => env('RESCAN_FREQUENCY_MINUTES', 60),
         'history_retention' => 5,
         'queue_priority' => 10,
     ],
 
     'pro' => [
         'site_cap' => null, // null = unlimited
-        'page_cap' => env('PRO_PAGE_CAP', 100),
-        'crawl_depths' => [
-            CrawlDepth::Shallow->value,
-            CrawlDepth::Standard->value,
-            CrawlDepth::Deep->value,
-        ],
-        'rescan_frequency_minutes' => null, // null = no cap
         'history_retention' => null, // null = unlimited
         'queue_priority' => 1,
     ],

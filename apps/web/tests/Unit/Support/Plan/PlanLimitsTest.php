@@ -5,8 +5,11 @@ use App\Value\CrawlDepth;
 use App\Value\Plan;
 use Tests\TestCase;
 
-// Needs the framework booted so config('plans.*') resolves — PlanLimits is
-// the single seam over config/plans.php, so these tests pin that contract.
+// Needs the framework booted so config('plans.*')/config('spider.*') resolve —
+// PlanLimits is the single seam over both, so these tests pin that contract.
+// page_cap, crawl_depths, and rescan_frequency_minutes come from spider.php
+// and are identical across plans; only site_cap, history_retention, and
+// queue_priority remain plan-scoped.
 uses(TestCase::class);
 
 test('free plan caps sites to 1', function () {
@@ -17,16 +20,20 @@ test('pro plan has no site cap', function () {
     expect(PlanLimits::for(Plan::Pro)->siteCap())->toBeNull();
 });
 
-test('free plan page cap matches the configured value', function () {
-    expect(PlanLimits::for(Plan::Free)->pageCap())->toBe((int) config('plans.free.page_cap'));
+test('free plan page cap matches the spider config, not a plan-scoped value', function () {
+    expect(PlanLimits::for(Plan::Free)->pageCap())->toBe((int) config('spider.page_cap'));
 });
 
-test('pro plan page cap matches the configured value', function () {
-    expect(PlanLimits::for(Plan::Pro)->pageCap())->toBe((int) config('plans.pro.page_cap'));
+test('pro plan page cap matches the spider config', function () {
+    expect(PlanLimits::for(Plan::Pro)->pageCap())->toBe((int) config('spider.page_cap'));
 });
 
-test('free plan only allows shallow crawl depth', function () {
-    expect(PlanLimits::for(Plan::Free)->allowedCrawlDepths())->toBe([CrawlDepth::Shallow]);
+test('free plan allows every crawl depth configured in spider config', function () {
+    expect(PlanLimits::for(Plan::Free)->allowedCrawlDepths())->toBe([
+        CrawlDepth::Shallow,
+        CrawlDepth::Standard,
+        CrawlDepth::Deep,
+    ]);
 });
 
 test('pro plan allows every crawl depth', function () {
@@ -37,8 +44,8 @@ test('pro plan allows every crawl depth', function () {
     ]);
 });
 
-test('free plan clamps any requested depth down to shallow', function (CrawlDepth $requested) {
-    expect(PlanLimits::for(Plan::Free)->clampCrawlDepth($requested))->toBe(CrawlDepth::Shallow);
+test('free plan passes every requested depth through unclamped', function (CrawlDepth $requested) {
+    expect(PlanLimits::for(Plan::Free)->clampCrawlDepth($requested))->toBe($requested);
 })->with([
     'shallow requested' => CrawlDepth::Shallow,
     'standard requested' => CrawlDepth::Standard,
@@ -53,12 +60,12 @@ test('pro plan passes every requested depth through unclamped', function (CrawlD
     'deep requested' => CrawlDepth::Deep,
 ]);
 
-test('free plan re-scan frequency matches the configured minutes', function () {
-    expect(PlanLimits::for(Plan::Free)->rescanFrequencyMinutes())->toBe((int) config('plans.free.rescan_frequency_minutes'));
+test('free plan re-scan frequency matches the spider config', function () {
+    expect(PlanLimits::for(Plan::Free)->rescanFrequencyMinutes())->toBe((int) config('spider.rescan_frequency_minutes'));
 });
 
-test('pro plan has no re-scan frequency cap', function () {
-    expect(PlanLimits::for(Plan::Pro)->rescanFrequencyMinutes())->toBeNull();
+test('pro plan re-scan frequency matches the spider config', function () {
+    expect(PlanLimits::for(Plan::Pro)->rescanFrequencyMinutes())->toBe((int) config('spider.rescan_frequency_minutes'));
 });
 
 test('free plan retains 5 audits of history', function () {
@@ -83,13 +90,13 @@ test('when monetization is disabled, every plan resolves with pro-tier limits', 
     config(['plans.enabled' => false]);
 
     expect(PlanLimits::for(Plan::Free)->siteCap())->toBeNull()
-        ->and(PlanLimits::for(Plan::Free)->pageCap())->toBe((int) config('plans.pro.page_cap'))
+        ->and(PlanLimits::for(Plan::Free)->pageCap())->toBe((int) config('spider.page_cap'))
         ->and(PlanLimits::for(Plan::Free)->allowedCrawlDepths())->toBe([
             CrawlDepth::Shallow,
             CrawlDepth::Standard,
             CrawlDepth::Deep,
         ])
-        ->and(PlanLimits::for(Plan::Free)->rescanFrequencyMinutes())->toBeNull()
+        ->and(PlanLimits::for(Plan::Free)->rescanFrequencyMinutes())->toBe((int) config('spider.rescan_frequency_minutes'))
         ->and(PlanLimits::for(Plan::Free)->historyRetention())->toBeNull()
         ->and(PlanLimits::for(Plan::Free)->queuePriority())->toBe(1);
 });

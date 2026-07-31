@@ -64,7 +64,7 @@ test('an authenticated user submitting a url creates an audit owned by their own
     $response->assertRedirect(route('audit.progress', ['id' => 'crawler-owned']));
 });
 
-test('the page cap is clamped to the free plan limit regardless of requested settings', function () {
+test('the page cap matches config/spider.php for a free account, not a plan-scoped value', function () {
     $capturedOptions = null;
     fakeSpiderCapturing('crawler-free-pages', $capturedOptions);
     $user = User::factory()->create();
@@ -74,10 +74,10 @@ test('the page cap is clamped to the free plan limit regardless of requested set
         validAuditPayload(['url' => 'https://example.com']),
     );
 
-    expect($capturedOptions->getOptions()['maxPages'])->toBe(50);
+    expect($capturedOptions->getOptions()['maxPages'])->toBe(config('spider.page_cap'));
 });
 
-test('the page cap is clamped to the pro plan limit', function () {
+test('the page cap matches config/spider.php for a pro account', function () {
     $capturedOptions = null;
     fakeSpiderCapturing('crawler-pro-pages', $capturedOptions);
     $user = User::factory()->pro()->create();
@@ -87,10 +87,10 @@ test('the page cap is clamped to the pro plan limit', function () {
         validAuditPayload(['url' => 'https://example.com']),
     );
 
-    expect($capturedOptions->getOptions()['maxPages'])->toBe(100);
+    expect($capturedOptions->getOptions()['maxPages'])->toBe(config('spider.page_cap'));
 });
 
-test('crawl depth requested beyond the free plan is silently clamped down to shallow', function () {
+test('a free account gets its requested crawl depth honored, since crawl depth is not plan-gated', function () {
     $capturedOptions = null;
     fakeSpiderCapturing('crawler-free-depth', $capturedOptions);
     $user = User::factory()->create();
@@ -100,7 +100,7 @@ test('crawl depth requested beyond the free plan is silently clamped down to sha
         validAuditPayload(['url' => 'https://example.com', 'crawlDepth' => 5]),
     );
 
-    expect($capturedOptions->getOptions()['maxDepth'])->toBe(1);
+    expect($capturedOptions->getOptions()['maxDepth'])->toBe(5);
 });
 
 test('pro accounts get their requested crawl depth honored', function () {
@@ -116,7 +116,7 @@ test('pro accounts get their requested crawl depth honored', function () {
     expect($capturedOptions->getOptions()['maxDepth'])->toBe(5);
 });
 
-test('a pro account can immediately re-scan the same domain without being blocked by the re-scan rule', function () {
+test('a pro account is also blocked from re-scanning the same domain inside the rescan window', function () {
     fakeSpider('crawler-pro-first');
     $user = User::factory()->pro()->create();
 
@@ -130,15 +130,15 @@ test('a pro account can immediately re-scan the same domain without being blocke
     // rule here, not the in-flight rule (covered separately in AuditPolicyTest).
     Audit::findById('crawler-pro-first')->forceFill(['status' => Status::Completed])->save();
 
-    fakeSpider('crawler-pro-second');
-
+    // No 2nd Spider::create expectation is set — the request should never
+    // reach the crawler if it's denied by the re-scan rule. The rescan cap
+    // comes from config/spider.php and applies to every plan alike.
     $response = $this->actingAs($user)->post(
         route('audit.store'),
         validAuditPayload(['url' => 'https://acme.com']),
     );
 
-    $response->assertRedirect(route('audit.progress', ['id' => 'crawler-pro-second']));
-    expect(Audit::findById('crawler-pro-second'))->not->toBeNull();
+    $response->assertRedirect()->assertSessionHasErrors('url');
 });
 
 /**

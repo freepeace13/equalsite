@@ -132,11 +132,13 @@ test('rescan.availableAt is null for a free account once the rescan window has p
         ->assertInertia(fn (Assert $page) => $page->where('rescan.availableAt', null));
 });
 
-test('rescan.availableAt is always null for pro accounts', function () {
+test('rescan.availableAt is a future timestamp for a pro account within the re-scan window, since the rescan cap is not plan-scoped', function () {
     $user = User::factory()->pro()->create();
     makeUserAudit($user, 'just-scanned', 'acme.com', Status::Completed);
 
     $this->actingAs($user)
         ->get(route('sites.show', ['domain' => 'acme.com']))
-        ->assertInertia(fn (Assert $page) => $page->where('rescan.availableAt', null));
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('rescan.availableAt', fn ($value) => $value !== null && Carbon::parse($value)->isFuture()),
+        );
 });
