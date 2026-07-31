@@ -63,6 +63,8 @@ export const createArtifactStorage = (config: StorageConfig) => {
 
                 return { ok: true };
             } catch (error) {
+                console.error("Artifact storage healthcheck failed", error);
+
                 return { ok: false, error: error instanceof Error ? error.message : String(error) };
             } finally {
                 await storage.deleteFile(probePath).catch(() => undefined);
