@@ -3,7 +3,7 @@
 use App\Value\CrawlDepth;
 
 return [
-    'page_cap' => env('SPIDER_PAGE_CAP', 30),
+    'page_cap' => (int) env('SPIDER_PAGE_CAP', 30),
 
     'rescan_frequency_minutes' => env('SPIDER_RESCAN_FREQUENCY_MINUTES', 60),
 
