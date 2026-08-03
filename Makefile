@@ -235,6 +235,20 @@ ui-typecheck: ## Typecheck @equalsite/ui
 	pnpm --filter @equalsite/ui typecheck
 
 # =========================================================
+# Reset / Cleanup
+# =========================================================
+
+reset: ## Reset project state (logs, redis, queues, horizon, db, artifacts, crawlee storage)
+	@echo "Resetting project state..."
+	find apps/web/storage/logs -maxdepth 1 -type f -name "*.log" -exec truncate -s 0 {} \;
+	$(DOCKER) exec redis redis-cli FLUSHALL
+	$(DOCKER) exec web php artisan migrate:fresh
+	find storage/audit-artifacts -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+	find services/playwright-spider/storage -mindepth 1 -maxdepth 1 ! -name '.gitignore' -exec rm -rf {} +
+	$(DOCKER) exec web php artisan optimize:clear
+	@echo "Project state reset complete."
+
+# =========================================================
 # Project Setup
 # =========================================================
 
@@ -275,4 +289,5 @@ fix-permissions: ## Fix Laravel storage permissions
 	web-dev web-build web-lint \
 	crawler-dev crawler-build crawler-test crawler-lint \
 	ui-storybook ui-build-storybook ui-build ui-lint ui-typecheck \
-	setup fix-permissions
+	setup fix-permissions \
+	reset
