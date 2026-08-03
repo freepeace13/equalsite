@@ -1,5 +1,6 @@
 <?php
 
+use App\AggregateRoots\AuditAggregateRoot;
 use App\Events\Audit\AuditProgress;
 use App\Listeners\AuditProgressListener;
 use App\Models\User;
@@ -13,6 +14,15 @@ uses(TestCase::class, RefreshDatabase::class);
 test('progress events update custom_data.progress_state', function () {
     $user = User::factory()->create();
     $audit = makeUserAudit($user, 'crawler-progress', 'acme.com', Status::Started);
+
+    // The listener guards progress updates against the aggregate's own in-memory status
+    // (dropped once the audit has reached a terminal state), so its event history must
+    // agree with the 'Started' status the projection row was faked into above. The audit
+    // row already exists (created directly above), so only replay AuditWasStarted here —
+    // AuditProjector::onAuditWasStarted updates the existing row rather than inserting one.
+    AuditAggregateRoot::retrieve('crawler-progress')
+        ->start('2026-07-26T00:00:00+00:00')
+        ->persist();
 
     $event = new AuditProgress(new RedisStreamData(
         id: '1-0',

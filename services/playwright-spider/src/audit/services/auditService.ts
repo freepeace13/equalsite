@@ -7,6 +7,7 @@ import { startedEvent } from "../events/startedEvent";
 import { failedEvent } from "../events/failedEvent";
 import { cancelledEvent } from "../events/cancelledEvent";
 import { progressEvent } from "../events/progressEvent";
+import { pageFailedEvent } from "../events/pageFailedEvent";
 import { classifyError } from "../utils/classifyError";
 
 
@@ -40,6 +41,25 @@ export const createAuditService = (
     ) => {
         const queue = await crawler.getRequestQueue();
         const info = await queue.getInfo();
+
+        // Crawlee's maxRequestsPerCrawl only gates *dequeuing* new requests — a request that was
+        // already dequeued and is mid-retry when the cap trips gets reclaimed into the queue but
+        // never redequeued, so it never reaches requestHandler or failedRequestHandler and would
+        // otherwise vanish with no terminal event at all. Surface it explicitly as failed instead
+        // of leaving the page stuck at 'started' forever on the Laravel side.
+        if (info && info.pendingRequestCount > 0) {
+            const { items } = await queue.client.listHead({ limit: info.pendingRequestCount });
+
+            for (const item of items) {
+                await eventPublisher(pageFailedEvent({
+                    auditId: audit.id,
+                    pageUrl: item.url,
+                    attemptsCount: item.retryCount,
+                    errorMessage: 'Audit completed before this page could be retried within the page limit.',
+                    errorCode: 'abandoned_incomplete',
+                }));
+            }
+        }
 
         await eventPublisher(progressEvent({
             auditId: audit.id,

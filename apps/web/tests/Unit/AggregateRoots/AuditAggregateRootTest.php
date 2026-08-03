@@ -47,6 +47,28 @@ test('updateProgress records AuditProgressWasUpdated', function () {
         ->assertRecorded([new AuditProgressWasUpdated(1, 2, 3, 33.3)]);
 });
 
+test('updateProgress ignores a stale progress event that would regress completedRequests', function () {
+    AuditAggregateRoot::fake('crawler-1')
+        ->given([
+            new AuditWasCreated(1, 'https://acme.com', 'acme.com'),
+            new AuditWasStarted('2026-07-26T00:00:00+00:00'),
+            new AuditProgressWasUpdated(10, 0, 10, 100.0),
+        ])
+        ->when(fn (AuditAggregateRoot $aggregate) => $aggregate->updateProgress(9, 1, 10, 90.0))
+        ->assertNotRecorded(AuditProgressWasUpdated::class);
+});
+
+test('updateProgress is a no-op once the audit has already completed', function () {
+    AuditAggregateRoot::fake('crawler-1')
+        ->given([
+            new AuditWasCreated(1, 'https://acme.com', 'acme.com'),
+            new AuditWasStarted('2026-07-26T00:00:00+00:00'),
+            new AuditWasCompleted('2026-07-26T00:01:00+00:00'),
+        ])
+        ->when(fn (AuditAggregateRoot $aggregate) => $aggregate->updateProgress(9, 1, 10, 90.0))
+        ->assertNotRecorded(AuditProgressWasUpdated::class);
+});
+
 test('pageStarted records AuditPageWasStarted', function () {
     AuditAggregateRoot::fake('crawler-1')
         ->given([new AuditWasCreated(1, 'https://acme.com', 'acme.com')])

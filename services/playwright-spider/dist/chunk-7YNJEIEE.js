@@ -403,6 +403,13 @@ var progressEvent = (payload) => ({
   }
 });
 
+// src/audit/events/pageFailedEvent.ts
+import { EventEnum as EventEnum7 } from "@equalsite/types";
+var pageFailedEvent = (payload) => ({
+  type: EventEnum7.PageFailed,
+  payload
+});
+
 // src/audit/utils/classifyError.ts
 var PATTERNS = [
   { code: "dns_error", test: /ERR_NAME_NOT_RESOLVED|ENOTFOUND|ERR_ADDRESS_UNREACHABLE/i },
@@ -438,6 +445,18 @@ var createAuditService = (auditRepository2, eventPublisher) => ({
   completeAudit: async (audit, crawler2) => {
     const queue = await crawler2.getRequestQueue();
     const info = await queue.getInfo();
+    if (info && info.pendingRequestCount > 0) {
+      const { items } = await queue.client.listHead({ limit: info.pendingRequestCount });
+      for (const item of items) {
+        await eventPublisher(pageFailedEvent({
+          auditId: audit.id,
+          pageUrl: item.url,
+          attemptsCount: item.retryCount,
+          errorMessage: "Audit completed before this page could be retried within the page limit.",
+          errorCode: "abandoned_incomplete"
+        }));
+      }
+    }
     await eventPublisher(progressEvent({
       auditId: audit.id,
       completedRequests: info?.handledRequestCount ?? 0,
@@ -542,6 +561,18 @@ var createArtifactStorage = (config) => {
   };
 };
 
+// src/audit/services/cancellationSignal.ts
+var cancelledAuditIds = /* @__PURE__ */ new Set();
+var markCancelled = (auditId) => {
+  cancelledAuditIds.add(auditId);
+};
+var isCancelled = (auditId) => {
+  return cancelledAuditIds.has(auditId);
+};
+var clearCancelled = (auditId) => {
+  cancelledAuditIds.delete(auditId);
+};
+
 export {
   secretKey,
   bullmq,
@@ -555,10 +586,14 @@ export {
   publishEvent,
   createQueuePositionService,
   progressEvent,
+  pageFailedEvent,
   classifyError,
   createAuditService,
   deleteDirectoryIfExists,
   crawlerMap,
+  markCancelled,
+  isCancelled,
+  clearCancelled,
   createArtifactStorage,
   initSentry,
   attachSentryErrorHandler,

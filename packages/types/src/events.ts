@@ -52,7 +52,8 @@ export type CrawlErrorCode =
     | 'connection_failed'
     | 'tls_error'
     | 'http_error'
-    | 'internal_error';
+    | 'internal_error'
+    | 'abandoned_incomplete';
 
 export interface PageFailedPayload extends BasePayload {
     pageUrl: string;

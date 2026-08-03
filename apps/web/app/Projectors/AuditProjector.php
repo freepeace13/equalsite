@@ -118,9 +118,26 @@ class AuditProjector extends Projector
 
     public function onAuditWasCompleted(AuditWasCompleted $event): void
     {
-        $this->audit($event)?->update([
+        $audit = $this->audit($event);
+
+        if (! $audit) {
+            return;
+        }
+
+        $audit->update([
             'status' => Status::Completed,
             'completed_at' => $event->completedAt,
+        ]);
+
+        // Crawlee's own maxRequestsPerCrawl/retry bounding can abandon an in-flight page without
+        // ever emitting a page.completed/page.failed event for it. Sweep any pages still stuck at
+        // 'started' so the UI never shows a permanently unresolved page for a completed audit.
+        $audit->pages()->where('status', 'started')->update([
+            'status' => 'failed',
+            'error_code' => 'abandoned_incomplete',
+            'error_message' => 'Audit completed before this page finished processing.',
+            'failed_at' => $event->completedAt,
+            'last_activity_at' => $event->completedAt,
         ]);
     }
 

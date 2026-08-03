@@ -31,6 +31,13 @@ class AuditAggregateRoot extends AggregateRoot
     protected array $pageTerminalStatuses = [];
 
     /**
+     * High-water mark for AuditProgressWasUpdated.completedRequests, used to drop stale/reordered
+     * progress events (e.g. a queued listener job executing out of order) that would otherwise
+     * regress the projected progress percentage after a later update already landed.
+     */
+    protected int $maxCompletedRequests = 0;
+
+    /**
      * @param  array<string, mixed>  $requestParams
      */
     public function create(int $userId, string $url, string $domain, array $requestParams = []): self
@@ -56,6 +63,14 @@ class AuditAggregateRoot extends AggregateRoot
 
     public function updateProgress(int $completed, int $pending, int $total, float $percentage): self
     {
+        if ($this->status !== Status::Started) {
+            return $this; // audit already reached a terminal state; ignore stale/reordered progress
+        }
+
+        if ($completed < $this->maxCompletedRequests) {
+            return $this; // stale/reordered progress event
+        }
+
         $this->recordThat(new AuditProgressWasUpdated($completed, $pending, $total, $percentage));
 
         return $this;
@@ -157,6 +172,11 @@ class AuditAggregateRoot extends AggregateRoot
     protected function applyAuditWasCancelled(AuditWasCancelled $event): void
     {
         $this->status = Status::Cancelled;
+    }
+
+    protected function applyAuditProgressWasUpdated(AuditProgressWasUpdated $event): void
+    {
+        $this->maxCompletedRequests = max($this->maxCompletedRequests, $event->completedRequests);
     }
 
     protected function applyAuditPageWasCompleted(AuditPageWasCompleted $event): void

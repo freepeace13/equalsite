@@ -78,7 +78,7 @@ interface PageSkippedPayload extends BasePayload {
     pageUrl: string;
     reason: string;
 }
-type CrawlErrorCode = 'dns_error' | 'timeout' | 'connection_failed' | 'tls_error' | 'http_error' | 'internal_error';
+type CrawlErrorCode = 'dns_error' | 'timeout' | 'connection_failed' | 'tls_error' | 'http_error' | 'internal_error' | 'abandoned_incomplete';
 interface PageFailedPayload extends BasePayload {
     pageUrl: string;
     attemptsCount: number;

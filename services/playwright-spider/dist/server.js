@@ -12,11 +12,12 @@ import {
   createQueuePositionService,
   deleteDirectoryIfExists,
   initSentry,
+  markCancelled,
   publishEvent,
   secretKey,
   storage,
   streamClient
-} from "./chunk-HX3M3JWE.js";
+} from "./chunk-7YNJEIEE.js";
 
 // src/app.ts
 import express from "express";
@@ -114,6 +115,7 @@ var createCancelAuditAction = (auditRepository2, eventPublisher, config) => {
         const crawler2 = crawlerMap.get(audit.id);
         if (crawler2) {
           await auditService.cancelAudit(audit, crawler2);
+          markCancelled(audit.id);
           crawler2.stop("Audit cancelled by user");
         } else {
           await auditRepository2.save(audit.markAsCancelled());
@@ -123,7 +125,6 @@ var createCancelAuditAction = (auditRepository2, eventPublisher, config) => {
         console.error(err);
       } finally {
         await auditRepository2.delete(audit.id);
-        crawlerMap.delete(audit.id);
       }
     }
   };

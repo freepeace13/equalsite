@@ -4,6 +4,7 @@ import {
   bullmq,
   captureWorkerFailure,
   classifyError,
+  clearCancelled,
   crawler,
   crawlerMap,
   crawlerQueue,
@@ -11,12 +12,14 @@ import {
   createAuditService,
   createQueuePositionService,
   initSentry,
+  isCancelled,
   onUncaughtException,
   onUnhandledRejection,
+  pageFailedEvent,
   progressEvent,
   publishEvent,
   storage
-} from "./chunk-HX3M3JWE.js";
+} from "./chunk-7YNJEIEE.js";
 
 // src/worker.ts
 import { Worker } from "bullmq";
@@ -25,27 +28,20 @@ import { Worker } from "bullmq";
 import path2 from "path";
 import { Configuration, PlaywrightCrawler } from "crawlee";
 
-// src/audit/events/pageFailedEvent.ts
-import { EventEnum } from "@equalsite/types";
-var pageFailedEvent = (payload) => ({
-  type: EventEnum.PageFailed,
-  payload
-});
-
 // src/audit/actions/handleAuditPageRequest.ts
 import { Request } from "crawlee";
 
 // src/audit/events/pageStartedEvent.ts
-import { EventEnum as EventEnum2 } from "@equalsite/types";
+import { EventEnum } from "@equalsite/types";
 var pageStartedEvent = (payload) => ({
-  type: EventEnum2.PageStarted,
+  type: EventEnum.PageStarted,
   payload
 });
 
 // src/audit/events/pageCompletedEvent.ts
-import { EventEnum as EventEnum3 } from "@equalsite/types";
+import { EventEnum as EventEnum2 } from "@equalsite/types";
 var pageCompletedEvent = (payload) => ({
-  type: EventEnum3.PageCompleted,
+  type: EventEnum2.PageCompleted,
   payload
 });
 
@@ -181,6 +177,9 @@ var createAuditPageRequestHandler = (auditId, eventPublisher, options, screensho
     enqueueLinks,
     crawler: crawler2
   }) => {
+    if (isCancelled(auditId)) {
+      return;
+    }
     await eventPublisher(pageStartedEvent({
       auditId,
       pageUrl: request.url,
@@ -210,7 +209,7 @@ var createAuditPageRequestHandler = (auditId, eventPublisher, options, screensho
     }));
     const currentDepth = request.userData?.depth ?? 0;
     const withinMaxDepth = options.maxDepth === void 0 || options.maxDepth === null || currentDepth < options.maxDepth;
-    if (options.enqueueLinks && withinMaxDepth) {
+    if (options.enqueueLinks && withinMaxDepth && !isCancelled(auditId)) {
       await enqueueLinks({
         strategy: options.enqueueStrategy,
         selector: "a",
@@ -330,6 +329,7 @@ var createPerformCleanUpAction = (auditRepository2) => ({
     try {
       await crawlerMap.get(audit.id)?.teardown();
       crawlerMap.delete(audit.id);
+      clearCancelled(audit.id);
       await auditRepository2.delete(audit.id);
       console.log("Cleanup successfully!");
     } catch (err) {

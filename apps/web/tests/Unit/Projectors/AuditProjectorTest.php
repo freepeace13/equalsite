@@ -61,6 +61,7 @@ test('AuditProgressWasUpdated projects into custom_data.progress_state', functio
 
     AuditAggregateRoot::retrieve('crawler-4')
         ->create($user->id, 'https://acme.com', 'acme.com')
+        ->start('2026-07-26T00:00:00+00:00')
         ->updateProgress(1, 2, 3, 33.3)
         ->persist();
 
@@ -203,6 +204,56 @@ test('AuditWasCompleted projects status and completed_at', function () {
 
     expect($audit->status)->toBe(Status::Completed)
         ->and($audit->completed_at->toIso8601String())->toBe('2026-07-26T00:05:00+00:00');
+});
+
+test('a reordered progress event arriving after AuditWasCompleted does not regress custom_data.progress_state', function () {
+    $user = User::factory()->create();
+
+    AuditAggregateRoot::retrieve('crawler-progress-reordered')
+        ->create($user->id, 'https://acme.com', 'acme.com')
+        ->start('2026-07-26T00:00:00+00:00')
+        ->updateProgress(27, 0, 27, 100.0)
+        ->complete('2026-07-26T00:01:00+00:00')
+        ->persist();
+
+    // Simulates a queued listener job for an earlier progress snapshot executing
+    // late (e.g. released and re-queued by WithoutOverlapping) after the audit
+    // already completed.
+    AuditAggregateRoot::retrieve('crawler-progress-reordered')
+        ->updateProgress(26, 1, 27, 96.0)
+        ->persist();
+
+    $audit = Audit::findById('crawler-progress-reordered');
+
+    expect($audit->getCustomData('progress_state'))->toEqual([
+        'completedRequests' => 27,
+        'pendingRequests' => 0,
+        'totalRequests' => 27,
+        'progressPercentage' => 100.0,
+    ]);
+});
+
+test('AuditWasCompleted sweeps pages still stuck at started into failed', function () {
+    $user = User::factory()->create();
+
+    AuditAggregateRoot::retrieve('crawler-sweep')
+        ->create($user->id, 'https://acme.com', 'acme.com')
+        ->pageStarted('https://acme.com/', 0, '2026-07-26T00:00:00+00:00')
+        ->pageStarted('https://acme.com/about', 0, '2026-07-26T00:00:00+00:00')
+        ->pageCompleted('https://acme.com/about', 1, ['critical' => 0, 'serious' => 0, 'moderate' => 0, 'minor' => 1], '2026-07-26T00:00:30+00:00')
+        ->complete('2026-07-26T00:01:00+00:00')
+        ->persist();
+
+    $audit = Audit::findById('crawler-sweep');
+
+    $orphaned = $audit->pages->firstWhere('url', 'https://acme.com/');
+    $completed = $audit->pages->firstWhere('url', 'https://acme.com/about');
+
+    expect($orphaned->status)->toBe('failed')
+        ->and($orphaned->error_code)->toBe('abandoned_incomplete')
+        ->and($orphaned->failed_at->toIso8601String())->toBe('2026-07-26T00:01:00+00:00');
+
+    expect($completed->status)->toBe('completed');
 });
 
 test('AuditWasCancelled projects status and cancelled_at', function () {
