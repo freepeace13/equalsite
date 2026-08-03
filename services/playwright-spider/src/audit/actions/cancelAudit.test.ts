@@ -88,4 +88,26 @@ describe("cancelAudit", () => {
         expect(stop).toHaveBeenCalledWith('Audit cancelled by user');
         expect(teardown).not.toHaveBeenCalled();
     });
+
+    it("leaves the crawler in crawlerMap so performCleanUp can tear it down once it actually stops", async () => {
+        const auditId = "audit-map-ownership";
+        fs.mkdirSync(path.join(artifactDirectory, auditId), { recursive: true });
+
+        const audit = makeAudit(auditId);
+        const auditRepository = makeAuditRepository(audit);
+        const eventPublisher = vi.fn().mockResolvedValue(undefined);
+
+        const fakeCrawler = {
+            stats: { state: {} },
+            stop: vi.fn(),
+            teardown: vi.fn(),
+        } as any;
+        crawlerMap.set(auditId, fakeCrawler);
+
+        await createCancelAuditAction(auditRepository, eventPublisher, {
+            artifactDirectory,
+        }).run(auditId);
+
+        expect(crawlerMap.get(auditId)).toBe(fakeCrawler);
+    });
 });

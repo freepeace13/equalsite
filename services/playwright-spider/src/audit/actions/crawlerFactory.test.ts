@@ -12,7 +12,10 @@ vi.mock("crawlee", () => ({
 const { default: createPlaywrightCrawler } = await import("./crawlerFactory");
 
 describe("createPlaywrightCrawler", () => {
-    it("enables Crawlee's built-in robots.txt handling", () => {
+    it("disables Crawlee's built-in robots.txt handling", () => {
+        // robots.txt fetches go through got-scraping, not Playwright, and some WAFs block/challenge
+        // that fingerprint while allowing the real page load - see crawlerFactory.ts for the full
+        // rationale. We're not a search-engine crawler, so robots.txt compliance isn't required.
         createPlaywrightCrawler({
             auditId: "audit-1",
             eventPublisher: vi.fn(),
@@ -25,6 +28,6 @@ describe("createPlaywrightCrawler", () => {
         });
 
         const [crawlerOptions] = playwrightCrawlerMock.mock.calls[0]!;
-        expect(crawlerOptions.respectRobotsTxtFile).toBe(true);
+        expect(crawlerOptions.respectRobotsTxtFile).toBe(false);
     });
 });

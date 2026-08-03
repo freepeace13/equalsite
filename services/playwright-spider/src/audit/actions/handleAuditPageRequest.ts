@@ -7,6 +7,7 @@ import { captureViolationScreenshots } from "./captureViolationScreenshots";
 import AxeBuilder from "@axe-core/playwright";
 import { progressEvent } from "../events/progressEvent";
 import type { AuditOptions } from "@equalsite/types";
+import { isCancelled } from "../services/cancellationSignal";
 
 /**
  * SameDomain/SameHostname enqueue strategies treat http/https and www/non-www
@@ -42,6 +43,10 @@ export const createAuditPageRequestHandler = (
         enqueueLinks,
         crawler
     }) => {
+        if (isCancelled(auditId)) {
+            return;
+        }
+
         await eventPublisher(pageStartedEvent({
             auditId,
             pageUrl: request.url,
@@ -84,7 +89,10 @@ export const createAuditPageRequestHandler = (
         const currentDepth = (request.userData?.depth as number | undefined) ?? 0;
         const withinMaxDepth = options.maxDepth === undefined || options.maxDepth === null || currentDepth < options.maxDepth;
 
-        if (options.enqueueLinks && withinMaxDepth) {
+        // An axe-core scan already in flight when cancellation lands cannot be interrupted
+        // mid-analyze() - Crawlee and axe-core/Playwright expose no abort hook for that. This
+        // check only stops it from enqueueing more work once cancellation has been signaled.
+        if (options.enqueueLinks && withinMaxDepth && !isCancelled(auditId)) {
             await enqueueLinks({
                 strategy: options.enqueueStrategy as EnqueueStrategy,
                 selector: 'a',

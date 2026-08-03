@@ -4,6 +4,7 @@ import type { EventPublisher } from "../repositories/eventPublisher";
 import { createAuditService } from "../services/auditService";
 import { deleteDirectoryIfExists } from "../utils/fsDirectory";
 import { crawlerMap } from "../services/crawlerMap";
+import { markCancelled } from "../services/cancellationSignal";
 
 export interface ICancelAuditAction {
     run: (auditId: string) => Promise<void>;
@@ -29,6 +30,7 @@ export const createCancelAuditAction = (
                 const crawler = crawlerMap.get(audit.id);
                 if (crawler) {
                     await auditService.cancelAudit(audit, crawler);
+                    markCancelled(audit.id);
                     crawler.stop('Audit cancelled by user');
                 } else {
                     await auditRepository.save(audit.markAsCancelled());
@@ -38,7 +40,6 @@ export const createCancelAuditAction = (
                 console.error(err);
             } finally {
                 await auditRepository.delete(audit.id);
-                crawlerMap.delete(audit.id);
             }
         }
     }
