@@ -21,6 +21,16 @@ class AuditAggregateRoot extends AggregateRoot
     protected Status $status = Status::Queued;
 
     /**
+     * URL => terminal page status ('completed'|'failed'|'skipped'). Once a page reaches
+     * one of these, Crawlee never revisits it, so a later `pageStarted` for the same URL
+     * is a stale/reordered event (e.g. a queued listener job executing out of order) and
+     * must not regress the projected status back to 'started'.
+     *
+     * @var array<string, string>
+     */
+    protected array $pageTerminalStatuses = [];
+
+    /**
      * @param  array<string, mixed>  $requestParams
      */
     public function create(int $userId, string $url, string $domain, array $requestParams = []): self
@@ -53,6 +63,10 @@ class AuditAggregateRoot extends AggregateRoot
 
     public function pageStarted(string $url, int $attemptsCount, string $startedAt): self
     {
+        if (isset($this->pageTerminalStatuses[$url])) {
+            return $this; // stale/reordered event for a URL that already reached a terminal state
+        }
+
         $this->recordThat(new AuditPageWasStarted($url, $attemptsCount, $startedAt));
 
         return $this;
@@ -143,5 +157,20 @@ class AuditAggregateRoot extends AggregateRoot
     protected function applyAuditWasCancelled(AuditWasCancelled $event): void
     {
         $this->status = Status::Cancelled;
+    }
+
+    protected function applyAuditPageWasCompleted(AuditPageWasCompleted $event): void
+    {
+        $this->pageTerminalStatuses[$event->url] = 'completed';
+    }
+
+    protected function applyAuditPageWasFailed(AuditPageWasFailed $event): void
+    {
+        $this->pageTerminalStatuses[$event->url] = 'failed';
+    }
+
+    protected function applyAuditPageWasSkipped(AuditPageWasSkipped $event): void
+    {
+        $this->pageTerminalStatuses[$event->url] = 'skipped';
     }
 }

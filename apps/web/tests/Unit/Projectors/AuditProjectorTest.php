@@ -102,6 +102,32 @@ test('page events upsert into a single audit_pages row per url', function () {
         ->and($page->last_activity_at->toIso8601String())->toBe('2026-07-26T00:01:00+00:00');
 });
 
+test('a reordered pageStarted event arriving after pageCompleted does not regress the page status', function () {
+    $user = User::factory()->create();
+
+    AuditAggregateRoot::retrieve('crawler-reordered')
+        ->create($user->id, 'https://acme.com', 'acme.com')
+        ->pageStarted('https://acme.com/about', 0, '2026-07-26T00:00:00+00:00')
+        ->pageCompleted('https://acme.com/about', 2, ['critical' => 1, 'serious' => 0, 'moderate' => 0, 'minor' => 1], '2026-07-26T00:01:00+00:00')
+        ->persist();
+
+    // Simulates a queued listener job for the original 'started' event executing
+    // late (e.g. released and re-queued by WithoutOverlapping) after 'completed'
+    // has already been applied.
+    AuditAggregateRoot::retrieve('crawler-reordered')
+        ->pageStarted('https://acme.com/about', 0, '2026-07-26T00:00:00+00:00')
+        ->persist();
+
+    $audit = Audit::findById('crawler-reordered');
+
+    expect($audit->pages)->toHaveCount(1);
+
+    $page = $audit->pages->first();
+
+    expect($page->status)->toBe('completed')
+        ->and($page->completed_at->toIso8601String())->toBe('2026-07-26T00:01:00+00:00');
+});
+
 test('page skipped and page failed project into separate audit_pages rows', function () {
     $user = User::factory()->create();
 

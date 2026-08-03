@@ -58,6 +58,60 @@ test('pageStarted records AuditPageWasStarted', function () {
         ]);
 });
 
+test('pageStarted is a no-op once the page has already completed', function () {
+    $breakdown = ['critical' => 1, 'serious' => 0, 'moderate' => 0, 'minor' => 0];
+
+    AuditAggregateRoot::fake('crawler-1')
+        ->given([
+            new AuditWasCreated(1, 'https://acme.com', 'acme.com'),
+            new AuditPageWasStarted('https://acme.com/about', 0, '2026-07-26T00:00:00+00:00'),
+            new AuditPageWasCompleted('https://acme.com/about', 1, $breakdown, '2026-07-26T00:00:01+00:00'),
+        ])
+        ->when(fn (AuditAggregateRoot $aggregate) => $aggregate->pageStarted(
+            'https://acme.com/about', 0, '2026-07-26T00:00:00+00:00'
+        ))
+        ->assertNotRecorded(AuditPageWasStarted::class);
+});
+
+test('pageStarted is a no-op once the page has already failed', function () {
+    AuditAggregateRoot::fake('crawler-1')
+        ->given([
+            new AuditWasCreated(1, 'https://acme.com', 'acme.com'),
+            new AuditPageWasStarted('https://acme.com/about', 0, '2026-07-26T00:00:00+00:00'),
+            new AuditPageWasFailed('https://acme.com/about', 3, 'Navigation timeout', 'timeout', '2026-07-26T00:00:01+00:00'),
+        ])
+        ->when(fn (AuditAggregateRoot $aggregate) => $aggregate->pageStarted(
+            'https://acme.com/about', 0, '2026-07-26T00:00:00+00:00'
+        ))
+        ->assertNotRecorded(AuditPageWasStarted::class);
+});
+
+test('pageStarted is a no-op once the page has already been skipped', function () {
+    AuditAggregateRoot::fake('crawler-1')
+        ->given([
+            new AuditWasCreated(1, 'https://acme.com', 'acme.com'),
+            new AuditPageWasSkipped('https://acme.com/robots', 'Blocked by robots.txt', '2026-07-26T00:00:00+00:00'),
+        ])
+        ->when(fn (AuditAggregateRoot $aggregate) => $aggregate->pageStarted(
+            'https://acme.com/robots', 0, '2026-07-26T00:00:01+00:00'
+        ))
+        ->assertNotRecorded(AuditPageWasStarted::class);
+});
+
+test('pageStarted still records a legitimate retry after a page starts but has not reached a terminal state', function () {
+    AuditAggregateRoot::fake('crawler-1')
+        ->given([
+            new AuditWasCreated(1, 'https://acme.com', 'acme.com'),
+            new AuditPageWasStarted('https://acme.com/about', 0, '2026-07-26T00:00:00+00:00'),
+        ])
+        ->when(fn (AuditAggregateRoot $aggregate) => $aggregate->pageStarted(
+            'https://acme.com/about', 1, '2026-07-26T00:00:01+00:00'
+        ))
+        ->assertRecorded([
+            new AuditPageWasStarted('https://acme.com/about', 1, '2026-07-26T00:00:01+00:00'),
+        ]);
+});
+
 test('pageSkipped records AuditPageWasSkipped', function () {
     AuditAggregateRoot::fake('crawler-1')
         ->given([new AuditWasCreated(1, 'https://acme.com', 'acme.com')])
